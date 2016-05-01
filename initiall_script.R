@@ -5,6 +5,7 @@ library("edgeR")
 library("geneplotter")
 library("plyr")
 library("ggplot2")
+library("scales")
 # Install dplyr or something
 
 thca <- readRDS("seTHCA.rds")
@@ -13,15 +14,29 @@ meta.info <- colData(thca)
 filter.info <- function(x){
     # Function to filter the NA, [Not Available], [Not Applicable] and [Unknown]
     # Return the proportion of information on x
-    nas <- sum(is.na(x), summary(x)["[Not Available]"],
-               summary(x)["[Unknown]"], summary(x)["[Not Applicable]"],
-               summary(x)["[Not Available]|[Not Available]|[Not Available]"],
-               summary(x) ["[Not Evaluated]"],
-               na.rm = TRUE)
-    return(1- nas/length(x))
+    nas <- sum(is.na(x))
+#     , summary(x)["[Not Available]"],
+#                summary(x)["[Unknown]"], summary(x)["[Not Applicable]"],
+#                summary(x)["[Not Available]|[Not Available]|[Not Available]"],
+#                summary(x) ["[Not Evaluated]"],
+#                na.rm = TRUE)
+    return(1 - (nas/length(x)))
 }
 
-sample.info <- sapply(meta.info, filter.info)
+na.replace <- function(x){
+    # Remove the unwanted factors
+    lev <- levels(x)
+    lev <- lev[!(lev %in% "[Not Available]")]
+    lev <- lev[!(lev %in% "[Unknown]")]
+    lev <- lev[!(lev %in% "[Not Applicable]")]
+    lev <- lev[!(lev %in% "[Not Available]|[Not Available]|[Not Available]")]
+    lev <- lev[!(lev %in% "[Not Evaluated]")]
+
+    x <- factor(x, levels=lev)
+}
+
+meta.info2 <- as.data.frame(lapply(meta.info, na.replace))
+sample.info <- sapply(meta.info2, filter.info)
 
 # Plotting the histogram of the information
 hist(sample.info)
@@ -33,8 +48,8 @@ hist(sample.info, xlim=c(0.3, 1), ylim=c(0, 35))
 relative.info <- sample.info[order(sample.info)]/sum(sample.info)
 plot(relative.info, main="Information brought by column")
 # Very few columns bring all the meaning
-
-filtered <- meta.info[, sample.info > 0.6]
+par(mfrow=c(1,1))
+filtered <- meta.info2[, sample.info > 0.6]
 # We end up with 45 columns
 
 ## Normalization: CPM scaling
@@ -62,6 +77,8 @@ b <-  theme(axis.line = element_line(colour = "black"),
             panel.grid.minor.y = element_line(colour = "grey", size = 0.25, linetype = 3),
             panel.border = element_blank(),
             panel.background = element_blank())
+# Make lables as percentatge
+p <- scale_y_continuous(labels=percent)
 
 # Comparing control vs cases and gender
 fplot + geom_bar(aes(type, fill=gender)) + b
@@ -80,6 +97,8 @@ fplot + geom_bar(aes(age_at_diagnosis, fill=gender), stat="count") + b
 fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race)) + b + l
 
 # Compare race and gender
+fplot + geom_bar(aes(race, fill=gender))+b+l
+fplot + geom_bar(aes(x=gender, y=(..count..)/sum(..count..), fill=race))+b+l
 
 # Seeing if the type of patient is correlated with age of diagnosis
 fplot + geom_bar(aes(age_at_diagnosis, fill=type), stat="count") + b
@@ -106,7 +125,7 @@ fplot+geom_bar(aes(tissue_source_site, fill=type)) + b + l
 fplot + geom_bar(aes(lymph_nodes_examined)) + b + l
 fplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill=gender))+b+l
 
-fplot + facet_wrap(~tumor_focality)+geom_bar(aes(age_at_diagnosis, fill=gender))+b+l
+fplot + geom_bar(aes(age_at_diagnosis, fill=gender))+b+l
 fplot +geom_bar(aes(age_at_diagnosis, fill=tumor_focality), na.rm=T)+ b + l
 fplot+geom_bar(aes(gender, fill=residual_tumor))+b
 fplot+geom_bar(aes(type, fill=gender))+b
