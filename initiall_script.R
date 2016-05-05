@@ -180,7 +180,37 @@ ggplot(read.info, aes(txgc))+geom_density()+b
 ggplot(read.info, aes(log10(txlen)))+geom_density()+b
 
 
-summary(filtered[filtered$histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" & filtered$race == "WHITE" & filtered$ethnicity == "NOT HISPANIC OR LATINO <NA>",])
+dim(filtered[filtered$histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" & filtered$race == "WHITE" & filtered$ethnicity == "NOT HISPANIC OR LATINO <NA>",])
+
+# Paired data
+
+paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
+paired_mask <- thca$bcr_patient_barcode %in% paired
+
+filtered_filt <- filtered[paired_mask, ]
+names <- row.names(filtered_filt)
+tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
+                                    race == "WHITE" &
+    histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
+        ethnicity == "NOT HISPANIC OR LATINO" ))
+participants <- unlist(lapply(tumor_names, substr, start = 9, stop = 12))
+
+participants <- participants[participants != ""]
+check <- function(x, checklist){
+    a <- substr(x, 9, 12)
+    if(a %in% checklist){
+        return(x)
+    }
+}
+
+sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist=participants))
+
+# Repeat plottings for filtered patients
+thca_expr <- assays(thca)$counts
+
+# Normalization just with the selected samples
+dge <- DGEList(counts=thca_expr[, colnames(thca_expr) %in% sample_names], genes=mcols(thca))
+
 ## Normalization: CPM scaling
 dge <- DGEList(counts = assays(thca)$counts, group = filtered$type,
                remove.zeros = TRUE) # Removing all the genes not expressed
