@@ -179,6 +179,8 @@ ggplot(read.info, aes(txgc, log10(txlen))) + geom_point()+geom_density2d() + b
 ggplot(read.info, aes(txgc))+geom_density()+b
 ggplot(read.info, aes(log10(txlen)))+geom_density()+b
 
+
+summary(filtered[filtered$histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" & filtered$race == "WHITE" & filtered$ethnicity == "NOT HISPANIC OR LATINO <NA>",])
 ## Normalization: CPM scaling
 dge <- DGEList(counts = assays(thca)$counts, group = filtered$type,
                remove.zeros = TRUE) # Removing all the genes not expressed
