@@ -167,6 +167,11 @@ fplot+geom_point(aes(tumor_size_width.1, tumor_size_width.2))+geom_density2d(aes
 fplot+geom_violin(aes(tumor_size_width.1, tumor_size_width))+b
 fplot+geom_violin(aes(tumor_size_width.2, tumor_size_width))+b
 
+# fplot+geom_point(aes(history_radiation_exposure, age_at_diagnosis))+b+l
+fplot+geom_bar(aes(age_at_diagnosis, fill=history_radiation_exposure))+b+l
+
+fplot+geom_bar(aes(age_at_diagnosis, fill=histologic_diagnosis))+b+l
+
 # Exploring information about the length and GC content of the transcripts
 read.info <- as.data.frame(mcols(thca))
 rownames(read.info) <- read.info$symbol
