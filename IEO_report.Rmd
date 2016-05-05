@@ -1,0 +1,112 @@
+```{r setup, cache=FALSE, echo=FALSE, results='asis'}
+dumpcssfile <- function(fname) {
+  paste(c('<style type="text/css">', readLines(fname), '</style>\n'),
+        collapse="\n")
+}
+
+cat(dumpcssfile(file.path("css", "ieo.css")))
+```
+---
+output: html_document
+---
+# Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)
+
+#### Mauro Álvarez (mail)
+#### Lluís Revilla(mail)
+#### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
+#### Inés Sentís (mail) 
+
+## Introduction
+
+This document should be processed from R and you need to install the packages
+[knitr](http://cran.r-project.org/web/packages/knitr/index.html) and
+[markdown](http://cran.r-project.org/web/packages/markdown/index.html). Once
+they are installed, you have to type the following instructions that generate
+a HTML document that you can open with a web browser:
+
+```
+library(knitr)     ## required for "knitting" from Rmd to md
+library(markdown)  ## required for processing from md to HTML
+knit2html("IEO_report.Rmd")  ## process Rmd to HTML
+browseURL("IEO_report.html") ## open the resulting HTML file from R
+```
+
+
+## Data import
+
+We start importing the raw table of counts.
+
+```{r}
+library(SummarizedExperiment)
+
+thca <- readRDS(file.path("data", "seTHCA.rds"))
+thca
+```
+
+Explore the column (phenotypic) data, which in this case corresponds to clinical
+variables, and their corresponding metadata.
+
+```{r}
+dim(colData(thca))
+colData(thca)[1:5, 1:5]
+mcols(colData(thca), use.names=TRUE)
+```
+
+Now, explore the row (feature) data.
+
+```{r}
+rowRanges(thca)
+```
+
+To perform quality assessment and normalization we need first to load the
+[edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
+create a `DGEList' object.
+
+```{r}
+library(edgeR)
+
+dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
+```
+
+Now calculate $\log_2$ CPM values of expression and put them as an additional
+assay element to ease their manipulation.
+
+```{r}
+assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=0.5)
+assays(thca)$logCPM[1:5, 1:5]
+logCPM <- assays(thca)$logCPM
+```
+
+##Filtering and subsampling
+
+Subsampling paired samples.
+
+```{r}
+dge$samples$group <- thca$type
+
+paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
+
+paired_mask <- thca$bcr_patient_barcode %in% paired
+
+dge_filt <- dge[, paired_mask]
+
+```
+
+
+## Quality assessment and normalization
+
+### Library sizes
+
+Let's examine the library sizes in terms of total number of sequence read counts
+per sample. Figure S1 below shows library sizes per sample in increasing order.
+
+<!---
+you can control the height and width in pixels of the figure with 'out.height' and 'out.width'
+--->
+
+```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S1: Library sizes in increasing order."}
+ord <- order(dge$sample$lib.size/1e6)
+barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
+        xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
+legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
+```
