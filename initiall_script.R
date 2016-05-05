@@ -87,6 +87,7 @@ b <-  theme(axis.line = element_line(colour = "black"),
             panel.grid.minor.y = element_line(colour = "grey", size = 0.25, linetype = 3),
             panel.border = element_blank(),
             panel.background = element_blank())
+
 # Make lables as percentatge
 p <- scale_y_continuous(labels=percent)
 
@@ -97,78 +98,78 @@ fplot + geom_bar(aes(type, fill=gender)) + b
 fplot + geom_bar(aes(type, fill=tumor_status)) + b
 
 # Comparing type, and gender with ethnicity
-fplot + facet_wrap(~ type) + geom_bar(aes(gender, fill=ethnicity)) + b
+# fplot + facet_wrap(~ type) + geom_bar(aes(gender, fill=ethnicity)) + b
 fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill=ethnicity)) + b
 
 # Compare age to gender and tumor
-fplot + geom_bar(aes(age_at_diagnosis, fill=gender), stat="count") + b
+# fplot + geom_bar(aes(age_at_diagnosis, fill=gender), stat="count") + b
 
 # Compare race and ethnicity
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race)) + b + l
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill=gender)) + b + l
+# fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill=type)) + b + l
 
 # Compare race and gender
-fplot + geom_bar(aes(race, fill=gender))+b+l
-fplot + geom_bar(aes(x=gender, y=(..count..)/sum(..count..), fill=race))+b+l
+# fplot + geom_bar(aes(race, fill=gender))+b+l
+fplot + geom_bar(aes(x=gender, fill=race))+b+l
 
 # Seeing if the type of patient is correlated with age of diagnosis
-fplot + geom_bar(aes(age_at_diagnosis, fill=type), stat="count") + b
+# fplot + geom_bar(aes(age_at_diagnosis, fill=type), stat="count") + b
 
 # Date relationship with samples
-fplot + geom_bar(aes(form_completion_date)) + b + l
+# fplot + geom_bar(aes(form_completion_date)) + b + l
 
 # Explore where is the tumor
-fplot + geom_bar(aes(tumor_tissue_site, fill=type)) + b +l
-fplot + geom_bar(aes(tumor_tissue_site, fill=tissue_source_site)) + b +l
+# fplot + geom_bar(aes(tumor_tissue_site, fill=type)) + b +l
+# fplot + geom_bar(aes(tumor_tissue_site, fill=tissue_source_site)) + b +l
 # Some tumors are not know for sure it is in the thyroid
 
 # History of the thyroid and type and gender
-fplot + geom_bar(aes(history_thyroid_disease, fill=type)) + b +l
-fplot + geom_bar(aes(history_thyroid_disease, fill=gender)) + b +l
+# fplot + geom_bar(aes(history_thyroid_disease, fill=type)) + b +l
+# fplot + geom_bar(aes(history_thyroid_disease, fill=gender)) + b +l
 
 # To be the proportion of gender on the samples
-fplot+geom_bar(aes(type, fill=gender)) + b + l
+# fplot+geom_bar(aes(type, fill=gender)) + b + l
 
 # Compare the source site of the samples
-fplot+geom_bar(aes(tissue_source_site, fill=gender)) + b + l
-fplot+geom_bar(aes(tissue_source_site, fill=type)) + b + l
+# fplot+geom_bar(aes(tissue_source_site, fill=gender)) + b + l
+# fplot+geom_bar(aes(tissue_source_site, fill=type)) + b + l
 
 # See how did they take care of homogenity in the tissue number extraction
-fplot + geom_bar(aes(lymph_nodes_examined)) + b + l
-fplot + geom_bar(aes(lymph_nodes_examined, fill=gender)) + b + l
-fplot + geom_bar(aes(lymph_nodes_examined, fill=type)) + b + l
-hist(as.numeric(filtered$lymph_nodes_examined), breaks=24) # Every 2 nodes
+# fplot + geom_bar(aes(as.numeric(lymph_nodes_examined))) + b + l
+# fplot + geom_bar(aes(lymph_nodes_examined, fill=gender)) + b + l
+# fplot + geom_bar(aes(lymph_nodes_examined, fill=type)) + b + l
+# hist(as.numeric(filtered$lymph_nodes_examined), breaks=24) # Every 2 nodes
 
 fplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill=gender))+b+l
 
 # Histogram of gender and tumor_focality over age
-fplot + geom_bar(aes(as.numeric(age_at_diagnosis), fill=gender))+b+l
-fplot +geom_bar(aes(as.numeric(age_at_diagnosis), fill=tumor_focality), na.rm=T)+ b + l
+# fplot +geom_bar(aes(as.numeric(age_at_diagnosis), fill=tumor_focality), na.rm=T)+ b + l
 
 # Gender on residual tumor
-fplot+geom_bar(aes(residual_tumor, fill=gender))+b
+# fplot+geom_bar(aes(residual_tumor, fill=gender))+b
 
-fplot+geom_bar(aes(type, fill=gender))+b
+# fplot+geom_bar(aes(type, fill=gender))+b
 
 # Did he/she had  other malignancy?
-fplot+geom_bar(aes(type, fill=history_other_malignancy))+b
+# fplot+geom_bar(aes(type, fill=history_other_malignancy))+b
 
 # How was the diagnostic done
 fplot+geom_bar(aes(histologic_diagnosis, fill=gender))+b+l
 
 # Where on the thyroid was placed
-fplot+geom_bar(aes(laterality, fill=type))+b+l
+# fplot+geom_bar(aes(laterality, fill=type))+b+l
 
-fplot+geom_point(aes(age_at_diagnosis, lymph_nodes_examined))+b
-fplot+geom_point(aes(as.numeric(age_at_diagnosis), as.numeric(lymph_nodes_examined)))+b
+# fplot+geom_point(aes(age_at_diagnosis, lymph_nodes_examined))+b
+# fplot+geom_point(aes(as.numeric(age_at_diagnosis), as.numeric(lymph_nodes_examined)))+b
 
 # Correlating size
-fplot+geom_violin(aes(tumor_size_width.1, tumor_size_width.2))+b
-fplot+geom_point(aes(tumor_size_width.1, tumor_size_width.2))+geom_density2d(aes(tumor_size_width.1, tumor_size_width.2))+b
-fplot+geom_violin(aes(tumor_size_width.1, tumor_size_width))+b
-fplot+geom_violin(aes(tumor_size_width.2, tumor_size_width))+b
+# fplot+geom_violin(aes(tumor_size_width.1, tumor_size_width.2))+b
+# fplot+geom_point(aes(tumor_size_width.1, tumor_size_width.2))+geom_density2d(aes(tumor_size_width.1, tumor_size_width.2))+b
+# fplot+geom_violin(aes(tumor_size_width.1, tumor_size_width))+b
+# fplot+geom_violin(aes(tumor_size_width.2, tumor_size_width))+b
 
 # fplot+geom_point(aes(history_radiation_exposure, age_at_diagnosis))+b+l
-fplot+geom_bar(aes(age_at_diagnosis, fill=history_radiation_exposure))+b+l
+# fplot+geom_bar(aes(age_at_diagnosis, fill=history_radiation_exposure))+b+l
 
 fplot+geom_bar(aes(age_at_diagnosis, fill=histologic_diagnosis))+b+l
 
@@ -193,6 +194,7 @@ tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
                                     race == "WHITE" &
     histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
         ethnicity == "NOT HISPANIC OR LATINO" ))
+
 participants <- unlist(lapply(tumor_names, substr, start = 9, stop = 12))
 
 participants <- participants[participants != ""]
