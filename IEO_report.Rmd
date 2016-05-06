@@ -355,8 +355,8 @@ barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 
-ord <- order(dge.subset$sample$lib.size/1e6)
-barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
+ord.subset <- order(dge.subset$sample$lib.size/1e6)
+barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
+        xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
