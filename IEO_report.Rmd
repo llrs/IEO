@@ -429,7 +429,7 @@ to filter out lowly-expressed genes.
 mask <- avgexp > 1
 sum(mask)
 thca.filtered <- thca.filtered[mask, ]
-dge <- dge.subset[mask, ]
+dge.subset <- dge.subset[mask, ]
 ```
 
 ### Normalization
@@ -442,6 +442,38 @@ dge.subset <- calcNormFactors(dge.subset)
 
 Replace the raw log2 CPM units in the corresponding assay element of the `SummarizedExperiment`
 object, by the normalized ones.
+
+```{r}
+assays(thca.filtered)$logCPM <- cpm(dge.subset, log = TRUE, prior.count = 3)
+```
+
+### MA-plots
+
+We examine now the MA-plots of the normalized expression profiles. We look first to
+the tumor samples.
+
+<!---
+Here we make a MA-plot for each sample. The options 'fig.height' and 'fig.width'
+control the relative image size in *inches*. The final image size results from
+'height'x'dpi' and 'width'x'dpi', where 'dpi' is the image resolution in
+"dots per inch" (by default dpi = 72). To scale the image to a desired size use
+'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
+--->
+
+```{r maPlotsTumor, fig.height = 36, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples."}
+par(mfrow = c(22, 3), mar = c(4, 5, 3, 1))
+setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
+dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
+for (i in 1:ncol(setmp)) {
+  A <- rowMeans(assays(setmp)$logCPM)
+  M <- assays(setmp)$logCPM[, i] - A
+  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
+  smoothScatter(A, M, main = samplename, las = 1)
+  abline(h = 0, col = "blue", lwd = 2)
+  lo <- lowess(M ~ A)
+  lines(lo$x, lo$y, col = "red", lwd = 2)
+}
+```
 
 ##Bibliography
 
