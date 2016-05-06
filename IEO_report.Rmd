@@ -246,7 +246,6 @@ We decided a threshold of 60%:
 ```{r select.filtered}
 filtered <- meta.info[, variable.info  > 0.6]
 meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
-head(filtered)
 ```
 
 To explore the data we first create an object to explore with `ggplot`:
@@ -312,8 +311,8 @@ check <- function(x, checklist){
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
 ```
 
-We explore again the variables for these subset
-```{r}
+We explore again the variables for these subset:
+```{r subset.explore}
 meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(meta.filtered.subset)
 mplot + geom_bar(aes(type, fill = gender)) + b
@@ -325,6 +324,7 @@ mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender))+b+l
 mplot + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l
 ```
+
 
 To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
