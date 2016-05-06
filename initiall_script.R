@@ -206,12 +206,14 @@ check <- function(x, checklist){
 }
 
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist=participants))
+meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 
 # Repeat plottings for filtered patients
 thca_expr <- assays(thca)$counts
 
 # Normalization just with the selected samples
-dge <- DGEList(counts=thca_expr[, colnames(thca_expr) %in% sample_names], genes=mcols(thca))
+dge.subset <- DGEList(counts=thca_expr[, colnames(thca_expr) %in% sample_names], genes=mcols(thca))
+dge <- DGEList(counts=thca_expr, genes=mcols(thca))
 
 ## Normalization: CPM scaling
 dge <- DGEList(counts = assays(thca)$counts, group = filtered$type,

@@ -279,7 +279,52 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender))+b+l
 fplot + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l
 ```
 
-We can see in `r fig$ref("Figure S1")` the data has some patterns
+We can see in `r fig$ref("Figure S1")` the data has some patterns, there are more females than males, and much more tumoral than normal samples.
+
+We decide to perform the analysis on the white population not hispanic or latino, whose tumoral sample correspond to the most common cancer in thyroids the Thyroid Papillary Carcinoma. To have more inshight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
+
+```{r subset}
+ #Paired data
+paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
+paired_mask <- thca$bcr_patient_barcode %in% paired
+
+filtered_filt <- filtered[paired_mask, ]
+
+# Imposing the selected conditions
+tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
+                                    race == "WHITE" &
+    histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
+        ethnicity == "NOT HISPANIC OR LATINO" ))
+
+# Extracting the participants identifiers
+participants <- unlist(lapply(tumor_names, substr, start = 9, stop = 12))
+participants <- participants[participants != ""]
+
+check <- function(x, checklist){
+    # Returning name of the sample just if the name is the same as in checklist
+    a <- substr(x, 9, 12)
+    if(a %in% checklist){
+        return(x)
+    }
+}
+
+# extracting sample names of tumor and normal data.
+sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
+```
+
+We explore again the variables for these subset
+```{r}
+meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
+mplot <- ggplot(meta.filtered.subset)
+mplot + geom_bar(aes(type, fill = gender)) + b
+mplot + geom_bar(aes(type, fill = tumor_status)) + b
+mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
+mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l
+mplot + geom_bar(aes(x=gender, fill = race)) + b + l
+mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l
+mplot + geom_bar(aes(histologic_diagnosis, fill = gender))+b+l
+mplot + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l
+```
 
 To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
@@ -287,15 +332,19 @@ create a `DGEList' object.
 
 ```{r}
 library(edgeR)
+thca_expr <- assays(thca)$counts
 
-dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
+# Normalization just with the selected samples
+dge.subset <- DGEList(counts=thca_expr[, colnames(thca_expr) %in% sample_names], genes=mcols(thca))
+dge <- DGEList(counts=thca_expr, genes=mcols(thca))
 ```
 
 Now calculate $\log_2$ CPM values of expression and put them as an additional
 assay element to ease their manipulation.
 
 ```{r}
-assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=0.5)
+# Using the normalized value changing the pior count to 3
+assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=3) 
 assays(thca)$logCPM[1:5, 1:5]
 logCPM <- assays(thca)$logCPM
 ```
