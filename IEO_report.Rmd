@@ -150,8 +150,7 @@ We start importing the raw table of counts.
 
 ```{r start}
 library(SummarizedExperiment)
-# MARINA!!:
-# Recorda marina que aquí ho tens en un altre directori: file.path("data", 
+
 thca <- readRDS("seTHCA.rds") 
 thca
 ```
@@ -293,6 +292,7 @@ check <- function(x, checklist){
 
 # extracting sample names of tumor and normal data.
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
+thca.filtered <- thca[,sample_names]
 ```
 
 We explore again the variables for these subset:
@@ -316,11 +316,10 @@ create a `DGEList' object.
 
 ```{r}
 library(edgeR)
-thca_expr <- assays(thca)$counts
-thca.counts.filtered <- thca_expr[, colnames(thca_expr) %in% sample_names]
+
 # Normalization just with the selected samples
-dge.subset <- DGEList(counts=thca.counts.filtered, genes=mcols(thca))
-dge <- DGEList(counts=thca_expr, genes=mcols(thca))
+dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
+dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
 ```
 
 Now calculate $\log_2$ CPM values of expression and put them as an additional
@@ -333,9 +332,9 @@ assays(thca)$logCPM[1:5, 1:5]
 logCPM <- assays(thca)$logCPM
 
 # Just the subset
-thca.counts.filtered$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
-thca.counts.filtered$logCPM[1:5, 1:5]
-logCPM <- thca.counts.filtered$logCPM
+assays(thca.filtered)$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
+assays(thca.filtered)$logCPM[1:5, 1:5]
+logCPM <- assays(thca.filtered)$logCPM
 ```
 
 ## Quality assessment and normalization
