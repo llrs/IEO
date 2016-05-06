@@ -144,13 +144,37 @@ output: html_document
 #### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
 #### Inés Sentís (mail) 
 
+## Introduction
+
+This document should be processed from R and you need to install the packages
+[knitr](http://cran.r-project.org/web/packages/knitr/index.html) and
+[markdown](http://cran.r-project.org/web/packages/markdown/index.html). Once
+they are installed, you have to type the following instructions that generate
+a HTML document that you can open with a web browser:
+
+```
+library(knitr)     ## required for "knitting" from Rmd to md
+library(markdown)  ## required for processing from md to HTML
+knit2html("IEO_report.Rmd")  ## process Rmd to HTML
+browseURL("IEO_report.html") ## open the resulting HTML file from R
+```
+Thyroid cancer develops in the follicular cells of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight ( http://cancergenome.nih.gov/cancersselected/thyroid). 
+
+From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old( http://cancergenome.nih.gov/cancersselected/thyroid).
+
+Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
+
+Research from The Cancer Genome Atlas focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer(Agrawal et al., 2014).
+
+
 ## Data import
 
 We start importing the raw table of counts.
 
 ```{r start}
 library(SummarizedExperiment)
-
+# MARINA!!:
+# Recorda marina que aquí ho tens en un altre directori: file.path("data", 
 thca <- readRDS("seTHCA.rds") 
 thca
 ```
@@ -223,12 +247,13 @@ relative.info <- variable.info[order(variable.info)]/sum(variable.info)
 plot(relative.info, main="Information brought by column")
 ```
 
-As we can see in many  variables with just `NA` and very few with other values. 
+As we can see many variables with just `NA` and very few with other values. 
 We decided a threshold of 60%:
 
 ```{r select.filtered}
 filtered <- meta.info[, variable.info  > 0.6]
 meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
+head(filtered)
 ```
 
 To explore the data we first create an object to explore with `ggplot`:
@@ -261,54 +286,7 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender))+b+l
 fplot + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l
 ```
 
-We can see in `r fig$ref("Figure S1")` the data has some patterns, there are more females than males, and much more tumoral than normal samples.
-
-We decide to perform the analysis on the white population not hispanic or latino, whose tumoral sample correspond to the most common cancer in thyroids the Thyroid Papillary Carcinoma. To have more inshight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
-
-```{r subset}
- #Paired data
-paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
-paired_mask <- thca$bcr_patient_barcode %in% paired
-
-filtered_filt <- filtered[paired_mask, ]
-
-# Imposing the selected conditions
-tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
-                                    race == "WHITE" &
-    histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
-        ethnicity == "NOT HISPANIC OR LATINO" ))
-
-# Extracting the participants identifiers
-participants <- unlist(lapply(tumor_names, substr, start = 9, stop = 12))
-participants <- participants[participants != ""]
-
-check <- function(x, checklist){
-    # Returning name of the sample just if the name is the same as in checklist
-    a <- substr(x, 9, 12)
-    if(a %in% checklist){
-        return(x)
-    }
-}
-
-# extracting sample names of tumor and normal data.
-sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
-thca.filtered <- thca[,sample_names]
-```
-
-We explore again the variables for these subset:
-```{r subset.explore}
-meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
-mplot <- ggplot(meta.filtered.subset)
-mplot + geom_bar(aes(type, fill = gender)) + b
-mplot + geom_bar(aes(type, fill = tumor_status)) + b
-mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
-mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l
-mplot + geom_bar(aes(x=gender, fill = race)) + b + l
-mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l
-mplot + geom_bar(aes(histologic_diagnosis, fill = gender))+b+l
-mplot + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l
-```
-
+We can see in `r fig$ref("Figure S1")` the data has some patterns
 
 To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
@@ -317,8 +295,6 @@ create a `DGEList' object.
 ```{r}
 library(edgeR)
 
-# Normalization just with the selected samples
-dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
 dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
 ```
 
@@ -326,16 +302,26 @@ Now calculate $\log_2$ CPM values of expression and put them as an additional
 assay element to ease their manipulation.
 
 ```{r}
-# Using the normalized value changing the pior count to 3
-assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=3) 
+assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=0.5)
 assays(thca)$logCPM[1:5, 1:5]
 logCPM <- assays(thca)$logCPM
-
-# Just the subset
-assays(thca.filtered)$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
-assays(thca.filtered)$logCPM[1:5, 1:5]
-logCPM <- assays(thca.filtered)$logCPM
 ```
+
+##Filtering and subsampling
+
+Subsampling paired samples.
+
+```{r}
+dge$samples$group <- thca$type
+
+paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
+
+paired_mask <- thca$bcr_patient_barcode %in% paired
+
+dge_filt <- dge[, paired_mask]
+
+```
+
 
 ## Quality assessment and normalization
 
@@ -353,9 +339,13 @@ ord <- order(dge$sample$lib.size/1e6)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
-
-ord.subset <- order(dge.subset$sample$lib.size/1e6)
-barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1])
-legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
+
+##Bibliography
+
+  Agrawal, N., Akbani, R., Aksoy, B. A., Ally, A., Arachchi, H., Asa, S. L., . Zou, L. (2014). Integrated Genomic Characterization of Papillary Thyroid Carcinoma. Cell, 159(3), 676-690. 
+  Http://cancergenome.nih.gov/. (n.d.). http://cancergenome.nih.gov/. Retrieved May 6, 2016, from http://cancergenome.nih.gov/cancersselected/thyroid
+  Xing, M. (2013). Molecular pathogenesis and mechanisms of thyroid cancer. Nature Reviews. Cancer, 13(3), 184-99. 
+
+ 
+
