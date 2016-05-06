@@ -460,8 +460,8 @@ control the relative image size in *inches*. The final image size results from
 'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
 --->
 
-```{r maPlotsTumor, fig.height = 36, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples."}
-par(mfrow = c(22, 3), mar = c(4, 5, 3, 1))
+```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples."}
+par(mfrow = c(11, 3), mar = c(4, 5, 3, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
 for (i in 1:ncol(setmp)) {
@@ -474,6 +474,109 @@ for (i in 1:ncol(setmp)) {
   lines(lo$x, lo$y, col = "red", lwd = 2)
 }
 ```
+
+We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
+
+```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S5: MA-plots of the normal samples."}
+par(mfrow = c(11, 3), mar = c(4, 5, 3, 1))
+setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
+dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
+for (i in 1:ncol(setmp)) {
+  A <- rowMeans(assays(setmp)$logCPM)
+  M <- assays(setmp)$logCPM[, i] - A
+  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
+  smoothScatter(A, M, main = samplename, las = 1)
+  abline(h = 0, col = "blue", lwd = 2)
+  lo <- lowess(M ~ A)
+  lines(lo$x, lo$y, col = "red", lwd = 2)
+}
+```
+
+We do not observe either important expression-level dependent biases among the normal samples.
+
+### Batch identification
+
+We will search now for potential surrogate of batch effect indicators. Given that each sample
+names corresponds to a TCGA barcode (see https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode),
+following the strategy described in http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview
+we are going to derive different elements of the TCGA barcode and examine their distribution
+across samples.
+
+```{r}
+tss <- substr(sample_names, 6, 7)
+table(tss)
+center <- substr(sample_names, 27, 28)
+table(center)
+plate <- substr(sample_names, 22, 25)
+table(plate)
+portionanalyte <- substr(sample_names, 18, 20)
+table(portionanalyte)
+samplevial <- substr(sample_names, 14, 16)
+table(samplevial)
+```
+
+We can observe that they come from several tissues source sites, but all from the same center. However they come from 10 different plates, from 5 portionanalyte and 3 vials.
+
+
+We are going to check  if the TSS as surrogate of batch effect indicator. Considering our outcome
+of interest as molecular changes between sample types, tumor vs. normal, we will examine now
+the cross-classification of this outcome with TSS.
+
+```{r}
+table(data.frame(TYPE = thca.filtered$type, TSS = tss))
+# We will check for the other variables
+table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
+table(data.frame(TYPE = thca.filtered$type, Portionanalyte = portionanalyte))
+table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
+```
+
+As expected the TSS is not influencing, neither is the plate, but the Portionanalyte and the vial may induce a batch effect
+
+```{r sampleClustering, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S6: Hierarchical clustering of the samples."}
+d <- as.dist(1-cor(logCPM, method = "spearman"))
+sampleClustering <- hclust(d)
+sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
+outcome <- paste(substr(sample_names, 9, 12), as.character(thca.filtered$type), sep = "-")
+names(outcome) <- sample_names
+
+plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL){
+    # Function to see the batch
+    # Given a sampleDendogram use batching to colour the leafs by sample.names of se
+    if (is.null(sample.names)){
+        sample.names = colnames(se)
+    }
+    batch <- as.integer(factor(batching))
+    names(batch) <- sample.names
+    sampleDendrogram <- dendrapply(sampleDendrogram,
+                                   function(x, batch, labels) {
+                                     if (is.leaf(x)) {
+                                       attr(x, "nodePar") <- list(lab.col = as.vector(batch[attr(x, "label")]))
+                                       attr(x, "label") <- as.vector(labels[attr(x, "label")])
+                                     }
+                                     x
+                                   }, batch, outcome)
+    plot(sampleDendrogram, main = "Hierarchical clustering of samples")
+    legend("topright", paste("Batch", sort(unique(batch)), levels(factor(batching))), fill = sort(unique(batch)))
+}
+
+plot.batch(sampleDendrogram, portionanalyte, thca.filtered, outcome, sample_names)
+plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
+```
+
+We conclude that there isn't a batch effect due to this variables. But to doble check we perform a PCA:
+
+
+```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
+for (batching in list(portionanalyte, samplevial)){
+    batch <- as.integer(factor(batching))
+    names(batch) <- sample_names
+    plotMDS(dge.subset, labels = outcome, col = batch)
+    legend("bottomleft", paste("Batch", sort(unique(batch)), levels(factor(batching))),
+           fill = sort(unique(batch)), inset = 0.05)
+}
+
+```
+
 
 ##Bibliography
 
