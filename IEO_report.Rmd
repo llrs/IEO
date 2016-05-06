@@ -144,22 +144,6 @@ output: html_document
 #### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
 #### Inés Sentís (mail) 
 
-## Introduction
-
-This document should be processed from R and you need to install the packages
-[knitr](http://cran.r-project.org/web/packages/knitr/index.html) and
-[markdown](http://cran.r-project.org/web/packages/markdown/index.html). Once
-they are installed, you have to type the following instructions that generate
-a HTML document that you can open with a web browser:
-
-```
-library(knitr)     ## required for "knitting" from Rmd to md
-library(markdown)  ## required for processing from md to HTML
-knit2html("IEO_report.Rmd")  ## process Rmd to HTML
-browseURL("IEO_report.html") ## open the resulting HTML file from R
-```
-
-
 ## Data import
 
 We start importing the raw table of counts.
@@ -240,7 +224,7 @@ relative.info <- variable.info[order(variable.info)]/sum(variable.info)
 plot(relative.info, main="Information brought by column")
 ```
 
-As we can see many variables with just `NA` and very few with other values. 
+As we can see in many  variables with just `NA` and very few with other values. 
 We decided a threshold of 60%:
 
 ```{r select.filtered}
@@ -333,9 +317,9 @@ create a `DGEList' object.
 ```{r}
 library(edgeR)
 thca_expr <- assays(thca)$counts
-
+thca.counts.filtered <- thca_expr[, colnames(thca_expr) %in% sample_names]
 # Normalization just with the selected samples
-dge.subset <- DGEList(counts=thca_expr[, colnames(thca_expr) %in% sample_names], genes=mcols(thca))
+dge.subset <- DGEList(counts=thca.counts.filtered, genes=mcols(thca))
 dge <- DGEList(counts=thca_expr, genes=mcols(thca))
 ```
 
@@ -347,23 +331,12 @@ assay element to ease their manipulation.
 assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=3) 
 assays(thca)$logCPM[1:5, 1:5]
 logCPM <- assays(thca)$logCPM
+
+# Just the subset
+thca.counts.filtered$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
+thca.counts.filtered$logCPM[1:5, 1:5]
+logCPM <- thca.counts.filtered$logCPM
 ```
-
-##Filtering and subsampling
-
-Subsampling paired samples.
-
-```{r}
-dge$samples$group <- thca$type
-
-paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
-
-paired_mask <- thca$bcr_patient_barcode %in% paired
-
-dge_filt <- dge[, paired_mask]
-
-```
-
 
 ## Quality assessment and normalization
 
@@ -378,6 +351,11 @@ you can control the height and width in pixels of the figure with 'out.height' a
 
 ```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S1: Library sizes in increasing order."}
 ord <- order(dge$sample$lib.size/1e6)
+barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
+        xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
+legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
+
+ord <- order(dge.subset$sample$lib.size/1e6)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
