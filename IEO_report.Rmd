@@ -144,6 +144,15 @@ output: html_document
 #### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
 #### Inés Sentís (mail) 
 
+## Introduction
+Thyroid cancer develops in the follicular cells of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight ( http://cancergenome.nih.gov/cancersselected/thyroid). 
+
+From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old( http://cancergenome.nih.gov/cancersselected/thyroid).
+
+Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
+
+Research from The Cancer Genome Atlas focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer(Agrawal et al., 2014).
+
 ## Data import
 
 We start importing the raw table of counts.
@@ -365,6 +374,3 @@ legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
   Agrawal, N., Akbani, R., Aksoy, B. A., Ally, A., Arachchi, H., Asa, S. L., . Zou, L. (2014). Integrated Genomic Characterization of Papillary Thyroid Carcinoma. Cell, 159(3), 676-690. 
   Http://cancergenome.nih.gov/. (n.d.). http://cancergenome.nih.gov/. Retrieved May 6, 2016, from http://cancergenome.nih.gov/cancersselected/thyroid
   Xing, M. (2013). Molecular pathogenesis and mechanisms of thyroid cancer. Nature Reviews. Cancer, 13(3), 184-99. 
-
- 
-
