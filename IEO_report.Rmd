@@ -627,7 +627,8 @@ using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 ```{r sva.model}
 library(sva)
 variables <- c("tumor_size_width.1", "tumor_size_width.2", "tumor_size_width", "gender", "age_at_diagnosis", "tumor_tissue_site", "histologic_diagnosis", "ajcc_pathologic_tumor_stage","residual_tumor", "type" )
-mod <- model.matrix(~ variables + variables^2, filtered[sample_names,])
+form <- as.formula(paste("~", paste(variables, collapse="*")))
+mod <- model.matrix(form, filtered[sample_names,])
 mod0 <- model.matrix(~ 1, colData(thca.filtered))
 pv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, mod, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
