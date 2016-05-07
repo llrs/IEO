@@ -146,9 +146,9 @@ output: html_document
 
 ## Introduction
 
-Thyroid cancer develops in the follicular cells of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight ( http://cancergenome.nih.gov/cancersselected/thyroid). 
+Thyroid cancer develops in the follicular cells of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [see it on cancergenome](http://cancergenome.nih.gov/cancersselected/thyroid). 
 
-From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old( http://cancergenome.nih.gov/cancersselected/thyroid).
+From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years [old](http://cancergenome.nih.gov/cancersselected/thyroid).
 
 Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
 
@@ -158,7 +158,7 @@ Research from The Cancer Genome Atlas focused on PTC and they found that a part 
 
 We start importing the raw table of counts.
 
-```{r start}
+```{r start, message=FALSE}
 library(SummarizedExperiment)
 
 thca <- readRDS("seTHCA.rds") 
@@ -326,9 +326,10 @@ create a `DGEList' object.
 
 ```{r}
 library(edgeR)
+thca.filtered.counts <- assays(thca.filtered)$counts
 
 # Normalization just with the selected samples
-dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
+dge.subset <- DGEList(counts=thca.filtered.counts, genes=mcols(thca.filtered))
 dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
 ```
 
@@ -404,9 +405,34 @@ multidensity(as.list(as.data.frame(assays(thca.filtered[, thca.filtered$type == 
              xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
 
+Seeing this plots we suspect the two spikes are due to the effect of the read length and GC content of each transcript. Therefore we will correct them with the package cqn:
 
-We do not appreciate substantial differences between the samples in the
-distribution of expression values.
+```{r cqn, message=FALSE}
+library("cqn")
+cqn.subset <- cqn(thca.filtered.counts, lengths = rowRanges(thca.filtered)$txlen,
+                  x = rowRanges(thca.filtered)$txgc,
+                  sizeFactors = colSums(thca.filtered.counts))
+par(mfrow=c(1,2))
+cqnplot(cqn.subset, n = 1, xlab = "GC content", lty = 1, ylim = c(3, 7))
+cqnplot(cqn.subset, n = 2, xlab = "length", lty = 1, ylim = c(3, 7))
+```
+
+As we can see there is more variance on the extremes values of GC content and length, and more variability due to GC than due to length.
+
+We can see if the distribution of expression values per sample in terms of logarithmic CPM units. Due to the large number of samples, we display tumor and normal samples separately:
+
+```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S2: Non-parametric density distribution of expression profiles per sample."}
+cqn.logCPM <- cqn.subset$y + cqn.subset$offset
+par(mfrow = c(1, 3))
+multidensity(as.list(as.data.frame(cqn.logCPM[,thca.filtered$type ==  "tumor"])),
+             xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
+multidensity(as.list(as.data.frame(cqn.logCPM)),
+             xlab = "log 2 CPM", legend = NULL, main = "All samples", las = 1)
+multidensity(as.list(as.data.frame(cqn.logCPM[, thca.filtered$type ==  "normal"])),
+             xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+```
+
+We can clearly see that this are quite better than the previous ones used without GC and length normalization. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values.
 
 ### Distribution of expression levels among genes
 
@@ -414,8 +440,12 @@ Let's calculate now the average expression per gene through all the samples. Fig
 shows the distribution of those values across genes.
 
 ```{r exprdist, out.width = "400px", fig.cap = "Figure S3: Distribution of average expression level per gene."}
+par(mfrow = c(1, 2))
 avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "", las = 1)
+abline(v = 1, col = "red", lwd = 2)
+
+hist(rowMeans(cqn.logCPM), xlab = "log2 CPM", main = "", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 ```
 
@@ -497,9 +527,7 @@ We do not observe either important expression-level dependent biases among the n
 ### Batch identification
 
 We will search now for potential surrogate of batch effect indicators. Given that each sample
-names corresponds to a TCGA barcode (see https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode),
-following the strategy described in http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview
-we are going to derive different elements of the TCGA barcode and examine their distribution
+names corresponds to a TCGA barcode (see the [wiki](https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode)), following the strategy described [here](http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview) we are going to derive different elements of the TCGA barcode and examine their distribution
 across samples.
 
 ```{r}
@@ -563,7 +591,7 @@ plot.batch(sampleDendrogram, portionanalyte, thca.filtered, outcome, sample_name
 plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
 ```
 
-We conclude that there isn't a batch effect due to this variables. But to doble check we perform a PCA:
+We conclude that there isn't a batch effect due to this variables, but there are two samples classified as tumoral that cluster with normal samples, therefore,  to doble check we perform a PCA:
 
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
@@ -571,12 +599,19 @@ for (batching in list(portionanalyte, samplevial)){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
     plotMDS(dge.subset, labels = outcome, col = batch)
-    legend("bottomleft", paste("Batch", sort(unique(batch)), levels(factor(batching))),
+    legend("topright", paste("Batch", sort(unique(batch)), levels(factor(batching))),
            fill = sort(unique(batch)), inset = 0.05)
 }
-
 ```
 
+We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. 
+
+
+## SessionInfo
+
+```{r}
+sessionInfo()
+```
 
 ##Bibliography
 
