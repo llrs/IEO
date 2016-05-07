@@ -324,25 +324,18 @@ To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
 create a `DGEList' object.
 
-```{r}
+```{r edgeR, message = FALSE}
 library(edgeR)
-thca.filtered.counts <- assays(thca.filtered)$counts
 
 # Normalization just with the selected samples
-dge.subset <- DGEList(counts=thca.filtered.counts, genes=mcols(thca.filtered))
+dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
 dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
 ```
 
 Now calculate $\log_2$ CPM values of expression and put them as an additional
 assay element to ease their manipulation.
 
-```{r}
-# Using the normalized value changing the pior count to 3
-assays(thca)$logCPM <- cpm(dge, log=TRUE, prior.count=3) 
-assays(thca)$logCPM[1:5, 1:5]
-logCPM <- assays(thca)$logCPM
-
-# Just the subset
+```{r logCPM}
 assays(thca.filtered)$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
 assays(thca.filtered)$logCPM[1:5, 1:5]
 logCPM <- assays(thca.filtered)$logCPM
@@ -376,10 +369,16 @@ and we may consider discarding those samples whose depth is substantially lower
 than the rest. To identify who are these samples we may simply look at the
 actual numbers including portion of the sample identifier that distinguishes them.
 
-```{r}
+```{r libsize}
 sampledepth <- round(dge.subset$sample$lib.size / 1e6, digits = 1)
 names(sampledepth) <- substr(sample_names, 6, 12)
-sort(sampledepth)
+qqnorm(sampledepth)
+qqline(sampledepth)
+# Looking into the qqplot we decide to filter out those below 40 or above 70.
+sample_names <- sample_names[sampledepth > 40 & sampledepth < 70]
+
+thca.filtered <- thca.filtered[, colnames(thca.filtered) %in% sample_names]
+dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
 ```
 
 
@@ -409,25 +408,24 @@ Seeing this plots we suspect the two spikes are due to the effect of the read le
 
 ```{r cqn, message=FALSE}
 library("cqn")
-cqn.subset <- cqn(thca.filtered.counts, lengths = rowRanges(thca.filtered)$txlen,
+cqn.subset <- cqn(assays(thca.filtered)$counts, lengths = rowRanges(thca.filtered)$txlen,
                   x = rowRanges(thca.filtered)$txgc,
-                  sizeFactors = colSums(thca.filtered.counts))
+                  sizeFactors = colSums(assays(thca.filtered)$counts))
 par(mfrow=c(1,2))
-cqnplot(cqn.subset, n = 1, xlab = "GC content", lty = 1, ylim = c(3, 7))
-cqnplot(cqn.subset, n = 2, xlab = "length", lty = 1, ylim = c(3, 7))
+cqnplot(cqn.subset, n = 1, xlab = "GC content", lty = 1)
+cqnplot(cqn.subset, n = 2, xlab = "length", lty = 1)
 ```
 
-As we can see there is more variance on the extremes values of GC content and length, and more variability due to GC than due to length.
+As we can see there is more variance on the extremes values of GC content and length, and more variability due to length than due to GC.
 
 We can see if the distribution of expression values per sample in terms of logarithmic CPM units. Due to the large number of samples, we display tumor and normal samples separately:
 
-```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S2: Non-parametric density distribution of expression profiles per sample."}
+```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S2: Non-parametric density distribution of expression profiles per sample."}
 cqn.logCPM <- cqn.subset$y + cqn.subset$offset
-par(mfrow = c(1, 3))
+assays(thca.filtered)$cqn.logCPM <- cqn.logCPM
+par(mfrow = c(1, 2))
 multidensity(as.list(as.data.frame(cqn.logCPM[,thca.filtered$type ==  "tumor"])),
              xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
-multidensity(as.list(as.data.frame(cqn.logCPM)),
-             xlab = "log 2 CPM", legend = NULL, main = "All samples", las = 1)
 multidensity(as.list(as.data.frame(cqn.logCPM[, thca.filtered$type ==  "normal"])),
              xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
@@ -445,7 +443,8 @@ avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 
-hist(rowMeans(cqn.logCPM), xlab = "log2 CPM", main = "", las = 1)
+avgexp <- rowMeans(assays(thca.filtered)$cqn.logCPM)
+hist(avgexp, xlab = "log2 CPM", main = "", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 ```
 
@@ -458,23 +457,16 @@ to filter out lowly-expressed genes.
 ```{r}
 mask <- avgexp > 1
 sum(mask)
-thca.filtered <- thca.filtered[mask, ]
+# thca.filtered <- thca.filtered[mask, ]
 dge.subset <- dge.subset[mask, ]
 ```
 
 ### Normalization
 
-We calculate now the normalization factors on the filtered expression data set.
+Since we will use the offsets computed by `cqn`, there is no need to normalize using the normalization tools from `edgeR`, such as `calcNormFactors`.
 
-```{r}
-dge.subset <- calcNormFactors(dge.subset)
-```
-
-Replace the raw log2 CPM units in the corresponding assay element of the `SummarizedExperiment`
-object, by the normalized ones.
-
-```{r}
-assays(thca.filtered)$logCPM <- cpm(dge.subset, log = TRUE, prior.count = 3)
+```{r norm}
+dge.subset$offset <- cqn.subset$glm.offset
 ```
 
 ### MA-plots
@@ -561,7 +553,7 @@ table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
 As expected the TSS is not influencing, neither is the plate, but the Portionanalyte and the vial may induce a batch effect
 
 ```{r sampleClustering, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S6: Hierarchical clustering of the samples."}
-d <- as.dist(1-cor(logCPM, method = "spearman"))
+d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
 outcome <- paste(substr(sample_names, 9, 12), as.character(thca.filtered$type), sep = "-")
