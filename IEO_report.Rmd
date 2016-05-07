@@ -202,6 +202,7 @@ na.replace <- function(x){
     lev <- lev[!(lev %in% "[Not Applicable]")]
     lev <- lev[!(lev %in% "[Not Available]|[Not Available]|[Not Available]")]
     lev <- lev[!(lev %in% "[Not Evaluated]")]
+    lev <- lev[!(lev %in% "None")]
 
     x <- factor(x, levels=lev)
 }
@@ -238,6 +239,7 @@ We decided a threshold of 60%:
 
 ```{r select.filtered}
 filtered <- meta.info[, variable.info  > 0.6]
+dim(filtered)
 meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
 ```
 
@@ -470,7 +472,7 @@ In the light of this plot, we may consider a cutoff of 1 log CPM unit as minimum
 of expression to select genes being expressed across samples. Using this cutoff we proceed
 to filter out lowly-expressed genes.
 
-```{r}
+```{r filter.low.expr}
 mask <- avgexp.cqn > 1
 sum(mask)
 # thca.filtered <- thca.filtered[mask, ]
@@ -538,7 +540,7 @@ We will search now for potential surrogate of batch effect indicators. Given tha
 names corresponds to a TCGA barcode (see the [wiki](https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode)), following the strategy described [here](http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview) we are going to derive different elements of the TCGA barcode and examine their distribution
 across samples.
 
-```{r}
+```{r barcodes}
 tss <- substr(sample_names, 6, 7)
 table(tss)
 samplevial <- substr(sample_names, 14, 16)
@@ -559,7 +561,7 @@ We are going to check  if the TSS as surrogate of batch effect indicator. Consid
 of interest as molecular changes between sample types, tumor vs. normal, we will examine now
 the cross-classification of this outcome with the variables:
 
-```{r}
+```{r table.barcodes}
 table(data.frame(TYPE = thca.filtered$type, TSS = tss))
 # We will check for the other variables
 table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
@@ -602,11 +604,10 @@ plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome, sample_names)
 ```
 
-There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can check it with a PCA
-
+There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
-for (batching in list(portion, as.character(thca.filtered$type))){
+for (batching in list(portion, as.character(thca.filtered$type), as.character(thca.filtered$gender))){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
     plotMDS(dge.subset, labels = outcome, col = batch)
@@ -615,12 +616,60 @@ for (batching in list(portion, as.character(thca.filtered$type))){
 }
 ```
 
-We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. 
+We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. And it seems that the females have more variance between healthy and tumoral.
+
+
+## Differential expression
+
+We perform a simple examination of expression changes and their associated p-values
+using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
+
+```{r sva.model}
+library(sva)
+variables <- c("tumor_size_width.1", "tumor_size_width.2", "tumor_size_width", "gender", "age_at_diagnosis", "tumor_tissue_site", "histologic_diagnosis", "ajcc_pathologic_tumor_stage","residual_tumor", "type" )
+mod <- model.matrix(~ variables + variables^2, filtered[sample_names,])
+mod0 <- model.matrix(~ 1, colData(thca.filtered))
+pv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, mod, mod0)
+sum(p.adjust(pv, method = "fdr") < 0.01)
+```
+
+There are `r sum(p.adjust(pv, method = "fdr") < 0.01)` genes changing significantly
+their expression at FDR < 1%. In Figure S8 below we show the distribution of the
+resulting p-values.
+
+```{r pdist, out.width = "400px", fig.cap = "Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
+hist(pv, main = "", las = 1)
+```
+
+Now, let's estimate surrogate variables using the `sva()` function.
+
+```{r sva.variables}
+sv <- sva(assays(thca.filtered)$cqn.logCPM, mod, mod0)
+sv$n
+```
+
+The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
+assess againt the extent of differential expression this time adjusting for these
+surrogate variables.
+
+```{r svn.ftest}
+modsv <- cbind(mod, sv$sv)
+mod0sv <- cbind(mod0, sv$sv)
+pvsv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, modsv, mod0sv)
+sum(p.adjust(pvsv, method = "fdr") < 0.01)
+```
+
+We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`.
+Figure S9 shows the resulting distribution of p-values.
+
+```{r psvdist, out.width = "400px", fig.cap = fig$cap("Figure S9","Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.")}
+hist(pvsv, main = "", las = 1)
+```
 
 
 ## SessionInfo
 
-```{r}
+```{r sessionInfo}
 sessionInfo()
 ```
 
