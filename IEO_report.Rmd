@@ -372,10 +372,25 @@ actual numbers including portion of the sample identifier that distinguishes the
 ```{r libsize}
 sampledepth <- round(dge.subset$sample$lib.size / 1e6, digits = 1)
 names(sampledepth) <- substr(sample_names, 6, 12)
+
 qqnorm(sampledepth)
 qqline(sampledepth)
-# Looking into the qqplot we decide to filter out those below 40 or above 70.
+```
+
+Looking into the qqplot we decide to filter out those below 40 or above 70 but keeping only those that are paired:
+
+```{r refiltering.names}
 sample_names <- sample_names[sampledepth > 40 & sampledepth < 70]
+
+keep.paired <- function(pattern, x){
+    # Return the names if it is paired
+    pos <- grep(pattern, x, fixed = TRUE)
+    if (length(pos) > 1){
+        return(x[pos])
+    }
+}
+
+sample_names <- unique(unlist(lapply(substr(sample_names, 9, 12), keep.paired, sample_names)))
 
 thca.filtered <- thca.filtered[, colnames(thca.filtered) %in% sample_names]
 dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
@@ -443,8 +458,9 @@ avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 
-avgexp <- rowMeans(assays(thca.filtered)$cqn.logCPM)
-hist(avgexp, xlab = "log2 CPM", main = "", las = 1)
+# Using the corrected logCPM
+avgexp.cqn <- rowMeans(assays(thca.filtered)$cqn.logCPM)
+hist(avgexp.cqn, xlab = "log2 CPM", main = "", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 ```
 
@@ -455,7 +471,7 @@ of expression to select genes being expressed across samples. Using this cutoff 
 to filter out lowly-expressed genes.
 
 ```{r}
-mask <- avgexp > 1
+mask <- avgexp.cqn > 1
 sum(mask)
 # thca.filtered <- thca.filtered[mask, ]
 dge.subset <- dge.subset[mask, ]
@@ -463,7 +479,7 @@ dge.subset <- dge.subset[mask, ]
 
 ### Normalization
 
-Since we will use the offsets computed by `cqn`, there is no need to normalize using the normalization tools from `edgeR`, such as `calcNormFactors`.
+Since we will use the offsets computed by `cqn`, there is no need to normalize using the normalization tools from `edgeR`, such as `calcNormFactors` according to cqn vignette.
 
 ```{r norm}
 dge.subset$offset <- cqn.subset$glm.offset
@@ -525,38 +541,39 @@ across samples.
 ```{r}
 tss <- substr(sample_names, 6, 7)
 table(tss)
-center <- substr(sample_names, 27, 28)
-table(center)
-plate <- substr(sample_names, 22, 25)
-table(plate)
-portionanalyte <- substr(sample_names, 18, 20)
-table(portionanalyte)
 samplevial <- substr(sample_names, 14, 16)
 table(samplevial)
+portion <- substr(sample_names, 18, 19)
+table(portion)
+table(substr(sample_names, 20, 20))
+plate <- substr(sample_names, 22, 25)
+table(plate)
+center <- substr(sample_names, 27, 28)
+table(center)
 ```
 
-We can observe that they come from several tissues source sites, but all from the same center. However they come from 10 different plates, from 5 portionanalyte and 3 vials.
-
+We can observe that they come from several tissues source sites, but all from the same center (	
+University of North Carolina) and the same metabolite (RNA). However they come from 10 different plates, from 5 portionanalyte and 3 vials.
 
 We are going to check  if the TSS as surrogate of batch effect indicator. Considering our outcome
 of interest as molecular changes between sample types, tumor vs. normal, we will examine now
-the cross-classification of this outcome with TSS.
+the cross-classification of this outcome with the variables:
 
 ```{r}
 table(data.frame(TYPE = thca.filtered$type, TSS = tss))
 # We will check for the other variables
 table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
-table(data.frame(TYPE = thca.filtered$type, Portionanalyte = portionanalyte))
+table(data.frame(TYPE = thca.filtered$type, Portion = portion))
 table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
 ```
 
-As expected the TSS is not influencing, neither is the plate, but the Portionanalyte and the vial may induce a batch effect
+To double check if they have some effect on the batch we make the hierarchical clustering of them:
 
 ```{r sampleClustering, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S6: Hierarchical clustering of the samples."}
 d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
-outcome <- paste(substr(sample_names, 9, 12), as.character(thca.filtered$type), sep = "-")
+outcome <- substr(sample_names, 9, 12)
 names(outcome) <- sample_names
 
 plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL){
@@ -575,23 +592,25 @@ plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL)
                                      }
                                      x
                                    }, batch, outcome)
-    plot(sampleDendrogram, main = "Hierarchical clustering of samples")
-    legend("topright", paste("Batch", sort(unique(batch)), levels(factor(batching))), fill = sort(unique(batch)))
+    plot(sampleDendrogram, main = "Hierarchical clustering")
+    legend("topright", paste("Batch", levels(factor(batching))), fill = sort(unique(batch)))
 }
 
-plot.batch(sampleDendrogram, portionanalyte, thca.filtered, outcome, sample_names)
+plot.batch(sampleDendrogram, portion, thca.filtered, outcome, sample_names)
 plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
+plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
+plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome, sample_names)
 ```
 
-We conclude that there isn't a batch effect due to this variables, but there are two samples classified as tumoral that cluster with normal samples, therefore,  to doble check we perform a PCA:
+There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can check it with a PCA
 
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
-for (batching in list(portionanalyte, samplevial)){
+for (batching in list(portion, as.character(thca.filtered$type))){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
     plotMDS(dge.subset, labels = outcome, col = batch)
-    legend("topright", paste("Batch", sort(unique(batch)), levels(factor(batching))),
+    legend("topright", paste("Batch", levels(factor(batching))),
            fill = sort(unique(batch)), inset = 0.05)
 }
 ```
