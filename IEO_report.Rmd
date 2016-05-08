@@ -146,7 +146,7 @@ output: html_document
 
 ## Introduction
 
-Thyroid cancer develops in the follicular cells of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [see it on cancergenome](http://cancergenome.nih.gov/cancersselected/thyroid). 
+Thyroid cancer can develop from the different cells that form the follicles of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [see it on cancergenome](http://cancergenome.nih.gov/cancersselected/thyroid). 
 
 From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years [old](http://cancergenome.nih.gov/cancersselected/thyroid).
 
