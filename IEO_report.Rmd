@@ -221,24 +221,24 @@ We applied this functions to the `col.data` and we visualized it:
 meta.info <- as.data.frame(lapply(col.data, na.replace))
 variable.info <- sapply(meta.info, filter.info)
 
-# Plotting the histogram of the information
-hist(variable.info, 
-     main = "Variables completness", xlab = "% of not NA of each variable")
-# Seeing the most informative to set a threshold,
-# frequency are the number of columns with such % of information
-hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35), 
-     main = "Variables completness", xlab = "% of not NA of each variable")
-
 # Representing the information by column vs total information
 relative.info <- variable.info[order(variable.info)]/sum(variable.info)
 plot(relative.info, main="Information brought by column")
+
+# Plotting the histogram of the information
+hist(variable.info, 
+     main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
+# Seeing the most informative to set a threshold,
+# frequency are the number of columns with such % of information
+hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35), 
+     main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
 ```
 
-As we can see in many  variables with just `NA` and very few with other values. 
-We decided a threshold of 60%:
+As we can see, in many variables the main value is just `NA` or other derivative which means "No information available for this variable". So in order to keep the most informative variables, we decided to apply a threshold of 60% (of the values containing informative data) to select the variables:
 
 ```{r select.filtered}
 filtered <- meta.info[, variable.info  > 0.6]
+
 dim(filtered)
 meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
 ```
@@ -317,6 +317,7 @@ check <- function(x, checklist){
 # extracting sample names of tumor and normal data.
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
 thca.filtered <- thca[,sample_names]
+colData(thca.filtered) <- filtered
 ```
 
 We explore again the variables for these subset:
@@ -640,10 +641,11 @@ using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 
 ```{r sva.model, cache=TRUE}
 library(sva)
-variables <- c("type", "gender")
-form <- as.formula(paste("~", paste(variables, collapse="+")))
-mod <- model.matrix(form, filtered[sample_names,])
-mod0 <- model.matrix(~ 1, colData(thca.filtered))
+variables0 <- colnames(filtered) # All variables available
+variables <- c("gender", "type") # Variables for the model
+form <- as.formula(paste("~ ", paste(variables, collapse = "+"))) # Building the model
+mod  <- model.matrix(form, data=colData(thca.filtered)[, variable.info > 0.6])
+mod0 <- model.matrix(~ 1 , data=colData(thca.filtered)[, variable.info > 0.6])
 pv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, mod, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
