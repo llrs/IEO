@@ -262,6 +262,7 @@ y.axis = ylab("number of cases")
 ```
 
 And we plot some relationships for some significant variables:
+In the "normal" type samples most of the information is not avalable. This could be due to that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infered "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
 ```{r plots, fig.cap = fig$cap("Figure S1","Exploring the col.data")}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
