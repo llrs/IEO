@@ -264,15 +264,25 @@ y.axis = ylab("number of cases")
 And we plot some relationships for some significant variables:
 
 ```{r plots, fig.cap = fig$cap("Figure S1","Exploring the col.data")}
-fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + ggtitle("Gender distribution across normal and tumour samples")
-fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + ggtitle("Tumor status across normal and tumour samples")
-fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + y.axis + ggtitle("... normal and tumour samples")
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + y.axis + scale_x_discrete(breaks=waiver(), labels=c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", "WHITE", "NA")) + ggtitle("Ethnicity and race ...")
+fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
+    ggtitle("Gender distribution across normal and tumour samples")
+fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + 
+    ggtitle("Tumor status across normal and tumour samples")
+fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + 
+    y.axis + ggtitle("... normal and tumour samples")
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + 
+    y.axis + scale_x_discrete(breaks=waiver(), 
+labels=c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", "WHITE", "NA")) +
+    ggtitle("Ethnicity and race ...")
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + ggtitle("some title")
 fplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis + xlab("tumor focality")
-hd.xaxis = scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), labels=c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA"))
-fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + y.axis + ggtitle("Gender distribution across different types of hystologic diagnosis")
-ggplot(na.omit(as.data.frame(filtered))) + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l +  labs(x="age at diagnosis", y = y.axis)+ scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
+hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
+                            labels=c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA"))
+fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + y.axis +
+    ggtitle("Gender distribution across different types of hystologic diagnosis")
+ggplot(na.omit(as.data.frame(filtered))) + geom_bar(aes(age_at_diagnosis, na.rm = T, fill = histologic_diagnosis)) + b + l +  labs(x="age at diagnosis", y = y.axis)+ scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), 
+ labels = c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA")) + 
+    ggtitle("Histologic diagnosis distribution across different ages")
 ```
 
 We can see in `r fig$ref("Figure S1")` the data has some patterns, there are more females than males, and much more tumoral than normal samples.
@@ -449,7 +459,7 @@ multidensity(as.list(as.data.frame(cqn.logCPM[, thca.filtered$type ==  "normal"]
              xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
 
-We can clearly see that this are quite better than the previous ones used without GC and length normalization. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values.
+We can clearly see that this are quite better than the previous ones used without GC and length normalization on the second spike. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values. However below 0 there is a lot of variability.
 
 ### Distribution of expression levels among genes
 
@@ -459,12 +469,12 @@ shows the distribution of those values across genes.
 ```{r exprdist, out.width = "400px", fig.cap = "Figure S3: Distribution of average expression level per gene."}
 par(mfrow = c(1, 2))
 avgexp <- rowMeans(assays(thca.filtered)$logCPM)
-hist(avgexp, xlab = "log2 CPM", main = "", las = 1)
+hist(avgexp, xlab = "log2 CPM", main = "Using DGEList normalization", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 
 # Using the corrected logCPM
 avgexp.cqn <- rowMeans(assays(thca.filtered)$cqn.logCPM)
-hist(avgexp.cqn, xlab = "log2 CPM", main = "", las = 1)
+hist(avgexp.cqn, xlab = "log2 CPM", main = "Using cqn normalization", las = 1)
 abline(v = 1, col = "red", lwd = 2)
 ```
 
@@ -502,8 +512,8 @@ control the relative image size in *inches*. The final image size results from
 'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
 --->
 
-```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples."}
-par(mfrow = c(11, 3), mar = c(4, 5, 3, 1))
+```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples.", cache=TRUE}
+par(mfrow = c(8, 3), mar = c(4, 5, 3, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
 for (i in 1:ncol(setmp)) {
@@ -519,8 +529,8 @@ for (i in 1:ncol(setmp)) {
 
 We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
 
-```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S5: MA-plots of the normal samples."}
-par(mfrow = c(11, 3), mar = c(4, 5, 3, 1))
+```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S5: MA-plots of the normal samples.", cache=TRUE}
+par(mfrow = c(8, 3), mar = c(4, 5, 3, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
 for (i in 1:ncol(setmp)) {
@@ -559,7 +569,7 @@ table(center)
 We can observe that they come from several tissues source sites, but all from the same center (	
 University of North Carolina) and the same metabolite (RNA). However they come from 10 different plates, from 5 portionanalyte and 3 vials.
 
-We are going to check  if the TSS as surrogate of batch effect indicator. Considering our outcome
+We are going to check if the TSS as surrogate of batch effect indicator. Considering our outcome
 of interest as molecular changes between sample types, tumor vs. normal, we will examine now
 the cross-classification of this outcome with the variables:
 
@@ -577,9 +587,10 @@ To double check if they have some effect on the batch we make the hierarchical c
 d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
-outcome <- substr(sample_names, 9, 12)
-names(outcome) <- sample_names
-
+outcome <- paste(substr(colnames(thca.filtered), 9, 12),
+                            as.character(thca.filtered$type), sep = "-")
+names(outcome) <- colnames(thca.filtered)
+par(mfrow = c(1,1))
 plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL){
     # Function to see the batch
     # Given a sampleDendogram use batching to colour the leafs by sample.names of se
@@ -589,13 +600,14 @@ plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL)
     batch <- as.integer(factor(batching))
     names(batch) <- sample.names
     sampleDendrogram <- dendrapply(sampleDendrogram,
-                                   function(x, batch, labels) {
-                                     if (is.leaf(x)) {
-                                       attr(x, "nodePar") <- list(lab.col = as.vector(batch[attr(x, "label")]))
-                                       attr(x, "label") <- as.vector(labels[attr(x, "label")])
-                                     }
-                                     x
-                                   }, batch, outcome)
+                           function(x, batch, labels) {
+                             if (is.leaf(x)) {
+                               attr(x, "nodePar") <- list(lab.col = as.vector(batch[attr(x, "label")]))
+                               attr(x, "label") <- as.vector(labels[attr(x, "label")])
+                             }
+                             x
+                           },
+                               batch, outcome)
     plot(sampleDendrogram, main = "Hierarchical clustering")
     legend("topright", paste("Batch", levels(factor(batching))), fill = sort(unique(batch)))
 }
@@ -603,9 +615,9 @@ plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL)
 plot.batch(sampleDendrogram, portion, thca.filtered, outcome, sample_names)
 plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
 plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome, sample_names)
 ```
 
+We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
@@ -613,8 +625,8 @@ for (batching in list(portion, as.character(thca.filtered$type), as.character(th
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
     plotMDS(dge.subset, labels = outcome, col = batch)
-    legend("topright", paste("Batch", levels(factor(batching))),
-           fill = sort(unique(batch)), inset = 0.05)
+    legend("bottomleft", paste("Batch", levels(factor(batching))),
+           fill = sort(unique(batch)), inset = 0.05, cex=0.7)
 }
 ```
 
@@ -626,10 +638,10 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 We perform a simple examination of expression changes and their associated p-values
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 
-```{r sva.model}
+```{r sva.model, cache=TRUE}
 library(sva)
-variables <- c("tumor_size_width.1", "tumor_size_width.2", "tumor_size_width", "gender", "age_at_diagnosis", "tumor_tissue_site", "histologic_diagnosis", "ajcc_pathologic_tumor_stage","residual_tumor", "type" )
-form <- as.formula(paste("~", paste(variables, collapse="*")))
+variables <- c("type", "gender")
+form <- as.formula(paste("~", paste(variables, collapse="+")))
 mod <- model.matrix(form, filtered[sample_names,])
 mod0 <- model.matrix(~ 1, colData(thca.filtered))
 pv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, mod, mod0)
