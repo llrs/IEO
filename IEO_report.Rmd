@@ -190,7 +190,7 @@ Looking deeper into col.data with:
 col.data[1:5, 30:35]
 ```
 
-We can observed that where some data not available indicated differently (NA, [Not Available]...) so we decided to study which variables have more information. To do so we created two functions, one (`na.replace`) to change those vales into the standarized `NA` nomenclature, and `filter.info` to quantify how many of each variable is not `NA`.
+We can observe there are different ways to indicate that the data is not available (NA, [Not Available]...). Consequently, we decide to study which variables have more information. To do so, we create two functions, one (`na.replace`) to change those values into the standarized `NA` nomenclature, and `filter.info` to quantify how many of each variable is not `NA`.
 
 ```{r functions}
 
@@ -215,7 +215,7 @@ filter.info <- function(x){
 }
 ```
 
-We applied this functions to the `col.data` and we visualized it:
+We apply these functions to the `col.data` and we visualize it:
 
 ```{r col.data.analysis}
 meta.info <- as.data.frame(lapply(col.data, na.replace))
@@ -234,7 +234,7 @@ hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35),
      main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
 ```
 
-As we can see, in many variables the main value is just `NA` or other derivative which means "No information available for this variable". So in order to keep the most informative variables, we decided to apply a threshold of 60% (of the values containing informative data) to select the variables:
+As we can see, in many variables the main value is just `NA` or other derivatives meaning "No information available for this variable". Therefore, in order to keep the most informative variables, we apply a threshold of 60% (of the values containing informative data) to select the relevant ones:
 
 ```{r select.filtered}
 filtered <- meta.info[, variable.info  > 0.6]
@@ -243,7 +243,7 @@ dim(filtered)
 meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
 ```
 
-To explore the data we first create an object to explore with `ggplot`:
+To explore the data we first create an object with `ggplot`:
 ```{r ggplot.config}
 library("ggplot2")
 fplot <- ggplot(as.data.frame(filtered))
@@ -262,7 +262,7 @@ y.axis = ylab("number of cases")
 ```
 
 And we plot some relationships for some significant variables:
-In the "normal" type samples most of the information is not avalable. This could be due to that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infered "normal" samples information from its paired sample data (mainly gender and ethnicity).
+In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
 ```{r plots, fig.cap = fig$cap("Figure S1","Exploring the col.data")}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
@@ -274,7 +274,7 @@ fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b +
 fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + 
     y.axis + scale_x_discrete(breaks=waiver(), 
 labels=c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", "WHITE", "NA")) +
-    ggtitle("Ethnicity and race ...")
+    ggtitle("Ethnicity and origin ...")
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + ggtitle("some title")
 fplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis + xlab("tumor focality")
 hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
@@ -286,9 +286,9 @@ ggplot(na.omit(as.data.frame(filtered))) + geom_bar(aes(age_at_diagnosis, na.rm 
     ggtitle("Histologic diagnosis distribution across different ages")
 ```
 
-We can see in `r fig$ref("Figure S1")` the data has some patterns, there are more females than males, and much more tumoral than normal samples.
+We can see in `r fig$ref("Figure S1")` that the data has some patterns: there are more females than males and much more tumoral than normal samples.
 
-We decide to perform the analysis on the white population not hispanic or latino, whose tumoral sample correspond to the most common cancer in thyroids the Thyroid Papillary Carcinoma. To have more inshight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
+We decide to perform the analysis on the white population not hispanic or latino, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
 
 ```{r subset}
 # Paired data
@@ -324,7 +324,7 @@ thca.filtered$race <- replace(thca.filtered$race,which(is.na(thca.filtered$race)
 
 ```
 
-We explore again the variables for these subset:
+We explore again the variables for this subset:
 ```{r subset.explore}
 meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(meta.filtered.subset)
@@ -332,7 +332,7 @@ mplot + geom_bar(aes(type, fill = gender)) + b + y.axis
 mplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + scale_fill_discrete(name="tumor status")
 mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + y.axis
 mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + y.axis
-mplot + geom_bar(aes(x=gender, fill = race)) + b + l  + y.axis
+mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l  + y.axis
 mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + y.axis + scale_x_discrete(name= "histogic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Gender distribution across different types of hystologic diagnosis")
 ggplot(na.omit(meta.filtered.subset)) + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis + xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
@@ -464,7 +464,7 @@ multidensity(as.list(as.data.frame(cqn.logCPM[, thca.filtered$type ==  "normal"]
              xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
 
-We can clearly see that this are quite better than the previous ones used without GC and length normalization on the second spike. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values. However below 0 there is a lot of variability.
+We can clearly see that this are quite better than the previous ones used without GC and length normalization on the second spike. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values. However, below 0 there is a lot of variability.
 
 ### Distribution of expression levels among genes
 
@@ -671,7 +671,7 @@ sv$n
 ```
 
 The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
-assess againt the extent of differential expression this time adjusting for these
+assess against the extent of differential expression this time adjusting for these
 surrogate variables.
 
 ```{r svn.ftest}
