@@ -316,8 +316,11 @@ check <- function(x, checklist){
 
 # Extracting sample names of tumor and normal data.
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
-thca.filtered <- thca[,sample_names]
-colData(thca.filtered) <- filtered
+thca.filtered <- thca[, sample_names]
+
+##NOT OK BUT IT's sth to start
+thca.filtered$race <- replace(thca.filtered$race,which(is.na(thca.filtered$race)), "WHITE")
+
 ```
 
 We explore again the variables for these subset:
