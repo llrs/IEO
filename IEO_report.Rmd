@@ -148,7 +148,7 @@ output: html_document
 
 Thyroid cancer develops in the follicular cells of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [see it on cancergenome](http://cancergenome.nih.gov/cancersselected/thyroid). 
 
-From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years [old](http://cancergenome.nih.gov/cancersselected/thyroid).
+From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old (http://cancergenome.nih.gov/cancersselected/thyroid).
 
 Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
 
@@ -280,7 +280,7 @@ We can see in `r fig$ref("Figure S1")` the data has some patterns, there are mor
 We decide to perform the analysis on the white population not hispanic or latino, whose tumoral sample correspond to the most common cancer in thyroids the Thyroid Papillary Carcinoma. To have more inshight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
 
 ```{r subset}
- #Paired data
+# Paired data
 paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
 paired_mask <- thca$bcr_patient_barcode %in% paired
 
@@ -304,23 +304,22 @@ check <- function(x, checklist){
     }
 }
 
-# extracting sample names of tumor and normal data.
+# Extracting sample names of tumor and normal data.
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
-thca.filtered <- thca[,sample_names]
 ```
 
 We explore again the variables for these subset:
 ```{r subset.explore}
 meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(meta.filtered.subset)
-mplot + geom_bar(aes(type, fill = gender)) + b
-mplot + geom_bar(aes(type, fill = tumor_status)) + b
-mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
-mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l
-mplot + geom_bar(aes(x=gender, fill = race)) + b + l
-mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l
-mplot + geom_bar(aes(histologic_diagnosis, fill = gender))+b+l
-mplot + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l
+mplot + geom_bar(aes(type, fill = gender)) + b + y.axis
+mplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + scale_fill_discrete(name="tumor status")
+mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + y.axis
+mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + y.axis
+mplot + geom_bar(aes(x=gender, fill = race)) + b + l  + y.axis
+mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis
+mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + y.axis + scale_x_discrete(name= "histogic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Gender distribution across different types of hystologic diagnosis")
+ggplot(na.omit(meta.filtered.subset)) + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis + xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
 ```
 
 
@@ -503,7 +502,7 @@ control the relative image size in *inches*. The final image size results from
 --->
 
 ```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples."}
-par(mfrow = c(11, 3), mar = c(4, 5, 3, 1))
+par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
 for (i in 1:ncol(setmp)) {
@@ -520,7 +519,7 @@ for (i in 1:ncol(setmp)) {
 We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
 
 ```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S5: MA-plots of the normal samples."}
-par(mfrow = c(11, 3), mar = c(4, 5, 3, 1))
+par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
 for (i in 1:ncol(setmp)) {
@@ -606,7 +605,7 @@ plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome, sample_names)
 ```
 
-There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
+There might be a batch effect on the sample vial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
 for (batching in list(portion, as.character(thca.filtered$type), as.character(thca.filtered$gender))){
@@ -621,55 +620,6 @@ for (batching in list(portion, as.character(thca.filtered$type), as.character(th
 We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. And it seems that the females have more variance between healthy and tumoral.
 
 
-## Differential expression
-
-We perform a simple examination of expression changes and their associated p-values
-using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
-
-```{r sva.model}
-library(sva)
-variables <- c("tumor_size_width.1", "tumor_size_width.2", "tumor_size_width", "gender", "age_at_diagnosis", "tumor_tissue_site", "histologic_diagnosis", "ajcc_pathologic_tumor_stage","residual_tumor", "type" )
-form <- as.formula(paste("~", paste(variables, collapse="*")))
-mod <- model.matrix(form, filtered[sample_names,])
-mod0 <- model.matrix(~ 1, colData(thca.filtered))
-pv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, mod, mod0)
-sum(p.adjust(pv, method = "fdr") < 0.01)
-```
-
-There are `r sum(p.adjust(pv, method = "fdr") < 0.01)` genes changing significantly
-their expression at FDR < 1%. In Figure S8 below we show the distribution of the
-resulting p-values.
-
-```{r pdist, out.width = "400px", fig.cap = "Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
-hist(pv, main = "", las = 1)
-```
-
-Now, let's estimate surrogate variables using the `sva()` function.
-
-```{r sva.variables}
-sv <- sva(assays(thca.filtered)$cqn.logCPM, mod, mod0)
-sv$n
-```
-
-The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
-assess againt the extent of differential expression this time adjusting for these
-surrogate variables.
-
-```{r svn.ftest}
-modsv <- cbind(mod, sv$sv)
-mod0sv <- cbind(mod0, sv$sv)
-pvsv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, modsv, mod0sv)
-sum(p.adjust(pvsv, method = "fdr") < 0.01)
-```
-
-We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`.
-Figure S9 shows the resulting distribution of p-values.
-
-```{r psvdist, out.width = "400px", fig.cap = fig$cap("Figure S9","Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.")}
-hist(pvsv, main = "", las = 1)
-```
-
-
 ## SessionInfo
 
 ```{r sessionInfo}
@@ -678,6 +628,6 @@ sessionInfo()
 
 ##Bibliography
 
-  Agrawal, N., Akbani, R., Aksoy, B. A., Ally, A., Arachchi, H., Asa, S. L., . Zou, L. (2014). Integrated Genomic Characterization of Papillary Thyroid Carcinoma. Cell, 159(3), 676-690. 
-  Http://cancergenome.nih.gov/. (n.d.). http://cancergenome.nih.gov/. Retrieved May 6, 2016, from http://cancergenome.nih.gov/cancersselected/thyroid
-  Xing, M. (2013). Molecular pathogenesis and mechanisms of thyroid cancer. Nature Reviews. Cancer, 13(3), 184-99. 
+* Agrawal N, Akbani R, Aksoy BA, Ally A, Arachchi H, Asa SL, Zou L. (2014). Integrated Genomic Characterization of Papillary Thyroid Carcinoma. Cell, 159(3), 676-690. 
+* The Canger Genome Atlas. Papillary Thyroid Carcinoma. Retrieved May 6, 2016. Available from: http://cancergenome.nih.gov/cancersselected/thyroid
+* Xing M. (2013). Molecular pathogenesis and mechanisms of thyroid cancer. Nature Reviews. Cancer, 13(3), 184-99. 
