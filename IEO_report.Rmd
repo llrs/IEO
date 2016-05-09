@@ -668,19 +668,20 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 
 After the looking for the batch effect we couldn't find the cause of the batch effect, but we try to see if by 
 ```{r clustering.combat}
+library(sva)
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
-cluter.combat <- hclust(d)
-cluter.combat <- as.dendrogram(cluter.combat, hang = 0.1)
+cluster.combat <- hclust(d)
+cluster.combat <- as.dendrogram(cluster.combat, hang = 0.1)
 names(batch) <- colnames(thca.filtered)
 outcome <- paste(substr(colnames(thca.filtered), 9, 12),
                             as.character(thca.filtered$type), sep = "-")
 names(outcome) <- colnames(thca.filtered)
 
-plot.batch(cluter.combat, samplevial, thca.filtered, outcome)
-plot.batch(cluter.combat, thca.filtered$gender, thca.filtered, outcome)
-plot.batch(cluter.combat, thca.filtered$type, thca.filtered, outcome)
+plot.batch(cluster.combat, samplevial, thca.filtered, outcome)
+plot.batch(cluster.combat, thca.filtered$gender, thca.filtered, outcome)
+plot.batch(cluster.combat, thca.filtered$type, thca.filtered, outcome)
 ```
 
 We can observe a slightly improvement, but still some tumoral samples cluster together with the normal ones. 
@@ -692,6 +693,9 @@ To improve the batch effect removal we look if QR decomposition yields better re
 ```{r clustering.QRdecomposition}
 library(limma)
 batch <- as.integer(as.factor(tss))
+variables <- c("gender", "type") # Variables for the model
+form <- as.formula(paste("~ ", paste(variables, collapse = "+"))) # Building the model
+mod  <- model.matrix(form, data=colData(thca.filtered)[, variable.info > 0.6])
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, batch, design = mod)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
 cluster.qr <- hclust(d)
@@ -738,11 +742,7 @@ We perform a simple examination of expression changes and their associated p-val
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 
 ```{r sva.model, cache=TRUE}
-library(sva)
 variables0 <- colnames(filtered) # All variables available
-variables <- c("gender", "type") # Variables for the model
-form <- as.formula(paste("~ ", paste(variables, collapse = "+"))) # Building the model
-mod  <- model.matrix(form, data=colData(thca.filtered)[, variable.info > 0.6])
 mod0 <- model.matrix(~ 1 , data=colData(thca.filtered)[, variable.info > 0.6])
 pv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, mod, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
