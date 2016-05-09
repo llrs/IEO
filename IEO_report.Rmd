@@ -190,7 +190,7 @@ Looking deeper into col.data with:
 col.data[1:5, 30:35]
 ```
 
-We can observe there are different ways to indicate that the data is not available (NA, [Not Available]...). Consequently, we decide to study which variables have more information. To do so, we create two functions, one (`na.replace`) to change those values into the standarized `NA` nomenclature, and `filter.info` to quantify how many of each variable is not `NA`.
+We observed that there are different ways to indicate that the data is not available (NA, [Not Available]...). Consequently, we decide to study which variables have more information. To do so, we create two functions, one (`na.replace`) to change those values into the standarized `NA` nomenclature, and `filter.info` to quantify how many of each variable is not `NA`.
 
 ```{r functions}
 
