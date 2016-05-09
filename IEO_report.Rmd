@@ -139,7 +139,7 @@ output: html_document
 ---
 # Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)
 
-#### Mauro Álvarez (mail)
+#### Mauro Álvarez (mauro.alvarez01@estudiant.upf.edu)
 #### Lluís Revilla(lluis.revilla01@estudiant.upf.edu)
 #### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
 #### Inés Sentís (ines.sentis01@estudiant.upf.edu) 
