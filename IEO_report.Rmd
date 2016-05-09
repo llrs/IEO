@@ -142,7 +142,7 @@ output: html_document
 #### Mauro Álvarez (mail)
 #### Lluís Revilla(lluis.revilla01@estudiant.upf.edu)
 #### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
-#### Inés Sentís (mail) 
+#### Inés Sentís (ines.sentis01@estudiant.upf.edu) 
 
 ## Introduction
 
@@ -264,31 +264,51 @@ y.axis = ylab("number of cases")
 And we plot some relationships for some significant variables:
 In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
-```{r plots, fig.cap = fig$cap("Figure S1","Exploring the col.data")}
+```{r plots, fig.cap = fig$cap("Figure S1.A","Exploring the col.data")}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
     ggtitle("Gender distribution across normal and tumour samples")
+```
+As expected, there are more female samples than male samples. As we mentioned before, tiroid cancer is more prevalent in women than men and we can see that not only for tumor samples but for normals samples too. In addition, there are more tumor cases than normal cases.
+```{r plots, fig.cap = fig$cap("Figure S1.B","Exploring the col.data")}
 fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + 
     ggtitle("Tumor status across normal and tumour samples")
+```
+We also have examined the tumor status of the tumor samples. There are more cancer patients without tumor ("tumor free") than with the tumor ("with tumor") after the collection of the data. We assume that most of the patients that participate in the study have recovered after it. 
+```{r plots, fig.cap = fig$cap("Figure S1.C","Exploring the col.data")}
 fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + 
     y.axis + ggtitle("... normal and tumour samples")
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + 
+```
+In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
+```{r plots, fig.cap = fig$cap("Figure S1.D","Exploring the col.data")}
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b + l + 
     y.axis + scale_x_discrete(breaks=waiver(), 
 labels=c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", "WHITE", "NA")) +
     ggtitle("Ethnicity and origin ...")
-fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + ggtitle("some title")
+```
+If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
+```{r plots, fig.cap = fig$cap("Figure S1.E","Exploring the col.data")}
+fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + ggtitle("Gender and ethnicity")
+```
+If we ignore the hispanic origin of the individuals and just focus on the main ethnicities of the study we can observe that for both female and male samples there is  a majority of "white" individuals. However, the fact that "white" subjects are hispanic or not can provide some variability so that is something we will take into account later. 
+```{r plots, fig.cap = fig$cap("Figure S1.F","Exploring the col.data")}
 fplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis + xlab("tumor focality")
 hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
                             labels=c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA"))
+```
+There is no data about tumor focality in the normal samples... 
+```{r plots, fig.cap = fig$cap("Figure S1.H","Exploring the col.data")}
 fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + y.axis +
     ggtitle("Gender distribution across different types of hystologic diagnosis")
+```
+Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
+```{r plots, fig.cap = fig$cap("Figure S1.I","Exploring the col.data")}
 ggplot(na.omit(as.data.frame(filtered))) + geom_bar(aes(age_at_diagnosis, na.rm = T, fill = histologic_diagnosis)) + b + l +  labs(x="age at diagnosis", y = y.axis)+ scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), 
  labels = c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA")) + 
     ggtitle("Histologic diagnosis distribution across different ages")
 ```
+Even thought, thyroid cancer is commontly diagnosed at mature ages (~50) this plot shows that the classical papillary thyroid cancer has similar representation in all ages for this dataset.
 
-We can see in `r fig$ref("Figure S1")` that the data has some patterns: there are more females than males and much more tumoral than normal samples.
-
-As it could be seen in the previous plots, the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to enviromental or epigenetic factors) as much as possible. To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
+As a summary from the previous plots, the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to enviromental or epigenetic factors) as much as possible. To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
 
 ```{r subset}
 # Paired data
