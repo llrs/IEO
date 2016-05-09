@@ -302,9 +302,7 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + 
 ```
 Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
 ```{r plots1I, fig.cap = fig$cap("Figure S1.I","Exploring the col.data")}
-ggplot(na.omit(as.data.frame(filtered))) + geom_bar(aes(age_at_diagnosis, na.rm = T, fill = histologic_diagnosis)) + b + l +  labs(x="age at diagnosis", y = y.axis)+ scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), 
- labels = c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA")) + 
-    ggtitle("Histologic diagnosis distribution across different ages")
+ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) + geom_bar(aes(age_at_diagnosis, na.rm = T, fill = histologic_diagnosis)) + b + l +  labs(x="age at diagnosis", y = y.axis)+ scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
 ```
 Even thought, thyroid cancer is commontly diagnosed at mature ages (~50) this plot shows that the classical papillary thyroid cancer has similar representation in all ages for this dataset.
 
@@ -339,9 +337,9 @@ check <- function(x, checklist){
 sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
 thca.filtered <- thca[, sample_names]
 
-##NOT OK BUT IT's sth to start
+#Imposing known col.Data in paired normal samples
 thca.filtered$race <- replace(thca.filtered$race,which(is.na(thca.filtered$race)), "WHITE")
-
+thca.filtered$ethnicity <- replace(thca.filtered$ethnicity,which(is.na(thca.filtered$ethnicity)), "NOT HISPANIC OR LATINO")
 ```
 
 We explore again the variables for this subset:
@@ -355,7 +353,7 @@ mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + y
 mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l  + y.axis
 mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + y.axis + scale_x_discrete(name= "histogic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Gender distribution across different types of hystologic diagnosis")
-ggplot(na.omit(meta.filtered.subset)) + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis + xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
+ggplot(meta.filtered.subset[!is.na(meta.filtered.subset$age_at_diagnosis), ]) + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis + xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
 ```
 
 
