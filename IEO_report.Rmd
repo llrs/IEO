@@ -258,7 +258,8 @@ b <-  theme(axis.line = element_line(colour = "black"),
             panel.grid.minor.y = element_line(colour = "grey", size = 0.25, linetype = 3),
             panel.border = element_blank(),
             panel.background = element_blank())
-y.axis = ylab("number of cases")
+y.axis <- ylab("number of cases")
+
 ```
 
 And we plot some relationships for some significant variables:
@@ -280,29 +281,42 @@ fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b +
 ```
 In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
 ```{r plots1D, fig.cap = fig$cap("Figure S1.D","Exploring the col.data")}
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b + l + 
-    y.axis + scale_x_discrete(breaks=waiver(), 
-labels=c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", "WHITE", "NA")) +
+labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
+            "WHITE", "NA")
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
+    l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
     ggtitle("Ethnicity and origin ...")
 ```
 If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
 ```{r plots1E, fig.cap = fig$cap("Figure S1.E","Exploring the col.data")}
-fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + ggtitle("Gender and ethnicity")
+fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
+    ggtitle("Gender and ethnicity")
 ```
 If we ignore the hispanic origin of the individuals and just focus on the main ethnicities of the study we can observe that for both female and male samples there is  a majority of "white" individuals. However, the fact that "white" subjects are hispanic or not can provide some variability so that is something we will take into account later. 
 ```{r plots1F, fig.cap = fig$cap("Figure S1.F","Exploring the col.data")}
-fplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis + xlab("tumor focality")
-hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
-                            labels=c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA"))
+fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
+    l + y.axis + xlab("tumor focality")
 ```
 There is no data about tumor focality in the normal samples... 
 ```{r plots1H, fig.cap = fig$cap("Figure S1.H","Exploring the col.data")}
-fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + y.axis +
+labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
+            "Papillary - Tall Cell", "NA")
+hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
+        labels=labels)
+fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + 
+    y.axis + 
     ggtitle("Gender distribution across different types of hystologic diagnosis")
 ```
 Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
 ```{r plots1I, fig.cap = fig$cap("Figure S1.I","Exploring the col.data")}
-ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) + geom_bar(aes(age_at_diagnosis, na.rm = T, fill = histologic_diagnosis)) + b + l +  labs(x="age at diagnosis", y = y.axis)+ scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Other specify", "Papillary - Classical", "Papillary - Follicular", "Papillary - Tall Cell", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
+labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
+            "Papillary - Tall Cell", "NA")
+ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) + 
+    geom_bar(aes(age_at_diagnosis, na.rm = TRUE, fill = histologic_diagnosis)) +
+    b + l + labs(x="age at diagnosis") + y.axis + 
+    scale_fill_discrete(name = "histologic diagnosis", breaks = waiver(), 
+        labels = labels) + 
+    ggtitle("Histologic diagnosis distribution across different ages")
 ```
 Even thought, thyroid cancer is commontly diagnosed at mature ages (~50) this plot shows that the classical papillary thyroid cancer has similar representation in all ages for this dataset.
 
@@ -310,7 +324,8 @@ As a summary from the previous plots, the most abundant population in the sample
 
 ```{r subset}
 # Paired data
-paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, thca[, thca$type =='normal']$bcr_patient_barcode)
+paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, 
+                    thca[, thca$type == 'normal']$bcr_patient_barcode)
 paired_mask <- thca$bcr_patient_barcode %in% paired
 
 filtered_filt <- filtered[paired_mask, ]
@@ -334,26 +349,38 @@ check <- function(x, checklist){
 }
 
 # Extracting sample names of tumor and normal data.
-sample_names <- unlist(lapply(row.names(filtered_filt), check, checklist = participants))
+sample_names <- unlist(lapply(row.names(filtered_filt), check, 
+                              checklist = participants))
 thca.filtered <- thca[, sample_names]
 
 #Imposing known col.Data in paired normal samples
-thca.filtered$race <- replace(thca.filtered$race,which(is.na(thca.filtered$race)), "WHITE")
-thca.filtered$ethnicity <- replace(thca.filtered$ethnicity,which(is.na(thca.filtered$ethnicity)), "NOT HISPANIC OR LATINO")
+thca.filtered$race <- replace(thca.filtered$race, 
+                              which(is.na(thca.filtered$race)), "WHITE")
+thca.filtered$ethnicity <- replace(thca.filtered$ethnicity, 
+           which(is.na(thca.filtered$ethnicity)), "NOT HISPANIC OR LATINO")
 ```
 
 We explore again the variables for this subset:
 ```{r subset.explore}
 meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(meta.filtered.subset)
-mplot + geom_bar(aes(type, fill = gender)) + b + y.axis
-mplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + scale_fill_discrete(name="tumor status")
-mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + y.axis
-mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l + y.axis
-mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l  + y.axis
-mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + y.axis
-mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + y.axis + scale_x_discrete(name= "histogic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Gender distribution across different types of hystologic diagnosis")
-ggplot(meta.filtered.subset[!is.na(meta.filtered.subset$age_at_diagnosis), ]) + geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis + xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis", breaks=waiver(), labels = c("Papillary - Classical", "NA")) + ggtitle("Histologic diagnosis distribution across different ages")
+mplot + geom_bar(aes(type, fill = gender)) + b
+mplot + geom_bar(aes(type, fill = tumor_status)) + b + 
+    scale_fill_discrete(name="tumor status")
+mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
+mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l
+mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l
+mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l
+mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + 
+    scale_x_discrete(name = "histogic diagnosis", breaks=waiver(), 
+     labels = c("Papillary - Classical", "NA")) + 
+    ggtitle("Gender distribution across different types of hystologic diagnosis")
+
+ggplot(meta.filtered.subset[!is.na(meta.filtered.subset$age_at_diagnosis), ]) +
+    geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + 
+    xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis",
+   breaks=waiver(), labels = c("Papillary - Classical", "NA")) + 
+    ggtitle("Histologic diagnosis distribution across different ages")
 ```
 
 
@@ -406,7 +433,7 @@ and we may consider discarding those samples whose depth is substantially lower
 than the rest. To identify who are these samples we may simply look at the
 actual numbers including portion of the sample identifier that distinguishes them.
 
-```{r libsize}
+```{r libsize.set}
 sampledepth <- round(dge.subset$sample$lib.size / 1e6, digits = 1)
 names(sampledepth) <- substr(sample_names, 6, 12)
 
@@ -427,10 +454,12 @@ keep.paired <- function(pattern, x){
     }
 }
 
-sample_names <- unique(unlist(lapply(substr(sample_names, 9, 12), keep.paired, sample_names)))
+sample_names <- unique(unlist(lapply(substr(sample_names, 9, 12), 
+                                     keep.paired, sample_names)))
 
 thca.filtered <- thca.filtered[, colnames(thca.filtered) %in% sample_names]
-dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
+dge.subset <- DGEList(counts=assays(thca.filtered)$counts, 
+                      genes=mcols(thca.filtered))
 ```
 
 ### Distribution of expression levels among samples
@@ -449,17 +478,22 @@ file; see http://yihui.name/knitr/options for full details.
 ```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S2: Non-parametric density distribution of expression profiles per sample."}
 library(geneplotter)
 par(mfrow = c(1, 2))
-multidensity(as.list(as.data.frame(assays(thca.filtered[, thca.filtered$type ==  "tumor"])$logCPM)),
-             xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
-multidensity(as.list(as.data.frame(assays(thca.filtered[, thca.filtered$type ==  "normal"])$logCPM)),
-             xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+multidensity(as.list(as.data.frame(assays(thca.filtered[, 
+            thca.filtered$type ==  "tumor"])$logCPM)),
+            xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", 
+            las = 1)
+multidensity(as.list(as.data.frame(assays(thca.filtered[,
+            thca.filtered$type ==  "normal"])$logCPM)),
+            xlab = "log 2 CPM", legend = NULL, main = "Normal samples",
+            las = 1)
 ```
 
 Seeing this plots we suspect the two spikes are due to the effect of the read length and GC content of each transcript. Therefore we will correct them with the package cqn:
 
 ```{r cqn, message=FALSE}
 library("cqn")
-cqn.subset <- cqn(assays(thca.filtered)$counts, lengths = rowRanges(thca.filtered)$txlen,
+cqn.subset <- cqn(assays(thca.filtered)$counts, 
+                  lengths = rowRanges(thca.filtered)$txlen,
                   x = rowRanges(thca.filtered)$txgc,
                   sizeFactors = colSums(assays(thca.filtered)$counts))
 par(mfrow=c(1,2))
@@ -475,10 +509,12 @@ We can see if the distribution of expression values per sample in terms of logar
 cqn.logCPM <- cqn.subset$y + cqn.subset$offset
 assays(thca.filtered)$cqn.logCPM <- cqn.logCPM
 par(mfrow = c(1, 2))
-multidensity(as.list(as.data.frame(cqn.logCPM[,thca.filtered$type ==  "tumor"])),
-             xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
-multidensity(as.list(as.data.frame(cqn.logCPM[, thca.filtered$type ==  "normal"])),
-             xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+multidensity(as.list(as.data.frame(
+    cqn.logCPM[,thca.filtered$type ==  "tumor"])),
+     xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
+multidensity(as.list(as.data.frame(
+    cqn.logCPM[, thca.filtered$type ==  "normal"])),
+    xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
 
 We can clearly see that this are quite better than the previous ones used without GC and length normalization on the second spike. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values. However, below 0 there is a lot of variability.
@@ -509,7 +545,7 @@ to filter out lowly-expressed genes.
 ```{r filter.low.expr}
 mask <- avgexp.cqn > 1
 sum(mask)
-# thca.filtered <- thca.filtered[mask, ]
+thca.filtered <- thca.filtered[mask, ]
 dge.subset <- dge.subset[mask, ]
 ```
 
@@ -519,7 +555,35 @@ Since we will use the offsets computed by `cqn`, there is no need to normalize u
 
 ```{r norm}
 dge.subset$offset <- cqn.subset$glm.offset
+
 dge.norm <- calcNormFactors(dge.subset)
+assays(thca.filtered)$n.logCPM <- cpm(dge.norm, log = TRUE, prior.count = 3)
+
+par(mfrow = c(3, 2))
+
+# Not normalized but filtered
+multidensity(as.list(as.data.frame(
+    assays(thca.filtered[,thca.filtered$type ==  "tumor"])$logCPM)),
+     xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
+multidensity(as.list(as.data.frame(
+    assays(thca.filtered[,thca.filtered$type ==  "tumor"])$logCPM)),
+    xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+
+# Normalize with calcNormFactors after filtering out those
+multidensity(as.list(as.data.frame(
+    assays(thca.filtered[,thca.filtered$type ==  "tumor"])$n.logCPM)),
+     xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
+multidensity(as.list(as.data.frame(
+    assays(thca.filtered[,thca.filtered$type ==  "tumor"])$n.logCPM)),
+    xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+
+# Normalized with cqn and filtered the low values:
+multidensity(as.list(as.data.frame(
+    assays(thca.filtered[,thca.filtered$type ==  "tumor"])$cqn.logCPM)),
+     xlab = "log 2 CPM", legend = NULL, main = "Tumor samples", las = 1)
+multidensity(as.list(as.data.frame(
+    assays(thca.filtered[,thca.filtered$type ==  "tumor"])$cqn.logCPM)),
+    xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
 
 ### MA-plots
