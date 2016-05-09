@@ -519,6 +519,7 @@ Since we will use the offsets computed by `cqn`, there is no need to normalize u
 
 ```{r norm}
 dge.subset$offset <- cqn.subset$glm.offset
+dge.norm <- calcNormFactors(dge.subset)
 ```
 
 ### MA-plots
