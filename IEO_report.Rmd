@@ -288,7 +288,7 @@ ggplot(na.omit(as.data.frame(filtered))) + geom_bar(aes(age_at_diagnosis, na.rm 
 
 We can see in `r fig$ref("Figure S1")` that the data has some patterns: there are more females than males and much more tumoral than normal samples.
 
-We decide to perform the analysis on the white population not hispanic or latino, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
+As it could be seen in the previous plots, the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to enviromental or epigenetic factors) as much as possible. To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
 
 ```{r subset}
 # Paired data
