@@ -668,7 +668,7 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 
 After the looking for the batch effect we couldn't find the cause of the batch effect, but we try to see if by 
 ```{r clustering.combat}
-library(sva)
+library("sva")
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
@@ -691,8 +691,8 @@ We can observe a slightly improvement, but still some tumoral samples cluster to
 To improve the batch effect removal we look if QR decomposition yields better results:
 
 ```{r clustering.QRdecomposition}
-library(limma)
-batch <- as.integer(as.factor(tss))
+library("limma")
+variables0 <- colnames(filtered) # All variables available
 variables <- c("gender", "type") # Variables for the model
 form <- as.formula(paste("~ ", paste(variables, collapse = "+"))) # Building the model
 mod  <- model.matrix(form, data=colData(thca.filtered)[, variable.info > 0.6])
