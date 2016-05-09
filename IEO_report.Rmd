@@ -146,13 +146,13 @@ output: html_document
 
 ## Introduction
 
-Thyroid cancer can develop from the different cells that form the follicles of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [see it on cancergenome](http://cancergenome.nih.gov/cancersselected/thyroid). 
+Thyroid cancer can develop from the different cells that form the follicles of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [See it on TCGA](http://cancergenome.nih.gov/cancersselected/thyroid). 
 
-From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years [old](http://cancergenome.nih.gov/cancersselected/thyroid).
+From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old.
 
 Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
 
-Research from The Cancer Genome Atlas focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer(Agrawal et al., 2014).
+Research from The Cancer Genome Atlas [(TCGA)](http://cancergenome.nih.gov/cancersselected/thyroid) focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer(Agrawal et al., 2014).
 
 ## Data import
 
@@ -265,58 +265,57 @@ y.axis <- ylab("number of cases")
 And we plot some relationships for some significant variables:
 In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
-```{r plots1A, fig.cap = fig$cap("Figure S1.A","Exploring the col.data")}
+```{r plots1A, fig.cap = "Figure S1.A Exploring the col.data"}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
     ggtitle("Gender distribution across normal and tumour samples")
 ```
 As expected, there are more female samples than male samples. As we mentioned before, tiroid cancer is more prevalent in women than men and we can see that not only for tumor samples but for normals samples too. In addition, there are more tumor cases than normal cases.
-```{r plots1B, fig.cap = fig$cap("Figure S1.B","Exploring the col.data")}
+```{r plots1B, fig.cap = "Figure S1.B Exploring the col.data"}
 fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + 
     ggtitle("Tumor status across normal and tumour samples")
 ```
 We also have examined the tumor status of the tumor samples. There are more cancer patients without tumor ("tumor free") than with the tumor ("with tumor") after the collection of the data. We assume that most of the patients that participate in the study have recovered after it. 
-```{r plots1C, fig.cap = fig$cap("Figure S1.C","Exploring the col.data")}
+```{r plots1C, fig.cap = "Figure S1.C Exploring the col.data"}
 fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + 
-    y.axis + ggtitle("... normal and tumour samples")
+    y.axis + ggtitle("Ethnicity distribution across normal and tumour samples")
 ```
 In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
-```{r plots1D, fig.cap = fig$cap("Figure S1.D","Exploring the col.data")}
+```{r plots1D, fig.cap = "Figure S1.D Exploring the col.data"}
 labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
             "WHITE", "NA")
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b +
     l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
-    ggtitle("Ethnicity and origin ...")
+    ggtitle("Gender distribution across different ethnicity and race.")
 ```
 If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
-```{r plots1E, fig.cap = fig$cap("Figure S1.E","Exploring the col.data")}
+```{r plots1E, fig.cap = "Figure S1.E Exploring the col.data"}
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
-    ggtitle("Gender and ethnicity")
+    ggtitle("Ethnicity distribution in male and female")
 ```
 If we ignore the hispanic origin of the individuals and just focus on the main ethnicities of the study we can observe that for both female and male samples there is  a majority of "white" individuals. However, the fact that "white" subjects are hispanic or not can provide some variability so that is something we will take into account later. 
-```{r plots1F, fig.cap = fig$cap("Figure S1.F","Exploring the col.data")}
+```{r plots1F, fig.cap = "Figure S1.F Exploring the col.data"}
 fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
-    l + y.axis + xlab("tumor focality")
+    l + y.axis + xlab("tumor focality") + ggtitle("Gender distribution in different tumour focality")
 ```
 There is no data about tumor focality in the normal samples... 
-```{r plots1H, fig.cap = fig$cap("Figure S1.H","Exploring the col.data")}
+```{r plots1H, fig.cap = "Figure S1.H Exploring the col.data"}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
 hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
-        labels=labels)
+                labels=labels)
 fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis + 
     y.axis + 
     ggtitle("Gender distribution across different types of hystologic diagnosis")
 ```
 Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
-```{r plots1I, fig.cap = fig$cap("Figure S1.I","Exploring the col.data")}
+```{r plots1I, fig.cap = "Figure S1.I Exploring the col.data", fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
 ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) + 
     geom_bar(aes(age_at_diagnosis, na.rm = TRUE, fill = histologic_diagnosis)) +
     b + l + labs(x="age at diagnosis") + y.axis + 
     scale_fill_discrete(name = "histologic diagnosis", breaks = waiver(), 
-        labels = labels) + 
-    ggtitle("Histologic diagnosis distribution across different ages")
+    labels = labels) + ggtitle("Histologic diagnosis distribution across different ages")
 ```
 Even thought, thyroid cancer is commontly diagnosed at mature ages (~50) this plot shows that the classical papillary thyroid cancer has similar representation in all ages for this dataset.
 
@@ -332,9 +331,9 @@ filtered_filt <- filtered[paired_mask, ]
 
 # Imposing the selected conditions
 tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
-                                    race == "WHITE" &
-    histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
-        ethnicity == "NOT HISPANIC OR LATINO" ))
+                                race == "WHITE" &
+                                histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
+                                ethnicity == "NOT HISPANIC OR LATINO" ))
 
 # Extracting the participants identifiers
 participants <- unlist(lapply(tumor_names, substr, 9, 12))
@@ -355,31 +354,31 @@ thca.filtered <- thca[, sample_names]
 
 #Imposing known col.Data in paired normal samples
 thca.filtered$race <- replace(thca.filtered$race, 
-                              which(is.na(thca.filtered$race)), "WHITE")
+                          which(is.na(thca.filtered$race)), "WHITE")
 thca.filtered$ethnicity <- replace(thca.filtered$ethnicity, 
-           which(is.na(thca.filtered$ethnicity)), "NOT HISPANIC OR LATINO")
+                               which(is.na(thca.filtered$ethnicity)), "NOT HISPANIC OR LATINO")
 ```
 
 We explore again the variables for this subset:
-```{r subset.explore}
+```{r subset.explore, fig.cap = "Figure S2 Exploring filtered data"}
 meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
-mplot <- ggplot(meta.filtered.subset)
+mplot <- ggplot(meta.filtered.subset) + y.axis
 mplot + geom_bar(aes(type, fill = gender)) + b
 mplot + geom_bar(aes(type, fill = tumor_status)) + b + 
     scale_fill_discrete(name="tumor status")
 mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
 mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l
 mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l
-mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l
+mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + xlab("tumor focality")
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + 
     scale_x_discrete(name = "histogic diagnosis", breaks=waiver(), 
-     labels = c("Papillary - Classical", "NA")) + 
+    labels = c("Papillary - Classical", "NA")) + 
     ggtitle("Gender distribution across different types of hystologic diagnosis")
 
 ggplot(meta.filtered.subset[!is.na(meta.filtered.subset$age_at_diagnosis), ]) +
-    geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + 
+    geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis +
     xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis",
-   breaks=waiver(), labels = c("Papillary - Classical", "NA")) + 
+    breaks=waiver(), labels = c("Papillary - Classical", "NA")) + 
     ggtitle("Histologic diagnosis distribution across different ages")
 ```
 
@@ -416,7 +415,7 @@ per sample. Figure S1 below shows library sizes per sample in increasing order.
 you can control the height and width in pixels of the figure with 'out.height' and 'out.width'
 --->
 
-```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S1: Library sizes in increasing order."}
+```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S3: Library sizes in increasing order."}
 ord <- order(dge$sample$lib.size/1e6)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
@@ -466,7 +465,7 @@ dge.subset <- DGEList(counts=assays(thca.filtered)$counts,
 
 Let's look at the distribution of expression values per sample in terms of
 logarithmic CPM units. Due to the large number of samples, we display tumor
-and normal samples separately, and are shown in Figure S2.
+and normal samples separately, and are shown in Figure S4.
 
 <!---
 the option echo = FALSE hides the R code. When plotting in general one does not
@@ -475,7 +474,7 @@ of the plot in inches while out.height and out.width do it in the final output
 file; see http://yihui.name/knitr/options for full details.
 --->
 
-```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S2: Non-parametric density distribution of expression profiles per sample."}
+```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S4: Non-parametric density distribution of expression profiles per sample.", message=FALSE}
 library(geneplotter)
 par(mfrow = c(1, 2))
 multidensity(as.list(as.data.frame(assays(thca.filtered[, 
@@ -505,7 +504,7 @@ As we can see there is more variance on the extremes values of GC content and le
 
 We can see if the distribution of expression values per sample in terms of logarithmic CPM units. Due to the large number of samples, we display tumor and normal samples separately:
 
-```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S2: Non-parametric density distribution of expression profiles per sample."}
+```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S5: Non-parametric density distribution of expression profiles per sample."}
 cqn.logCPM <- cqn.subset$y + cqn.subset$offset
 assays(thca.filtered)$cqn.logCPM <- cqn.logCPM
 par(mfrow = c(1, 2))
@@ -521,10 +520,10 @@ We can clearly see that this are quite better than the previous ones used withou
 
 ### Distribution of expression levels among genes
 
-Let's calculate now the average expression per gene through all the samples. Figure S3
+Let's calculate now the average expression per gene through all the samples. Figure S6
 shows the distribution of those values across genes.
 
-```{r exprdist, out.width = "400px", fig.cap = "Figure S3: Distribution of average expression level per gene."}
+```{r exprdist, out.width = "400px", fig.cap = "Figure S6: Distribution of average expression level per gene."}
 par(mfrow = c(1, 2))
 avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "Using DGEList normalization", las = 1)
@@ -599,7 +598,7 @@ control the relative image size in *inches*. The final image size results from
 'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
 --->
 
-```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S4: MA-plots of the tumor samples."}
+```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S7: MA-plots of the tumor samples."}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
@@ -616,7 +615,7 @@ for (i in 1:ncol(setmp)) {
 
 We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
 
-```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S5: MA-plots of the normal samples."}
+```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S8: MA-plots of the normal samples."}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
@@ -696,7 +695,7 @@ plot.batch <- function(dendrogram, batching, se, out){
 
 With this functions to plot the clustering with different labelings is easier:
 
-```{r clustering.n, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S6: Hierarchical clustering of the samples."}
+```{r clustering.n, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S9: Hierarchical clustering of the samples."}
 d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
@@ -713,7 +712,7 @@ plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, ou
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
-```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S7: Multidimensional scaling plot of the samples."}
+```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S10: Multidimensional scaling plot of the samples."}
 for (batching in list(portion, as.character(thca.filtered$type), as.character(thca.filtered$gender))){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
@@ -730,7 +729,8 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 ### ComBat
 
 After the looking for the batch effect we couldn't find the cause of the batch effect, but we try to see if by 
-```{r clustering.combat}
+#!!!!!!
+```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S11: Hierarchical clustering of the samples."}
 library("sva")
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
 
@@ -753,7 +753,7 @@ We can observe a slightly improvement, but still some tumoral samples cluster to
 
 To improve the batch effect removal we look if QR decomposition yields better results:
 
-```{r clustering.QRdecomposition}
+```{r clustering.QRdecomposition, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S12: Hierarchical clustering of the samples."}
 library("limma")
 variables0 <- colnames(filtered) # All variables available
 variables <- c("gender", "type") # Variables for the model
@@ -777,7 +777,7 @@ With QR decomposition we can observe that just one normal sample clusters with t
 
 We further try if SVD returns a better result:
 
-```{r clustring.svd}
+```{r clustring.svd, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S13: Hierarchical clustering of the samples."}
 library("corpcor")
 s <- fast.svd(t(scale(t(assays(thca.filtered)$cqn.logCPM),
                       center = TRUE, scale = TRUE)))
@@ -822,7 +822,7 @@ There are `r sum(p.adjust(pv, method = "fdr") < 0.01)` genes changing significan
 their expression at FDR < 1%. In Figure S8 below we show the distribution of the
 resulting p-values.
 
-```{r pdist, out.width = "400px", fig.cap = "Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
+```{r pdist, out.width = "500px", fig.cap = "Figure S14: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
 par(mfrow=c(1,1))
 hist(pv, main = "Histogram of p-values", las = 1)
 hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
@@ -847,9 +847,9 @@ sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
 We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`.
-Figure S9 shows the resulting distribution of p-values.
+Figure S15 shows the resulting distribution of p-values.
 
-```{r psvdist, out.width = "400px", fig.cap = fig$cap("Figure S9","Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.")}
+```{r psvdist, out.width = "500px", fig.cap = "Figure S15 Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1)
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
