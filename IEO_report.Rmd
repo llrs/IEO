@@ -304,7 +304,7 @@ tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
         ethnicity == "NOT HISPANIC OR LATINO" ))
 
 # Extracting the participants identifiers
-participants <- unlist(lapply(tumor_names, substr, start = 9, stop = 12))
+participants <- unlist(lapply(tumor_names, substr, 9, 12))
 participants <- participants[participants != ""]
 
 check <- function(x, checklist){
@@ -414,7 +414,6 @@ sample_names <- unique(unlist(lapply(substr(sample_names, 9, 12), keep.paired, s
 thca.filtered <- thca.filtered[, colnames(thca.filtered) %in% sample_names]
 dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
 ```
-
 
 ### Distribution of expression levels among samples
 
@@ -586,43 +585,46 @@ table(data.frame(TYPE = thca.filtered$type, Portion = portion))
 table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
 ```
 
-To double check if they have some effect on the batch we make the hierarchical clustering of them:
+To double check if they have some effect on the batch we make the hierarchical clustering of them. First we set some functions to plot the hierarhcical clustering:
 
-```{r sampleClustering, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S6: Hierarchical clustering of the samples."}
+```{r clustering.func}
+help.dendogram <- function(x, batch, labels) {
+    # Helper function to plot dendograms
+    if (is.leaf(x)) {
+        ## color by batch
+        attr(x, "nodePar") <- list(lab.col = as.vector(batch[attr(x, "label")])) 
+        ## label by outcome
+        attr(x, "label") <- as.vector(labels[attr(x, "label")])
+    }
+    x
+}
+
+plot.batch <- function(dendrogram, batching, se, out){
+    # Function to see the batch
+    # Given a sampleDendogram use batching to colour the leafs by sample.names of se
+    sample.names = colnames(se)
+    batch <- as.integer(factor(batching))
+    names(batch) <- sample.names
+    i.dendrogram <- dendrapply(dendrogram, help.dendogram, batch, out)
+    plot(i.dendrogram, main = "Hierarchical clustering")
+    legend("topright", paste("Batch", levels(factor(batching))), fill = sort(unique(batch)))
+}
+```
+
+With this functions to plot the clustering with different labelings is easier:
+
+```{r clustering.n, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S6: Hierarchical clustering of the samples."}
 d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
 outcome <- paste(substr(colnames(thca.filtered), 9, 12),
-                            as.character(thca.filtered$type), sep = "-")
+                        as.character(thca.filtered$type), sep = "-")
 names(outcome) <- colnames(thca.filtered)
 par(mfrow = c(1,1))
-
-help.dendogram <- function(x, batch, labels) {
-    # Helper function to plot dendograms
-     if (is.leaf(x)) {
-       attr(x, "nodePar") <- list(lab.col = as.vector(batch[attr(x, "label")]))
-       attr(x, "label") <- as.vector(labels[attr(x, "label")])
-     }
-     x
-}
-
-plot.batch <- function(sampleDendrogram, batching, se, out, sample.names = NULL){
-    # Function to see the batch
-    # Given a sampleDendogram use batching to colour the leafs by sample.names of se
-    if (is.null(sample.names)){
-        sample.names = colnames(se)
-    }
-    batch <- as.integer(factor(batching))
-    names(batch) <- sample.names
-    sampleDendrogram <- dendrapply(sampleDendrogram, help.dendogram, batch, outcome)
-    plot(sampleDendrogram, main = "Hierarchical clustering")
-    legend("topright", paste("Batch", levels(factor(batching))), fill = sort(unique(batch)))
-}
-
-plot.batch(sampleDendrogram, portion, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
-#plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome, sample_names)
+plot.batch(sampleDendrogram, portion, thca.filtered, outcome)
+plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome)
+plot.batch(sampleDendrogram, tss, thca.filtered, outcome)
+plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome)
 ```
 
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
@@ -645,18 +647,20 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 ### ComBat
 
 After the looking for the batch effect we couldn't find the cause of the batch effect, but we try to see if by 
-```{r}
+```{r clustering.combat}
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
-sampleClustering <- hclust(d)
-sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
+cluter.combat <- hclust(d)
+cluter.combat <- as.dendrogram(cluter.combat, hang = 0.1)
 names(batch) <- colnames(thca.filtered)
-outcome <- as.character(thca.filtered$type)
+outcome <- paste(substr(colnames(thca.filtered), 9, 12),
+                            as.character(thca.filtered$type), sep = "-")
 names(outcome) <- colnames(thca.filtered)
 
-plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, thca.filtered$gender, thca.filtered, outcome, sample_names)
+plot.batch(cluter.combat, samplevial, thca.filtered, outcome)
+plot.batch(cluter.combat, thca.filtered$gender, thca.filtered, outcome)
+plot.batch(cluter.combat, thca.filtered$type, thca.filtered, outcome)
 ```
 
 We can observe a slightly improvement, but still some tumoral samples cluster together with the normal ones. 
@@ -665,16 +669,19 @@ We can observe a slightly improvement, but still some tumoral samples cluster to
 
 To improve the batch effect removal we look if QR decomposition yields better results:
 
-```{r}
+```{r clustering.QRdecomposition}
 library(limma)
 batch <- as.integer(as.factor(tss))
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, batch, design = mod)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
-sampleClustering <- hclust(d)
-sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
+cluster.qr <- hclust(d)
+cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
 
-plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
+plot.batch(cluster.qr, samplevial, thca.filtered, outcome)
+plot.batch(cluster.qr, tss, thca.filtered, outcome)
+plot.batch(cluster.qr, thca.filtered$gender, thca.filtered, outcome)
+plot.batch(cluster.qr, thca.filtered$type, thca.filtered, outcome)
+
 ```
 
 With QR decomposition we can observe that just one normal sample clusters with tumoral ones,  and we can't observe other factor influencing this clustering.
@@ -683,7 +690,7 @@ With QR decomposition we can observe that just one normal sample clusters with t
 
 We further try if SVD returns a better result:
 
-```{r}
+```{r clustring.svd}
 library("corpcor")
 s <- fast.svd(t(scale(t(assays(thca.filtered)$cqn.logCPM), center = TRUE, scale = TRUE)))
 pcSds <- s$d
@@ -694,19 +701,17 @@ class(svdexp)
 dim(svdexp)
 
 d <- as.dist(1 - cor(svdexp, method = "spearman"))
-sampleClustering <- hclust(d)
-sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
+cluster.svd <- hclust(d)
+cluster.svd <- as.dendrogram(cluster.svd, hang = 0.1)
 names(batch) <- colnames(thca.filtered)
-outcome <- as.character(thca.filtered$type)
-names(outcome) <- colnames(thca.filtered)
 
-plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
-plot.batch(sampleDendrogram, tss, thca.filtered, outcome, sample_names)
+plot.batch(cluster.svd, samplevial, thca.filtered, outcome)
+plot.batch(cluster.svd, tss, thca.filtered, outcome)
+plot.batch(cluster.svd, thca.filtered$type, thca.filtered, outcome)
 ```
 
 SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed.
-
+After all 
 ## Differential expression
 
 We perform a simple examination of expression changes and their associated p-values
