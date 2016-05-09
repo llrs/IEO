@@ -287,7 +287,7 @@ fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
     l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
     ggtitle("Ethnicity and origin ...")
 ```
-If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
+If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals "hispanic or latino".
 ```{r plots1E, fig.cap = fig$cap("Figure S1.E","Exploring the col.data")}
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
     ggtitle("Gender and ethnicity")
@@ -297,7 +297,7 @@ If we ignore the hispanic origin of the individuals and just focus on the main e
 fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
     l + y.axis + xlab("tumor focality")
 ```
-There is no data about tumor focality in the normal samples... 
+There is no data about tumor focality in the normal samples, because as we could imagine the focality is a feature of the tumor samples.
 ```{r plots1H, fig.cap = fig$cap("Figure S1.H","Exploring the col.data")}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
@@ -307,7 +307,7 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis +
     y.axis + 
     ggtitle("Gender distribution across different types of hystologic diagnosis")
 ```
-Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
+Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability that must be taken into account for the selection of the subset of study.
 ```{r plots1I, fig.cap = fig$cap("Figure S1.I","Exploring the col.data")}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
@@ -430,7 +430,7 @@ legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 
 This figure reveals substantial differences in sequencing depth between samples
 and we may consider discarding those samples whose depth is substantially lower
-than the rest. To identify who are these samples we may simply look at the
+than the rest. To identify which are these samples we may simply look at the
 actual numbers including portion of the sample identifier that distinguishes them.
 
 ```{r libsize.set}
@@ -723,7 +723,7 @@ for (batching in list(portion, as.character(thca.filtered$type), as.character(th
 }
 ```
 
-We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. And it seems that the females have more variance between healthy and tumoral.
+We can confirm that there isn't a clear group of normal and tumors, in fact, some tumoral samples do mix with the normal ones. It seems that the females have more variance between healthy and tumoral.
 
 ## Removing batch effect
 
@@ -799,7 +799,7 @@ plot.batch(cluster.svd, thca.filtered$type, thca.filtered, outcome)
 ```
 
 SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed.
-After all the process the best one, that separates better tumor and normal samples is the qr decomposition, which will be used for futher analysis.
+After all the process, the best one, that separates better tumor and normal samples is the QR decomposition, which will be used for futher analysis.
 
 ```{r qrexpr}
 assays(thca.filtered)$qrexp <- qrexp
