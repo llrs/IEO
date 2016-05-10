@@ -584,6 +584,7 @@ multidensity(as.list(as.data.frame(
 multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+mtext(outer= T, main="Density of logCPM without normalization")
 
 # Normalize with calcNormFactors after filtering out those
 multidensity(as.list(as.data.frame(
@@ -592,6 +593,7 @@ multidensity(as.list(as.data.frame(
 multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$n.logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+mtext(outer= T, main="Density of logCPM with calcNormFactor")
 
 # Normalized with cqn and filtered the low values:
 multidensity(as.list(as.data.frame(
@@ -600,6 +602,7 @@ multidensity(as.list(as.data.frame(
 multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$cqn.logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
+mtext(outer= T, main="Density of logCPM with cqn")
 ```
 
 ### MA-plots
