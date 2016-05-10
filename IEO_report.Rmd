@@ -426,30 +426,29 @@ logCPM <- assays(thca.filtered)$logCPM
 ### Library sizes
 
 Let's examine the library sizes in terms of total number of sequence read counts
-per sample. Figure S1 below shows library sizes per sample in increasing order.
+per sample. Figure 5 below shows library sizes per sample in increasing order.
 
 <!---
 you can control the height and width in pixels of the figure with 'out.height' and 'out.width'
 --->
 
-```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S3: Library sizes in increasing order."}
+```{r libsizes1, echo=FALSE, out.width="600px", fig.cap="Figure 5.A: Library sizes in increasing order."}
 ord <- order(dge$sample$lib.size/1e6)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
-
+```
+Plotting for all samples makes it impossible to see accurately the blue and red colors corresponding to tumor and normal respectively.
+```{r libsizes2, echo=FALSE, out.width="600px", fig.cap="Figure 5.B: Library sizes in increasing order."}
 ord.subset <- order(dge.subset$sample$lib.size/1e6)
 barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
-
-This figure reveals substantial differences in sequencing depth between samples
-and we may consider discarding those samples whose depth is substantially lower
-than the rest. To identify which are these samples we may simply look at the
+After the filtering the subset plot allows one to see that there is similar heterogeneity in tumor and normal library sizes. In addition, this figure reveals substantial differences in sequencing depth between samples and we may consider discarding those samples whose depth is substantially lower than the rest. To identify which are these samples we may simply look at the
 actual numbers including portion of the sample identifier that distinguishes them.
 
-```{r libsize.set}
+```{r libsize.set, fig.cap="\\label{fig:libsize.set}Figure 6." }
 sampledepth <- round(dge.subset$sample$lib.size / 1e6, digits = 1)
 names(sampledepth) <- substr(sample_names, 6, 12)
 
@@ -482,7 +481,7 @@ dge.subset <- DGEList(counts=assays(thca.filtered)$counts,
 
 Let's look at the distribution of expression values per sample in terms of
 logarithmic CPM units. Due to the large number of samples, we display tumor
-and normal samples separately, and are shown in Figure S4.
+and normal samples separately, and are shown in Figure 7.
 
 <!---
 the option echo = FALSE hides the R code. When plotting in general one does not
@@ -491,7 +490,7 @@ of the plot in inches while out.height and out.width do it in the final output
 file; see http://yihui.name/knitr/options for full details.
 --->
 
-```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S4: Non-parametric density distribution of expression profiles per sample.", message=FALSE}
+```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap="\\label{fig: distRawExp}Figure 7:Non-parametric density distribution of expression profiles per sample.", message=FALSE}
 library(geneplotter)
 par(mfrow = c(1, 2))
 multidensity(as.list(as.data.frame(assays(thca.filtered[, 
@@ -517,11 +516,11 @@ cqnplot(cqn.subset, n = 1, xlab = "GC content", lty = 1)
 cqnplot(cqn.subset, n = 2, xlab = "length", lty = 1)
 ```
 
-As we can see there is more variance on the extremes values of GC content and length, and more variability due to length than due to GC.
+The plot shows more variance on the extreme values of GC content and length, and more variability due to length than due to GC.
 
 We can see if the distribution of expression values per sample in terms of logarithmic CPM units. Due to the large number of samples, we display tumor and normal samples separately:
 
-```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure S5: Non-parametric density distribution of expression profiles per sample."}
+```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure 8: Non-parametric density distribution of expression profiles per sample."}
 cqn.logCPM <- cqn.subset$y + cqn.subset$offset
 assays(thca.filtered)$cqn.logCPM <- cqn.logCPM
 par(mfrow = c(1, 2))
@@ -533,14 +532,14 @@ multidensity(as.list(as.data.frame(
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
 
-We can clearly see that this are quite better than the previous ones used without GC and length normalization on the second spike. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values. However, below 0 there is a lot of variability.
+These "after-normalization" plots are quite better than the previous ones used without GC and length normalization on the second spike. With this normalization we do not appreciate substantial differences between the samples in the distribution of expression values. However, below 0 there is a lot of variability.
 
 ### Distribution of expression levels among genes
 
-Let's calculate now the average expression per gene through all the samples. Figure S6
+Let's calculate now the average expression per gene through all the samples. Figure 9
 shows the distribution of those values across genes.
 
-```{r exprdist, out.width = "400px", fig.cap = "Figure S6: Distribution of average expression level per gene."}
+```{r exprdist, out.width = "400px", fig.cap = "Figure 9: Distribution of average expression level per gene."}
 par(mfrow = c(1, 2))
 avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "Using DGEList normalization", las = 1)
@@ -554,7 +553,7 @@ abline(v = 1, col = "red", lwd = 2)
 
 ### Filtering of lowly-expressed genes
 
-In the light of this plot, we may consider a cutoff of 1 log CPM unit as minimum value
+In the light of previous plot, we may consider a cutoff of 1 log CPM unit as minimum value
 of expression to select genes being expressed across samples. Using this cutoff we proceed
 to filter out lowly-expressed genes.
 
@@ -569,7 +568,7 @@ dge.subset <- dge.subset[mask, ]
 
 Since we will use the offsets computed by `cqn`, there is no need to normalize using the normalization tools from `edgeR`, such as `calcNormFactors` according to cqn vignette.
 
-```{r norm}
+```{r norm, fig.cap="\\label{fig: norm}Figure10: Tumor and Normal samples after filtering, without normalization, with calcNormFactors normalization and with cqn normalization " }
 dge.subset$offset <- cqn.subset$glm.offset
 
 dge.norm <- calcNormFactors(dge.subset)
@@ -584,7 +583,6 @@ multidensity(as.list(as.data.frame(
 multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
-mtext(outer= T, main="Density of logCPM without normalization")
 
 # Normalize with calcNormFactors after filtering out those
 multidensity(as.list(as.data.frame(
@@ -593,7 +591,6 @@ multidensity(as.list(as.data.frame(
 multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$n.logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
-mtext(outer= T, main="Density of logCPM with calcNormFactor")
 
 # Normalized with cqn and filtered the low values:
 multidensity(as.list(as.data.frame(
@@ -602,8 +599,8 @@ multidensity(as.list(as.data.frame(
 multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$cqn.logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
-mtext(outer= T, main="Density of logCPM with cqn")
 ```
+The normalization after filtering lowly-expressed genes with 'cqn' package clusters samples into one thin gaussian curve whereas normalization with calcNormFactors makes it thiker. 
 
 ### MA-plots
 
@@ -618,7 +615,7 @@ control the relative image size in *inches*. The final image size results from
 'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
 --->
 
-```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S7: MA-plots of the tumor samples."}
+```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure 11: MA-plots of the tumor samples."}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
@@ -635,7 +632,7 @@ for (i in 1:ncol(setmp)) {
 
 We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
 
-```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure S8: MA-plots of the normal samples."}
+```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure 12: MA-plots of the normal samples."}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
@@ -672,10 +669,9 @@ center <- substr(sample_names, 27, 28)
 table(center)
 ```
 
-We can observe that they come from several tissues source sites, but all from the same center (	
-University of North Carolina) and the same metabolite (RNA). However they come from 10 different plates, from 5 portionanalyte and 3 vials.
+We can observe that the samples where collected at 4 tissues source sites but the majority of them at University of Pittsburg (BJ) and MD Anderson(EL). However,the manager center of the data is the same (University of North Carolina) and the same metabolite (RNA). In addition, they come from 7 different plates more or less distributed. However, most samples came from 2 out of 5 different portion    and 2 out of 3 vials.
 
-We are going to check if the TSS as surrogate of batch effect indicator. Considering our outcome
+We are going to check if the previous variables of the barcode are surrogate of batch effect indicator. Considering our outcome
 of interest as molecular changes between sample types, tumor vs. normal, we will examine now
 the cross-classification of this outcome with the variables:
 
@@ -686,8 +682,9 @@ table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
 table(data.frame(TYPE = thca.filtered$type, Portion = portion))
 table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
 ```
+From the tables we can already see that all of them can be candidates as indicators for batch effect as there is no homogeneity of the number of tumor and normal samples across any of the variables. 
 
-To double check if they have some effect on the batch we make the hierarchical clustering of them. First we set some functions to plot the hierarhcical clustering:
+To double check if they have some effect on the batch we make the hierarchical clustering of them. First, we set some functions to plot the hierarhcical clustering:
 
 ```{r clustering.func}
 help.dendogram <- function(x, batch, labels) {
@@ -715,7 +712,7 @@ plot.batch <- function(dendrogram, batching, se, out){
 
 With this functions to plot the clustering with different labelings is easier:
 
-```{r clustering.n, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S9: Hierarchical clustering of the samples."}
+```{r clustering.n1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n1}Figure 13.A: Hierarchical clustering of the samples by portion"}
 d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
@@ -724,15 +721,21 @@ outcome <- paste(substr(colnames(thca.filtered), 9, 12),
 names(outcome) <- colnames(thca.filtered)
 par(mfrow = c(1,1))
 plot.batch(sampleDendrogram, portion, thca.filtered, outcome)
+```
+```{r clustering.n2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n2}Figure 13.B: Hierarchical clustering of the samples by sample vial"}
 plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome)
+```
+```{r clustering.n3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n3}Figure 13.C: Hierarchical clustering of the samples by TSS"}
 plot.batch(sampleDendrogram, tss, thca.filtered, outcome)
+```
+```{r clustering.n4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n4}Figure 13.D: Hierarchical clustering of the samples by type"}
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome)
 ```
 
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
-```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S10: Multidimensional scaling plot of the samples."}
+```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 14: Multidimensional scaling plot of the samples."}
 for (batching in list(portion, as.character(thca.filtered$type), as.character(thca.filtered$gender))){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
@@ -748,9 +751,8 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 
 ### ComBat
 
-After the looking for the batch effect we couldn't find the cause of the batch effect, but we try to see if by 
-#!!!!!!
-```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S11: Hierarchical clustering of the samples."}
+After the looking for the batch effect we couldn't find clearly the cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
+```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15: Hierarchical clustering of the samples."}
 library("sva")
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
 
@@ -771,9 +773,9 @@ We can observe a slightly improvement, but still some tumoral samples cluster to
 
 ### QR Decomposition
 
-To improve the batch effect removal we look if QR decomposition yields better results:
+To improve the batch effect removal we look if QR decomposition yields better results. In this case, we look for sample vial and TSS batch effects removal. To do so, we have to built the full model which would include gender and type as fixed effects. 
 
-```{r clustering.QRdecomposition, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S12: Hierarchical clustering of the samples."}
+```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.1}Figure 16.A: Hierarchical clustering of the samples with QR descompostion for sample vial"}
 library("limma")
 variables0 <- colnames(filtered) # All variables available
 variables <- c("gender", "type") # Variables for the model
@@ -785,10 +787,15 @@ cluster.qr <- hclust(d)
 cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
 
 plot.batch(cluster.qr, samplevial, thca.filtered, outcome)
+```
+```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.2}Figure 16.B: Hierarchical clustering of the samples with QR descompostion for TSS"}
 plot.batch(cluster.qr, tss, thca.filtered, outcome)
+```
+```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.3}Figure 16.C: Hierarchical clustering of the samples with QR descompostion for gender"}
 plot.batch(cluster.qr, thca.filtered$gender, thca.filtered, outcome)
+```
+```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.4}Figure 16.D: Hierarchical clustering of the samples with QR descompostion for type"}
 plot.batch(cluster.qr, thca.filtered$type, thca.filtered, outcome)
-
 ```
 
 With QR decomposition we can observe that just one normal sample clusters with tumoral ones,  and we can't observe other factor influencing this clustering.
@@ -797,7 +804,7 @@ With QR decomposition we can observe that just one normal sample clusters with t
 
 We further try if SVD returns a better result:
 
-```{r clustring.svd, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure S13: Hierarchical clustering of the samples."}
+```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.svd1}Figure 17.A: Hierarchical clustering of the samples with SVD for sample vial"}
 library("corpcor")
 s <- fast.svd(t(scale(t(assays(thca.filtered)$cqn.logCPM),
                       center = TRUE, scale = TRUE)))
@@ -814,12 +821,16 @@ cluster.svd <- as.dendrogram(cluster.svd, hang = 0.1)
 names(batch) <- colnames(thca.filtered)
 
 plot.batch(cluster.svd, samplevial, thca.filtered, outcome)
+```
+```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.svd2}Figure 17.B: Hierarchical clustering of the samples with SVD for TSS"}
 plot.batch(cluster.svd, tss, thca.filtered, outcome)
+```
+```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.svd3}Figure 17.C: Hierarchical clustering of the samples with SVD for type"}
 plot.batch(cluster.svd, thca.filtered$type, thca.filtered, outcome)
 ```
 
 SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed.
-After all the process the best one, that separates better tumor and normal samples is the qr decomposition, which will be used for futher analysis.
+After all the process the best one, that separates better tumor and normal samples is the qr decomposition, which will be used for following-up analysis.
 
 ```{r qrexpr}
 assays(thca.filtered)$qrexp <- qrexp
@@ -830,6 +841,7 @@ assays(thca.filtered)$qrexp <- qrexp
 
 We perform a simple examination of expression changes and their associated p-values
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
+We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
 
 ```{r sva.model, cache=TRUE}
 variables0 <- colnames(filtered) # All variables available
@@ -839,10 +851,10 @@ sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
 
 There are `r sum(p.adjust(pv, method = "fdr") < 0.01)` genes changing significantly
-their expression at FDR < 1%. In Figure S8 below we show the distribution of the
+their expression at FDR < 1%. In Figure 18 below we show the distribution of the
 resulting p-values.
 
-```{r pdist, out.width = "500px", fig.cap = "Figure S14: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
+```{r pdist, out.width = "500px", fig.cap = "Figure 18: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
 par(mfrow=c(1,1))
 hist(pv, main = "Histogram of p-values", las = 1)
 hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
@@ -867,15 +879,15 @@ sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
 We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`.
-Figure S15 shows the resulting distribution of p-values.
+Figure 18 shows the resulting distribution of p-values.
 
-```{r psvdist, out.width = "500px", fig.cap = "Figure S15 Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
+```{r psvdist, out.width = "500px", fig.cap = "Figure 19: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1)
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
-
+After all this first analysis, we can conclude that aproximatelly 5000 genes have different expression levels among tumor and normal samples. 
 
 ## SessionInfo
 
