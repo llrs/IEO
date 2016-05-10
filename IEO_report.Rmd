@@ -603,8 +603,8 @@ par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
 for (i in 1:ncol(setmp)) {
-  A <- rowMeans(assays(setmp)$logCPM)
-  M <- assays(setmp)$logCPM[, i] - A
+  A <- rowMeans(assays(setmp)$cqn.logCPM)
+  M <- assays(setmp)$cqn.logCPM[, i] - A
   samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
   smoothScatter(A, M, main = samplename, las = 1)
   abline(h = 0, col = "blue", lwd = 2)
@@ -620,8 +620,8 @@ par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
 for (i in 1:ncol(setmp)) {
-  A <- rowMeans(assays(setmp)$logCPM)
-  M <- assays(setmp)$logCPM[, i] - A
+  A <- rowMeans(assays(setmp)$cqn.logCPM)
+  M <- assays(setmp)$cqn.logCPM[, i] - A
   samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
   smoothScatter(A, M, main = samplename, las = 1)
   abline(h = 0, col = "blue", lwd = 2)
