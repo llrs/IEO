@@ -353,11 +353,12 @@ sample_names <- unlist(lapply(row.names(filtered_filt), check,
 thca.filtered <- thca[, sample_names]
 
 #Imposing known col.Data in paired normal samples
-thca.filtered$race <- replace(thca.filtered$race, 
-                          which(is.na(thca.filtered$race)), "WHITE")
-thca.filtered$ethnicity <- replace(thca.filtered$ethnicity, 
-                               which(is.na(thca.filtered$ethnicity)), "NOT HISPANIC OR LATINO")
+filtered_filt$race <- replace(filtered_filt$race, 
+                          which(is.na(filtered_filt$race)), "WHITE")
+filtered_filt$ethnicity <- replace(filtered_filt$ethnicity, 
+                               which(is.na(filtered_filt$ethnicity)), "NOT HISPANIC OR LATINO")
 ```
+
 
 We explore again the variables for this subset:
 ```{r subset.explore, fig.cap = "Figure S2 Exploring filtered data"}
@@ -367,7 +368,6 @@ mplot + geom_bar(aes(type, fill = gender)) + b
 mplot + geom_bar(aes(type, fill = tumor_status)) + b + 
     scale_fill_discrete(name="tumor status")
 mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
-mplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b + l
 mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l
 mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + xlab("tumor focality")
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + 
