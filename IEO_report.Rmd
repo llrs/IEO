@@ -216,18 +216,22 @@ filter.info <- function(x){
 ```
 
 We apply these functions to the `col.data` and we visualize it:
+We apply these functions to the `col.data` and we visualize it:
 
-```{r col.data.analysis}
+```{r col.data.analysis, fig.cap="\\label{fig:col.data.analysis}Figure 1."}
 meta.info <- as.data.frame(lapply(col.data, na.replace))
 variable.info <- sapply(meta.info, filter.info)
 
 # Representing the information by column vs total information
 relative.info <- variable.info[order(variable.info)]/sum(variable.info)
 plot(relative.info, main="Information brought by column")
-
+```
+```{r col.data.analysis2, fig.cap="\\label{fig:col.data.analysis2}Figure 2.A"}
 # Plotting the histogram of the information
 hist(variable.info, 
      main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
+```
+```{r col.data.analysis3, fig.cap="\\label{fig:col.data.analysis3}Figure 2.B"}
 # Seeing the most informative to set a threshold,
 # frequency are the number of columns with such % of information
 hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35), 
@@ -265,40 +269,43 @@ y.axis <- ylab("number of cases")
 And we plot some relationships for some significant variables:
 In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
-```{r plots1A, fig.cap = "Figure S1.A Exploring the col.data"}
+And we plot some relationships for some significant variables:
+In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
+
+```{r plots3A, fig.cap="\\label{fig:plots3A}Figure 3.A"}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
     ggtitle("Gender distribution across normal and tumour samples")
 ```
-As expected, there are more female samples than male samples. As we mentioned before, tiroid cancer is more prevalent in women than men and we can see that not only for tumor samples but for normals samples too. In addition, there are more tumor cases than normal cases.
-```{r plots1B, fig.cap = "Figure S1.B Exploring the col.data"}
+As expected, there are more female samples than male samples. As we mentioned before, thyroid cancer is more prevalent in women than men and we can see that not only for tumor samples but for normals samples too. In addition, there are more tumor cases than normal cases.
+```{r plots3B,fig.cap="\\label{fig:plots3B}Figure 3.B"}
 fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + 
     ggtitle("Tumor status across normal and tumour samples")
 ```
 We also have examined the tumor status of the tumor samples. There are more cancer patients without tumor ("tumor free") than with the tumor ("with tumor") after the collection of the data. We assume that most of the patients that participate in the study have recovered after it. 
-```{r plots1C, fig.cap = "Figure S1.C Exploring the col.data"}
+```{r plots3C, fig.cap="\\label{fig:plots3C}Figure 3.C"}
 fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + 
     y.axis + ggtitle("Ethnicity distribution across normal and tumour samples")
 ```
 In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
-```{r plots1D, fig.cap = "Figure S1.D Exploring the col.data"}
+```{r plots3D, fig.cap="\\label{fig:plots3D}Figure 3.D"}
 labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
             "WHITE", "NA")
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b +
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
     l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
     ggtitle("Gender distribution across different ethnicity and race.")
 ```
 If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
-```{r plots1E, fig.cap = "Figure S1.E Exploring the col.data"}
+```{r plots3E, fig.cap="\\label{fig:plots3E}Figure 3.E"}
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
     ggtitle("Ethnicity distribution in male and female")
 ```
 If we ignore the hispanic origin of the individuals and just focus on the main ethnicities of the study we can observe that for both female and male samples there is  a majority of "white" individuals. However, the fact that "white" subjects are hispanic or not can provide some variability so that is something we will take into account later. 
-```{r plots1F, fig.cap = "Figure S1.F Exploring the col.data"}
+```{r plots3F, fig.cap="\\label{fig:plots3F}Figure 3.F"}
 fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
     l + y.axis + xlab("tumor focality") + ggtitle("Gender distribution in different tumour focality")
 ```
 There is no data about tumor focality in the normal samples... 
-```{r plots1H, fig.cap = "Figure S1.H Exploring the col.data"}
+```{r plots3G, fig.cap="\\label{fig:plots3G}Figure 3.G"}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
 hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
@@ -308,7 +315,7 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis +
     ggtitle("Gender distribution across different types of hystologic diagnosis")
 ```
 Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
-```{r plots1I, fig.cap = "Figure S1.I Exploring the col.data", fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE}
+```{r plots3H, fig.cap="\\label{fig:plots3H}Figure 3.H", fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
 ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) + 
@@ -359,29 +366,39 @@ filtered_filt$ethnicity <- replace(filtered_filt$ethnicity,
                                which(is.na(filtered_filt$ethnicity)), "NOT HISPANIC OR LATINO")
 ```
 
-
-We explore again the variables for this subset:
-```{r subset.explore, fig.cap = "Figure S2 Exploring filtered data"}
+We explore again the variables for this subset. In this case, we show just some of the relationship plots we have seen previously:
+```{r subset.explore1, fig.cap="\\label{fig:subset.explore1}Figure 4.A"}
 meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(meta.filtered.subset) + y.axis
-mplot + geom_bar(aes(type, fill = gender)) + b
-mplot + geom_bar(aes(type, fill = tumor_status)) + b + 
-    scale_fill_discrete(name="tumor status")
-mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b
-mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l
-mplot + facet_wrap(~type)+geom_bar(aes(tumor_focality, fill = gender)) + b + l + xlab("tumor focality")
+mplot + geom_bar(aes(type, fill = gender)) + b +
+  ggtitle("Ethnicity and type of sample after filtering")
+```
+This plot just checks whether we have the same number of cases in normal sample and tumor sample so that we have done correctly the filtering.
+```{r subset.explore2, fig.cap="\\label{fig:subset.explore2}Figure 4.B"}
+mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b +
+  ggtitle("Hispanic origin, gender and type of sample after filtering")
+```
+Hispanic origin data is only available for tumor samples but as we have mentioned before we can extrapolate ethinicity and origin to the normal samples because they are paired (see below). 
+```{r subset.explore3, fig.cap="\\label{fig:subset.explore3}Figure 4.C"}
+mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l +
+  ggtitle("Gender samples and hispanic origin after filtering")
+```
+Same proportion of being or not being "hispanic or latino" in females and males. Subset filtering has not modified the fact that we have more female samples than males. 
+```{r subset.explore4, fig.cap="\\label{fig:subset.explore4}Figure 4.D"}
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + 
-    scale_x_discrete(name = "histogic diagnosis", breaks=waiver(), 
+    scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
     labels = c("Papillary - Classical", "NA")) + 
-    ggtitle("Gender distribution across different types of hystologic diagnosis")
-
+    ggtitle("Gender distribution across different types of hystologic diagnosis after filtering")
+```
+Papillary Classical Thyroid cancer in the same proportion as "NA" because we have the same number of normal cases and classical thyroid tumor cases. 
+```{r subset.explore5, fig.cap="\\label{fig:subset.explore5}Figure 4.E"}
 ggplot(meta.filtered.subset[!is.na(meta.filtered.subset$age_at_diagnosis), ]) +
     geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis +
     xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis",
     breaks=waiver(), labels = c("Papillary - Classical", "NA")) + 
-    ggtitle("Histologic diagnosis distribution across different ages")
+    ggtitle("Histologic diagnosis distribution across different ages after filtering")
 ```
-
+Number of cases across ages is more or less similar after the filtering exept for some ages that have more cases around 30, 34, 42 and 47. 
 
 To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
