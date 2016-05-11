@@ -1,5 +1,9 @@
 ---
-output: html_document
+title: "Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)"
+output:
+  html_document:
+    toc: true
+    theme: united
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
 library("knitr")
@@ -137,10 +141,6 @@ if (length(fig_labels) > 0) {
 
 cat(dumpcssfile(file.path("css", "ieo.css")))
 ```
----
-output: html_document
----
-# Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)
 
 #### Mauro Álvarez (mauro.alvarez01@estudiant.upf.edu)
 #### Lluís Revilla(lluis.revilla01@estudiant.upf.edu)
