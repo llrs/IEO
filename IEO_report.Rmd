@@ -372,8 +372,8 @@ filtered_filt$ethnicity <- replace(filtered_filt$ethnicity,
 
 We explore again the variables for this subset. In this case, we show just some of the relationship plots we have seen previously:
 ```{r subset.explore1, fig.cap="\\label{fig:subset.explore1}Figure 4.A"}
-meta.filtered.subset <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
-mplot <- ggplot(meta.filtered.subset) + y.axis
+filtered_filt <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
+mplot <- ggplot(filtered_filt) + y.axis
 mplot + geom_bar(aes(type, fill = gender)) + b +
   ggtitle("Ethnicity and type of sample after filtering")
 ```
@@ -396,7 +396,7 @@ mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l +
 ```
 Papillary Classical Thyroid cancer in the same proportion as "NA" because we have the same number of normal cases and classical thyroid tumor cases. 
 ```{r subset.explore5, fig.cap="\\label{fig:subset.explore5}Figure 4.E"}
-ggplot(meta.filtered.subset[!is.na(meta.filtered.subset$age_at_diagnosis), ]) +
+ggplot(filtered_filt[!is.na(filtered_filt$age_at_diagnosis), ]) +
     geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis +
     xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis",
     breaks=waiver(), labels = c("Papillary - Classical", "NA")) + 
@@ -925,13 +925,26 @@ summary(res)
 ```
 
 ```{r tt,}
-tt_tumor <- toptable(fit, coef = "typetumor")
-tt_gender <- toptable(fit, coef = "genderMALE")
+tt_tumor <- topTable(fit, number = Inf, coef = "typetumor")
+tt_gender <- topTable(fit, number = Inf, coef = "genderMALE")
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
                   all.x = T, all.y = F)
 tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID", 
                    all.x = T, all.y = F)
+```
+
+```{r accuracy}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit$t[, 3], df = fit$df.prior + fit$df.residual[3], main = "", pch = ".", cex = 3)
+qqline(fit$t[, 3], lwd = 2)
+```
+
+```{r volcanoplot}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+volcanoplot(fit, coef = 2, highlight = 7, fit$genes$symbol, main = "model Gender", las = 1)
+volcanoplot(fit, coef = 3, highlight = 7, fit$genes$symbol, main = "model Disease", las = 1)
 ```
 ## SessionInfo
 
