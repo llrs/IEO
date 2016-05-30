@@ -787,12 +787,9 @@ To improve the batch effect removal we look if QR decomposition yields better re
 
 ```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.1}Figure 16.A: Hierarchical clustering of the samples with QR descompostion for sample vial"}
 library("limma")
-variables0 <- colnames(filtered) # All variables available
-variables <- c("gender", "type") # Variables for the model
-form <- as.formula(paste("~ ", paste(variables, collapse = "*"))) # Building the model
+form <- as.formula("~ gender + type") # Building the model
 mod  <- model.matrix(form, data = colData(thca.filtered))
-qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, as.numeric(as.factor(tss)), 
-                           design = mod)
+qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = mod)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
 cluster.qr <- hclust(d)
 cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
@@ -887,7 +884,7 @@ surrogate variables.
 ```{r svn.ftest}
 modsv <- cbind(mod, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
-pvsv <- f.pvalue(assays(thca.filtered)$qrexpr, modsv, mod0sv)
+pvsv <- f.pvalue(assays(thca.filtered)$qrexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
@@ -912,10 +909,11 @@ annot <- select(org.Hs.eg.db, keys = rownames(thca.filtered), columns = c("SYMBO
 ```
 
 ## Differential expression
+Using the expression values with batch effect removed by qr decomposition we find the top differentially expressed genes:
 
 ```{r DE, cache = TRUE}
 # Transform the log2 normalized by cqn to counts
-cqn.n <- apply(assays(thca.filtered)$qrexpr, 1:2, function(x){2^(x)}) 
+cqn.n <- apply(assays(thca.filtered)$qrexp, 1:2, function(x){2^(x)}) 
 # Normalize by mean variance with voom
 vo <- voom(cqn.n, mod, plot = TRUE)
 corfit <- duplicateCorrelation(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode)
@@ -925,28 +923,53 @@ res <- decideTests(fit)
 summary(res)
 ```
 
+List of differentially expressed genes annotated with symbol and ensembl id:
+
 ```{r tt,}
 tt_tumor <- topTable(fit, number = Inf, coef = "typetumor")
 tt_gender <- topTable(fit, number = Inf, coef = "genderMALE")
+
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
                   all.x = T, all.y = F)
 tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID", 
                    all.x = T, all.y = F)
+head(tt_tumor)
 ```
 
+Diagnostics plot:
+
 ```{r accuracy}
-pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+pars <- par(mfrow = c(2, 2), mar = c(4, 5, 2, 2))
 hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit$t[, 3], df = fit$df.prior + fit$df.residual[3], main = "", pch = ".", cex = 3)
 qqline(fit$t[, 3], lwd = 2)
+hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual[2], main = "", pch = ".", cex = 3)
+qqline(fit$t[, 2], lwd = 2)
 ```
+
+Volcano plot:
 
 ```{r volcanoplot}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+
 volcanoplot(fit, coef = 2, highlight = 7, fit$genes$symbol, main = "model Gender", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
 volcanoplot(fit, coef = 3, highlight = 7, fit$genes$symbol, main = "model Disease", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
 ```
+
+The number of genes which are differentialed expressed
+```{r de.number}
+dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6,])[1]
+dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
+```
+
 ## SessionInfo
 
 ```{r sessionInfo}
