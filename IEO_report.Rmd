@@ -789,9 +789,10 @@ To improve the batch effect removal we look if QR decomposition yields better re
 library("limma")
 variables0 <- colnames(filtered) # All variables available
 variables <- c("gender", "type") # Variables for the model
-form <- as.formula(paste("~ ", paste(variables, collapse = "+"))) # Building the model
-mod  <- model.matrix(form, data=colData(thca.filtered)[, variable.info > 0.6])
-qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, batch, design = mod)
+form <- as.formula(paste("~ ", paste(variables, collapse = "*"))) # Building the model
+mod  <- model.matrix(form, data = colData(thca.filtered))
+qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, as.numeric(as.factor(tss)), 
+                           design = mod)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
 cluster.qr <- hclust(d)
 cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
@@ -806,6 +807,7 @@ plot.batch(cluster.qr, thca.filtered$gender, thca.filtered, outcome)
 ```
 ```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.4}Figure 16.D: Hierarchical clustering of the samples with QR descompostion for type"}
 plot.batch(cluster.qr, thca.filtered$type, thca.filtered, outcome)
+plot.batch(cluster.qr, tss, thca.filtered, outcome)
 ```
 
 With QR decomposition we can observe that just one normal sample clusters with tumoral ones,  and we can't observe other factor influencing this clustering.
@@ -844,7 +846,6 @@ After all the process the best one, that separates better tumor and normal sampl
 
 ```{r qrexpr}
 assays(thca.filtered)$qrexp <- qrexp
-
 ```
 
 ## Differential expression
@@ -875,7 +876,7 @@ hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 Now, let's estimate surrogate variables using the `sva()` function.
 
 ```{r sva.variables}
-sv <- sva(assays(thca.filtered)$cqn.logCPM, mod, mod0)
+sv <- sva(assays(thca.filtered)$qrexp, mod, mod0)
 sv$n
 ```
 
@@ -886,7 +887,7 @@ surrogate variables.
 ```{r svn.ftest}
 modsv <- cbind(mod, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
-pvsv <- f.pvalue(assays(thca.filtered)$cqn.logCPM, modsv, mod0sv)
+pvsv <- f.pvalue(assays(thca.filtered)$qrexpr, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
@@ -914,7 +915,7 @@ annot <- select(org.Hs.eg.db, keys = rownames(thca.filtered), columns = c("SYMBO
 
 ```{r DE, cache = TRUE}
 # Transform the log2 normalized by cqn to counts
-cqn.n <- apply(assays(thca.filtered)$cqn.logCPM, 1:2, function(x){2^(x)}) 
+cqn.n <- apply(assays(thca.filtered)$qrexpr, 1:2, function(x){2^(x)}) 
 # Normalize by mean variance with voom
 vo <- voom(cqn.n, mod, plot = TRUE)
 corfit <- duplicateCorrelation(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode)
