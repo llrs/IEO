@@ -1,6 +1,8 @@
 ---
 title: "Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)"
 output:
+  pdf_document:
+    toc: true
   html_document:
     toc: true
     theme: united
@@ -218,7 +220,6 @@ filter.info <- function(x){
 }
 ```
 
-We apply these functions to the `col.data` and we visualize it:
 We apply these functions to the `col.data` and we visualize it:
 
 ```{r col.data.analysis, fig.cap="\\label{fig:col.data.analysis}Figure 1."}
@@ -734,7 +735,9 @@ plot.batch(sampleDendrogram, tss, thca.filtered, outcome)
 ```{r clustering.n4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n4}Figure 13.D: Hierarchical clustering of the samples by type"}
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome)
 ```
-
+```{r clustering.n5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n1}Figure 13.E: Hierarchical clustering of the samples by prospective collection"}
+plot.batch(sampleDendrogram, as.character(thca.filtered$prospective_collection), thca.filtered, outcome)
+```
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
@@ -900,6 +903,36 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
 ```
 After all this first analysis, we can conclude that aproximatelly 5000 genes have different expression levels among tumor and normal samples. 
 
+## Functional Annotation
+We want ensembl annotation:
+```{r annot}
+library("org.Hs.eg.db")
+annot <- select(org.Hs.eg.db, keys = rownames(thca.filtered), columns = c("SYMBOL", "ENSEMBL", keytype = "ENTREZID"))
+```
+
+## Differential expression
+
+```{r DE, cache = TRUE}
+# Transform the log2 normalized by cqn to counts
+cqn.n <- apply(assays(thca.filtered)$cqn.logCPM, 1:2, function(x){2^(x)}) 
+# Normalize by mean variance with voom
+vo <- voom(cqn.n, mod, plot = TRUE)
+corfit <- duplicateCorrelation(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode)
+fit <- lmFit(vo, mod, correlation = corfit$consensus.correlation)
+fit <- eBayes(fit)
+res <- decideTests(fit)
+summary(res)
+```
+
+```{r tt,}
+tt_tumor <- toptable(fit, coef = "typetumor")
+tt_gender <- toptable(fit, coef = "genderMALE")
+# Annotate with the gene symbol
+tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
+                  all.x = T, all.y = F)
+tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID", 
+                   all.x = T, all.y = F)
+```
 ## SessionInfo
 
 ```{r sessionInfo}
