@@ -970,6 +970,80 @@ dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6,])[1]
 dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
 ```
 
+##Functional enrichment
+
+```{r fun.enrich.params}
+library(GOstats)
+
+geneUniverse <- rownames(thca)
+
+DE_tumor <- rownames(tt_tumor)[tt_tumor$adj.P.Val < 0.05] 
+
+DE_gender <- rownames(tt_gender)[tt_gender$adj.P.Val < 0.05] 
+
+params_tumor <- new("GOHyperGParams", geneIds=DE_tumor, universeGeneIds=geneUniverse,
+                annotation="org.Hs.eg.db", ontology="BP",
+                pvalueCutoff=0.05, testDirection="over", conditional = TRUE)
+
+params_gender <- new("GOHyperGParams", geneIds=DE_tumor, universeGeneIds=geneUniverse,
+                annotation="org.Hs.eg.db", ontology="BP",
+                pvalueCutoff=0.05, testDirection="over", conditional = TRUE)
+```
+
+```{r fun.enrich.tumor}
+hgOver_tumor <- hyperGTest(params_tumor)
+hgOver_tumor
+
+summary <- GOstats::summary
+GO_tumor <- summary(hgOver)
+
+GO_tumor <- GO_tumor[GO_tumor$Size >= 10 & GO_tumor$Count >= 10, ]
+GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing=TRUE), ]
+head(GO_tumor)
+
+geneIDs <- geneIdsByCategory(hgOver_tumor)[GO_tumor$GOBPID]
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns="SYMBOL", key=id, keytype="ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse=", ")
+GO_tumor <- cbind(GO_tumor, Genes=geneSYMs)
+rownames(GO_tumor) <- 1:nrow(GO_tumor)
+
+```
+
+```{r fun.enrich.gender}
+hgOver_gender <- hyperGTest(params_gender)
+hgOver_gender
+
+summary <- GOstats::summary
+GO_gender <- summary(hgOver)
+
+GO_gender <- GO_gender[GO_gender$Size >= 5 & GO_gender$Count >= 5, ]
+GO_gender <- GO_gender[order(GO_gender$OddsRatio, decreasing=TRUE), ]
+head(GO_gender)
+
+geneIDs <- geneIdsByCategory(hgOver_gender)[GO_gender$GOBPID]
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns="SYMBOL", key=id, keytype="ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse=", ")
+GO_gender <- cbind(GO_gender, Genes=geneSYMs)
+rownames(GO_gender) <- 1:nrow(GO_gender)
+
+```
+
+
+```{r fun.enrich.visualize}
+
+library(xtable)
+xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|c|")
+print(xtab_tumor, file="GO_tumor.html", type="html")
+
+browseURL("GO_tumor.html")
+
+xtab_gender <- xtable(GO_gender, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+print(xtab_gender, file="GO_gender.html", type="html")
+
+browseURL("GO_gender.html")
+```
+
+
 ## SessionInfo
 
 ```{r sessionInfo}
