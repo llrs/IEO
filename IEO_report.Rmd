@@ -917,7 +917,8 @@ cqn.n <- apply(assays(thca.filtered)$qrexp, 1:2, function(x){2^(x)})
 # Normalize by mean variance with voom
 vo <- voom(cqn.n, mod, plot = TRUE)
 corfit <- duplicateCorrelation(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode)
-fit <- lmFit(vo, mod, correlation = corfit$consensus.correlation)
+fit <- lmFit(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode,
+             correlation = corfit$consensus.correlation)
 fit <- eBayes(fit)
 res <- decideTests(fit)
 summary(res)
