@@ -1026,14 +1026,22 @@ hgOver_tumor
 
 GO_tumor <- GOstats::summary(hgOver_tumor)
 
+dim(GO_tumor)
+
 GO_tumor <- GO_tumor[GO_tumor$Size >= 10 & GO_tumor$Count >= 10, ]
+
+dim(GO_tumor)
+
+ggplot(GO_tumor, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
+    geom_point() + b
+
 GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing = TRUE), ]
 head(GO_tumor)
 
 geneIDs <- geneIdsByCategory(hgOver_tumor)[GO_tumor$GOBPID]
-# geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, 
-#                     columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
-geneSYMs <- sapply(unique(annot.Entrez.GO[,-1]), paste, collapse = ", ")
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db,
+                    columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
 GO_tumor <- cbind(GO_tumor, Genes = geneSYMs)
 rownames(GO_tumor) <- 1:nrow(GO_tumor)
 
