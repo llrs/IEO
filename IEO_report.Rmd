@@ -1,11 +1,11 @@
 ---
 title: "Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)"
 output:
-  pdf_document:
-    toc: true
   html_document:
     toc: true
     theme: united
+  pdf_document:
+toc: true
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
 library("knitr")
@@ -872,7 +872,7 @@ hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 
 Now, let's estimate surrogate variables using the `sva()` function.
 
-```{r sva.variables}
+```{r sva.variables, cache = TRUE}
 sv <- sva(assays(thca.filtered)$qrexp, mod, mod0)
 sv$n
 ```
@@ -881,7 +881,7 @@ The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
 assess against the extent of differential expression this time adjusting for these
 surrogate variables.
 
-```{r svn.ftest}
+```{r svn.ftest, cache = TRUE}
 modsv <- cbind(mod, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
 pvsv <- f.pvalue(assays(thca.filtered)$qrexp, modsv, mod0sv)
@@ -902,10 +902,23 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
 After all this first analysis, we can conclude that aproximatelly 5000 genes have different expression levels among tumor and normal samples. 
 
 ## Functional Annotation
-We want ensembl annotation:
-```{r annot}
+
+We want ensembl annotation, and gene symbol of our probes, and we want also the gene ontologies from all the human genes (will be later used for functional enrichment:
+
+```{r annot, cache = TRUE}
 library("org.Hs.eg.db")
-annot <- select(org.Hs.eg.db, keys = rownames(thca.filtered), columns = c("SYMBOL", "ENSEMBL", keytype = "ENTREZID"))
+annot <- select(org.Hs.eg.db, 
+                columns = c("SYMBOL", "ENSEMBL"),
+                keys = rownames(thca.filtered),
+                keytype = "ENTREZID")
+all.Human.GO <- select(org.Hs.eg.db,
+                       columns = "GO", 
+                       key = keys(org.Hs.eg.db, keytype = "ENTREZID"), 
+                       keytype = "ENTREZID")
+annot.Entrez.GO <- select(org.Hs.eg.db, 
+                columns = c("GO", "SYMBOL"),
+                keys = rownames(thca.filtered),
+                keytype = "ENTREZID")
 ```
 
 ## Differential expression
@@ -926,7 +939,7 @@ summary(res)
 
 List of differentially expressed genes annotated with symbol and ensembl id:
 
-```{r tt,}
+```{r tt, cache = TRUE}
 tt_tumor <- topTable(fit, number = Inf, coef = "typetumor")
 tt_gender <- topTable(fit, number = Inf, coef = "genderMALE")
 
@@ -940,14 +953,19 @@ head(tt_tumor)
 
 Diagnostics plot:
 
-```{r accuracy}
+```{r accuracy, cache = TRUE}
 pars <- par(mfrow = c(2, 2), mar = c(4, 5, 2, 2))
-hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
-qqt(fit$t[, 3], df = fit$df.prior + fit$df.residual[3], main = "", pch = ".", cex = 3)
-qqline(fit$t[, 3], lwd = 2)
 hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual[2], main = "", pch = ".", cex = 3)
-qqline(fit$t[, 2], lwd = 2)
+qqline(fit$t[, 2], lwd = 2, col = "red")
+abline(0, 1, lwd = 2)
+mtext("Comparing genes between gender", outer = TRUE, cex = 1.5, side = 3, line = -2)
+hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit$t[, 3], df = fit$df.prior + fit$df.residual[3], main = "", pch = ".", cex = 3)
+qqline(fit$t[, 3], lwd = 2, col = "red")
+abline(0, 1, lwd = 2)
+mtext("Comparing genes between patients and healthy.", outer = TRUE, cex = 1.5, 
+      side = 3, line = -23)
 ```
 
 Volcano plot:
@@ -966,6 +984,7 @@ abline(v = -2)
 ```
 
 The number of genes which are differentialed expressed
+
 ```{r de.number}
 dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6,])[1]
 dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
@@ -973,75 +992,89 @@ dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
 
 ##Functional enrichment
 
+We can perform a functional enrichment on our data with the GO already stored
+
 ```{r fun.enrich.params}
 library(GOstats)
 
-geneUniverse <- rownames(thca)
+DE_tumor <- unique(tt_tumor[abs(tt_tumor$logFC) > 2 & 
+                                  tt_tumor$B > 4.6 & 
+                                  tt_tumor$adj.P.Val < 0.05, "Row.names"])
 
-DE_tumor <- rownames(tt_tumor)[tt_tumor$adj.P.Val < 0.05] 
+DE_gender <- unique(tt_gender[abs(tt_gender$logFC) > 2 & 
+                                  tt_gender$B > 4.6 & 
+                                  tt_gender$adj.P.Val < 0.05, "Row.names"])
 
-DE_gender <- rownames(tt_gender)[tt_gender$adj.P.Val < 0.05] 
+params_tumor <- new("GOHyperGParams", geneIds = DE_tumor,
+                    universeGeneIds = unique(all.Human.GO$ENTREZID),
+                    annotation = "org.Hs.eg.db", ontology = "BP",
+                    pvalueCutoff = 0.05, testDirection = "over", 
+                    conditional = TRUE)
 
-params_tumor <- new("GOHyperGParams", geneIds=DE_tumor, universeGeneIds=geneUniverse,
-                annotation="org.Hs.eg.db", ontology="BP",
-                pvalueCutoff=0.05, testDirection="over", conditional = TRUE)
-
-params_gender <- new("GOHyperGParams", geneIds=DE_tumor, universeGeneIds=geneUniverse,
-                annotation="org.Hs.eg.db", ontology="BP",
-                pvalueCutoff=0.05, testDirection="over", conditional = TRUE)
+params_gender <- new("GOHyperGParams", geneIds = DE_tumor,
+                    universeGeneIds = unique(all.Human.GO$ENTREZID),
+                    annotation = "org.Hs.eg.db", ontology = "BP",
+                    pvalueCutoff = 0.05, testDirection = "over", 
+                    conditional = TRUE)
 ```
 
-```{r fun.enrich.tumor}
+Once prepared with the object we can run the analysis:
+
+```{r fun.enrich.tumor, cache = TRUE}
 hgOver_tumor <- hyperGTest(params_tumor)
 hgOver_tumor
 
-summary <- GOstats::summary
-GO_tumor <- summary(hgOver)
+GO_tumor <- GOstats::summary(hgOver_tumor)
 
 GO_tumor <- GO_tumor[GO_tumor$Size >= 10 & GO_tumor$Count >= 10, ]
-GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing=TRUE), ]
+GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing = TRUE), ]
 head(GO_tumor)
 
 geneIDs <- geneIdsByCategory(hgOver_tumor)[GO_tumor$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns="SYMBOL", key=id, keytype="ENTREZID")$SYMBOL)
-geneSYMs <- sapply(geneSYMs, paste, collapse=", ")
-GO_tumor <- cbind(GO_tumor, Genes=geneSYMs)
+# geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, 
+#                     columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+geneSYMs <- sapply(unique(annot.Entrez.GO[,-1]), paste, collapse = ", ")
+GO_tumor <- cbind(GO_tumor, Genes = geneSYMs)
 rownames(GO_tumor) <- 1:nrow(GO_tumor)
 
 ```
 
-```{r fun.enrich.gender}
+We should do the same if we had some genes differentially expressed on the comparison between gender.
+
+```{r fun.enrich.gender, eval=FALSE, include=FALSE}
 hgOver_gender <- hyperGTest(params_gender)
 hgOver_gender
 
 summary <- GOstats::summary
-GO_gender <- summary(hgOver)
+GO_gender <- summary(hgOver_tumor)
 
 GO_gender <- GO_gender[GO_gender$Size >= 5 & GO_gender$Count >= 5, ]
-GO_gender <- GO_gender[order(GO_gender$OddsRatio, decreasing=TRUE), ]
+GO_gender <- GO_gender[order(GO_gender$OddsRatio, decreasing = TRUE), ]
 head(GO_gender)
 
 geneIDs <- geneIdsByCategory(hgOver_gender)[GO_gender$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns="SYMBOL", key=id, keytype="ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, 
+            columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
 geneSYMs <- sapply(geneSYMs, paste, collapse=", ")
-GO_gender <- cbind(GO_gender, Genes=geneSYMs)
+GO_gender <- cbind(GO_gender, Genes = geneSYMs)
 rownames(GO_gender) <- 1:nrow(GO_gender)
 
 ```
 
+Looking into the table:
 
 ```{r fun.enrich.visualize}
-
 library(xtable)
-xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|c|")
-print(xtab_tumor, file="GO_tumor.html", type="html")
-
-browseURL("GO_tumor.html")
-
-xtab_gender <- xtable(GO_gender, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-print(xtab_gender, file="GO_gender.html", type="html")
-
-browseURL("GO_gender.html")
+xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+print(xtab_tumor)
+# print(xtab_tumor, file="GO_tumor.html", type="html")
+# 
+# browseURL("GO_tumor.html")
+# 
+# xtab_gender <- xtable(GO_gender, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+# print(xtab_gender, file="GO_gender.html", type="html")
+# 
+# browseURL("GO_gender.html")
 ```
 
 
