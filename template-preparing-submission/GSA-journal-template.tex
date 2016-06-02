@@ -77,7 +77,9 @@ The aim of our project deviates from being a replicate of the TCGA project. Our 
 
 
 \section*{Materials and Methods}
-All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed as a \textit{SummarizedExperiment} class object \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. 
+All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed within \textit{SummarizedExperiment} class object container \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. Before any analysis, we have normalized the data following the edgeR pipeline for normalizing RNA-seq data \citep{Robinson2010}. Robinson's guide consist on first of all scaling the data into \textit{counts per million reads} (CPM) and then using the \textit{Trimmed Mean of M-values }(TMM) method implemented in the edgeR R/Bioconductor package \citep{Robinson2010a}. After that, we also have perfomed a quantile normalization on the RNA-seq count data using the \textit{cqn} R/Bioconductor package \citep{Hansen2012}. 
+
+A part from normalization, we also have considered possible batch effects. 
 
 \subsection*{Data Availability}
 
