@@ -71,15 +71,21 @@ From the four types of thyroid cancer (papillary, follicular, medullary, and ana
 
 Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway \citep{Kimura2003}. Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells \citep{Xing2013a}. On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells \citep{Xing2013a}.
 
-Research from \href{http://cancergenome.nih.gov/cancersselected/thyroid}{ The Cancer Genome Atlas} focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer \cite{Agrawal2014a}. They proposed a new classification of PTC subtypes based on their molecular findings. 
+Research from \href{http://cancergenome.nih.gov/cancersselected/thyroid}{ The Cancer Genome Atlas} focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer . They proposed a new classification of PTC subtypes based on their molecular findings. 
 
 The aim of our project deviates from being a replicate of the TCGA project. Our academic purpose has been to study differentially expressed genes from tumor and normal samples but also taking into account whether there could be a gender effect on the tumorgenesis of PTC. To our knowledge, there is no clear reason why thyroid cancer is more prevalent in women than men. Therefore, it would be interesting to analyze whether there are differentially expressed genes within genders and respect to thyroid cancer. In addition, in case there are significant differences in gene expression which are the main pathways affected. 
 
 
 \section*{Materials and Methods}
+\subsection*{Normalization}
 All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed within \textit{SummarizedExperiment} class object container \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. Before any analysis, we have normalized the data following the edgeR pipeline for normalizing RNA-seq data \citep{Robinson2010}. Robinson's guide consist on first of all scaling the data into \textit{counts per million reads} (CPM) and then using the \textit{Trimmed Mean of M-values }(TMM) method implemented in the edgeR R/Bioconductor package \citep{Robinson2010a}. After that, we also have perfomed a quantile normalization on the RNA-seq count data using the \textit{cqn} R/Bioconductor package \citep{Hansen2012}. 
 
+\subsection*{Batch effects assessment}
 A part from normalization, we also have considered possible batch effects. 
+
+\subsection*{Differential expression analysis}
+
+\subsection*{Functional enrichment}
 
 \subsection*{Data Availability}
 
