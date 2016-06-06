@@ -905,7 +905,28 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
+<<<<<<< HEAD
 After all this first analysis, we can conclude that aproximatelly 4000 genes have different expression levels among tumor and normal samples. 
+=======
+
+After all this first analysis, we can conclude that aproximatelly 4300 genes have different expression levels among tumor and normal samples. 
+
+We remove the surrogate variable:
+```{r remove_surrogates}
+# Code from https://www.biostars.org/p/121489/#121500
+cleanY = function(y, mod, svs) {
+    X = cbind(mod, svs)
+    Hat = solve(t(X) %*% X) %*% t(X)
+    beta = (Hat %*% t(y))
+    rm(Hat)
+    gc()
+    P = ncol(mod)
+    return(y - t(as.matrix(X[,-c(1:P)]) %*% beta[-c(1:P),]))
+}
+
+e.no_surrogates <- cleanY(assays(thca.filtered)$qrexp, design, sv$sv)
+```
+>>>>>>> Correctly removing surrogates
 
 ## Functional Annotation
 
@@ -932,8 +953,13 @@ annot.Entrez.GO <- select(org.Hs.eg.db,
 Using the expression values with batch effect removed by qr decomposition we find the top differentially expressed genes:
 
 ```{r DE, cache = TRUE}
+<<<<<<< HEAD
 # Transform the log2 normalized by cqn to counts with the surrogate variables
 n_counts <- apply(sv$sv, 1:2, function(x){2^(x)}) 
+=======
+# Transform the log2 normalized by cqn to counts without the surrogate variables
+n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
+>>>>>>> Correctly removing surrogates
 
 # Normalize by mean variance with voom
 vo <- voom(n_counts, design, plot = TRUE)
@@ -1037,6 +1063,7 @@ dim(tt_males[abs(tt_males$logFC) > 2 & tt_males$B > 4.6,])[1]
 dim(tt_females[abs(tt_gender$logFC) > 2 & tt_females$B > 4.6,])[1]
 ```
 
+<<<<<<< HEAD
 
 ##Functional enrichment
 
@@ -1044,7 +1071,11 @@ We can perform a functional enrichment on our data with the GO already stored
 
 ```{r fun.enrich.params_tumors}
 library(GOstats)
+=======
+We can see the names overlap of the different comparisons
+>>>>>>> Correctly removing surrogates
 
+```{r names_overlap}
 DE_tumor <- unique(tt_tumor[abs(tt_tumor$logFC) > 2 & 
                                   tt_tumor$B > 4.6 & 
                                   tt_tumor$adj.P.Val < 0.05, "Row.names"])
@@ -1053,6 +1084,25 @@ DE_gender <- unique(tt_gender[abs(tt_gender$logFC) > 2 &
                                   tt_gender$B > 4.6 & 
                                   tt_gender$adj.P.Val < 0.05, "Row.names"])
 
+DE_males <- unique(tt_males[abs(tt_males$logFC) > 2 & 
+                                  tt_males$B > 4.6 & 
+                                  tt_males$adj.P.Val < 0.05, "Row.names"])
+
+DE_females <- unique(tt_females[abs(tt_females$logFC) > 2 & 
+                                  tt_females$B > 4.6 & 
+                                  tt_females$adj.P.Val < 0.05, "Row.names"])
+
+
+
+```
+
+Next 
+
+##Functional enrichment
+
+We can perform a functional enrichment on our data with the GO already stored
+
+```{r library(GOstats)}
 params_tumor <- new("GOHyperGParams", geneIds = DE_tumor,
                     universeGeneIds = unique(all.Human.GO$ENTREZID),
                     annotation = "org.Hs.eg.db", ontology = "BP",
