@@ -1048,12 +1048,11 @@ abline(v = -2)
 The number of genes which are differentialed expressed
 
 ```{r de.number}
-dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6,])[1]
-dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
-dim(tt_males[abs(tt_males$logFC) > 2 & tt_males$B > 4.6,])[1]
-dim(tt_females[abs(tt_females$logFC) > 2 & tt_females$B > 4.6,])[1]
+dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6 & tt_tumor$adj.P.Val < 0.05,])[1]
+dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6 & tt_gender$adj.P.Val < 0.05,])[1]
+dim(tt_males[abs(tt_males$logFC) > 2 & tt_males$B > 4.6 & tt_males$adj.P.Val < 0.05,])[1]
+dim(tt_females[abs(tt_females$logFC) > 2 & tt_females$B > 4.6 & tt_females$adj.P.Val < 0.05,])[1]
 ```
-
 
 ##Functional enrichment
 
@@ -1078,6 +1077,11 @@ DE_females <- unique(tt_females[abs(tt_females$logFC) > 2 &
 ```
 
 Next we can plot the Venn with the names of the overlapping genes
+
+```{r venn_plots}
+library("VennDiagram")
+library("Vennerable")
+```
 
 ##Functional enrichment
 
