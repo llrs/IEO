@@ -22,7 +22,7 @@
 \affil[$\ast$]{Universitat Pompeu Fabra}
 
 
-\keywords{Keyword; Keyword2; Keyword3; ...}
+\keywords{Cancer; Genomics; Thyroid; ...}
 
 \runningtitle{GENETICS Journal Template on Overleaf} % For use in the footer 
 
@@ -77,22 +77,23 @@ The aim of our project deviates from being a replicate of the TCGA project. Our 
 
 
 \section*{Materials and Methods}
+
+\subsection*{Data Availability}
+
+For this project we used publicly available RNA-seq data from \href{http://cancergenome.nih.gov/cancersselected/thyroid}{TCGA} consisting on 513 tumor samples from which 59 had paired normal samples \citep{Agrawal2014a}. The RDS file with the data is provided.
+From the available data we selected a subset of interest formed by all paired samples from "white" and "not hispanic or latino" population, which were the most abundant population groups in the samples (see Supplementary Materials). Additionally we selected samples whose tumoral type correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma (PTC). With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to environmental or epigenetic factors) as much as possible.
+
 \subsection*{Normalization}
-All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed within \textit{SummarizedExperiment} class object container \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. Before any analysis, we have normalized the data following the edgeR pipeline for normalizing RNA-seq data \citep{Robinson2010}. Robinson's guide consist on first of all scaling the data into \textit{counts per million reads} (CPM) and then using the \textit{Trimmed Mean of M-values }(TMM) method implemented in the edgeR R/Bioconductor package \citep{Robinson2010a}. After that, we also have perfomed a quantile normalization on the RNA-seq count data using the \textit{cqn} R/Bioconductor package \citep{Hansen2012}. 
+All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed within \textit{SummarizedExperiment} class object container \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. Before any analysis, we have normalized the data following the edgeR pipeline for normalizing RNA-seq data \citep{Robinson2010}. Robinson's guide consist on first of all scaling the data into \textit{counts per million reads} (CPM) and then using the \textit{Trimmed Mean of M-values}(TMM) method implemented in the edgeR R/Bioconductor package \citep{Robinson2010a}. After that, we also have perfomed a quantile normalization on the RNA-seq count data using the \textit{cqn} R/Bioconductor package \citep{Hansen2012}. 
 
 \subsection*{Batch effects assessment}
 A part from normalization, we also have considered possible batch effects. 
 
 \subsection*{Differential expression analysis}
+In order to perform the differential expression analysis we used \textit{limma} R/Bioconductor package with a workflow based on what has been previously published \citep{limma}. We build the design matrix and calculated the observational-level weights. As we were working with paired data we estimated the correlation in repeated measurements before fitting the linear model. Finally we build and fitted contrast matrices related to gender and disease status (normal or tumor) and calculated moderated t-statistics. Moreover we used the \textit{sva} R/Bioconductor package to remove the effect of the surrogate variables \citep{sva}. 
 
 \subsection*{Functional enrichment}
-
-\subsection*{Data Availability}
-
-At the end of the Materials and Methods section, include a statement on reagent and data availability. Please read the Data and Reagent Policy before writing the statement. Make sure to list the accession numbers or DOIs of any data you have placed in public repositories. List the file names and descriptions of any data you will upload as supplemental information. The statement should also include any applicable IRB numbers. You may include specifications for how to properly acknowledge or cite the data.
-
-For example: Strains are available upon request. File S1 contains detailed descriptions of all supplemental files. File S2 contains SNP ID numbers and locations. File S3 contains genotypes for each individual. Sequence data are available at GenBank and the accession numbers are listed in File S3. Gene expression data are available at GEO with the accession number: GDS1234. Code used to generate the simulated data is provided in file S4. 
-
+ 
 
 \section*{Results and Discussion}
 
