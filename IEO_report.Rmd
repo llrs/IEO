@@ -1048,40 +1048,42 @@ abline(v = -2)
 The number of genes which are differentialed expressed
 
 ```{r de.number}
-dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6 & tt_tumor$adj.P.Val < 0.05,])[1]
-dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6 & tt_gender$adj.P.Val < 0.05,])[1]
-dim(tt_males[abs(tt_males$logFC) > 2 & tt_males$B > 4.6 & tt_males$adj.P.Val < 0.05,])[1]
-dim(tt_females[abs(tt_females$logFC) > 2 & tt_females$B > 4.6 & tt_females$adj.P.Val < 0.05,])[1]
+de_tumor <- subset(tt_tumor, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
+de_gender <- subset(tt_gender, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
+de_males <- subset(tt_males, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
+de_females <- subset(tt_females, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
+nrow(de_tumor)
+nrow(de_gender)
+nrow(de_males)
+nrow(de_females)
 ```
 
-##Functional enrichment
-
-We can perform a functional enrichment on our data with the GO already stored
+As we can see there aren't any gene of the  comparison male vs female that pass the filter.
+However we can extract the names of the other comparisons to see how much they overlap:
 
 ```{r names_overlap}
-DE_tumor <- unique(tt_tumor[abs(tt_tumor$logFC) > 2 & 
-                                  tt_tumor$B > 4.6 & 
-                                  tt_tumor$adj.P.Val < 0.05, "Row.names"])
-
-DE_gender <- unique(tt_gender[abs(tt_gender$logFC) > 2 & 
-                                  tt_gender$B > 4.6 & 
-                                  tt_gender$adj.P.Val < 0.05, "Row.names"])
-
-DE_males <- unique(tt_males[abs(tt_males$logFC) > 2 & 
-                                  tt_males$B > 4.6 & 
-                                  tt_males$adj.P.Val < 0.05, "Row.names"])
-
-DE_females <- unique(tt_females[abs(tt_females$logFC) > 2 & 
-                                  tt_females$B > 4.6 & 
-                                  tt_females$adj.P.Val < 0.05, "Row.names"])
+DE_tumor <- unique(rownames(de_tumor))
+DE_males <- unique(rownames(de_males))
+DE_females <- unique(rownames(de_females))
 ```
 
-Next we can plot the Venn with the names of the overlapping genes
+To visualize it we plot them with venn diagrams:
 
 ```{r venn_plots}
 library("VennDiagram")
 library("Vennerable")
+
+plot(Venn(list(DE_tumor, DE_females),
+              SetNames = c("Tumoral", "Females")))
+
+plot(Venn(list(DE_tumor, DE_males),
+              SetNames = c("Tumoral", "Males")))
+
+plot(Venn(list(DE_females, DE_males),
+              SetNames = c("Females", "Males")))
 ```
+
+As we can observe of the comparison, many genes differentially expressed on females comparing healthy samples and tumoral ones are not found on males.
 
 ##Functional enrichment
 
@@ -1094,8 +1096,10 @@ params_tumor <- new("GOHyperGParams", geneIds = DE_tumor,
                     annotation = "org.Hs.eg.db", ontology = "BP",
                     pvalueCutoff = 0.05, testDirection = "over", 
                     conditional = TRUE)
-
-params_gender <- new("GOHyperGParams", geneIds = DE_tumor,
+# The set of differentially expressed only in females
+mask <- DE_females %in% intersect(DE_males, DE_females)
+DE_females_exc <- DE_females[!mask]
+params_female_exc <- new("GOHyperGParams", geneIds = DE_females_exc,
                     universeGeneIds = unique(all.Human.GO$ENTREZID),
                     annotation = "org.Hs.eg.db", ontology = "BP",
                     pvalueCutoff = 0.05, testDirection = "over", 
@@ -1112,7 +1116,7 @@ GO_tumor <- GOstats::summary(hgOver_tumor)
 
 dim(GO_tumor)
 
-GO_tumor <- GO_tumor[GO_tumor$Size >= 10 & GO_tumor$Count >= 10, ]
+GO_tumor <- subset(GO_tumor, Size >= 5 & Count >= 5 & Pvalue <= 0.05)
 
 dim(GO_tumor)
 
@@ -1134,25 +1138,30 @@ rownames(GO_tumor) <- 1:nrow(GO_tumor)
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
 ```{r fun.enrich.gender_tumors, eval=FALSE, include=FALSE}
-hgOver_gender <- hyperGTest(params_gender)
-hgOver_gender
+hgOver_female_exc <- hyperGTest(params_female_exc)
+hgOver_female_exc
 
-summary <- GOstats::summary
-GO_gender <- summary(hgOver_tumor)
+GO_female_exc <- GOstats::summary(hgOver_female_exc)
 
-GO_gender <- GO_gender[GO_gender$Size >= 5 & GO_gender$Count >= 5, ]
-GO_gender <- GO_gender[order(GO_gender$OddsRatio, decreasing = TRUE), ]
-head(GO_gender)
+GO_female_exc <- subset(GO_female_exc, Size >= 1 & Count >= 1 & Pvalue <= 0.05)
 
-geneIDs <- geneIdsByCategory(hgOver_gender)[GO_gender$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, 
-            columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
-geneSYMs <- sapply(geneSYMs, paste, collapse=", ")
-GO_gender <- cbind(GO_gender, Genes = geneSYMs)
-rownames(GO_gender) <- 1:nrow(GO_gender)
+dim(GO_female_exc)
 
+ggplot(GO_female_exc, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
+    geom_point() + b
+
+GO_female_exc <- GO_female_exc[order(GO_female_exc$OddsRatio, decreasing = TRUE), ]
+head(GO_female_exc)
+
+geneIDs <- geneIdsByCategory(hgOver_female_exc)[GO_female_exc$GOBPID]
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db,
+                    columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+GO_female_exc <- cbind(GO_female_exc, Genes = geneSYMs)
+rownames(GO_female_exc) <- 1:nrow(GO_female_exc)
 ```
 
+The first thing we can observe is the change of scale in the Odds ratio, now is much more bigger than the previous one.
 Looking into the table:
 
 ```{r fun.enrich.visualize_tumors}
@@ -1163,10 +1172,10 @@ xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 # 
 # browseURL("GO_tumor.html")
 # 
-# xtab_gender <- xtable(GO_gender, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-# print(xtab_gender, file="GO_gender.html", type="html")
+# xtab_gender <- xtable(hgOver_female_exc, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+# print(xtab_gender, file="hgOver_female_exc.html", type="html")
 # 
-# browseURL("GO_gender.html")
+# browseURL("hgOver_female_exc.html")
 ```
 
 
