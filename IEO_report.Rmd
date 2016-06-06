@@ -5,7 +5,7 @@ output:
     toc: true
     theme: united
   pdf_document:
-toc: true
+    toc: true
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
 library("knitr")
@@ -787,9 +787,14 @@ To improve the batch effect removal we look if QR decomposition yields better re
 
 ```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.1}Figure 16.A: Hierarchical clustering of the samples with QR descompostion for sample vial"}
 library("limma")
-form <- as.formula("~ gender + type") # Building the model
-mod  <- model.matrix(form, data = colData(thca.filtered))
-qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = mod)
+
+# Create the right design matrix
+variables.info <- colData(thca.filtered)[, variable.info > 0.6]
+treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
+design <- model.matrix(~0+treat)
+colnames(design) <- levels(treat)
+
+qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = design)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
 cluster.qr <- hclust(d)
 cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
@@ -853,8 +858,9 @@ We build the null model with just the intercept (=1) in order to compare it with
 
 ```{r sva.model, cache=TRUE}
 variables0 <- colnames(filtered) # All variables available
-mod0 <- model.matrix(~ 1 , data=colData(thca.filtered)[, variable.info > 0.6])
-pv <- f.pvalue(assays(thca.filtered)$qrexp, mod, mod0)
+
+mod0 <- model.matrix(~ 1 , data = variables.info)
+pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
 
@@ -873,7 +879,7 @@ hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 Now, let's estimate surrogate variables using the `sva()` function.
 
 ```{r sva.variables, cache = TRUE}
-sv <- sva(assays(thca.filtered)$qrexp, mod, mod0)
+sv <- sva(assays(thca.filtered)$qrexp, design, mod0)
 sv$n
 ```
 
@@ -882,7 +888,7 @@ assess against the extent of differential expression this time adjusting for the
 surrogate variables.
 
 ```{r svn.ftest, cache = TRUE}
-modsv <- cbind(mod, sv$sv)
+modsv <- cbind(design, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
 pvsv <- f.pvalue(assays(thca.filtered)$qrexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
@@ -899,7 +905,7 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
-After all this first analysis, we can conclude that aproximatelly 5000 genes have different expression levels among tumor and normal samples. 
+After all this first analysis, we can conclude that aproximatelly 4000 genes have different expression levels among tumor and normal samples. 
 
 ## Functional Annotation
 
@@ -926,23 +932,36 @@ annot.Entrez.GO <- select(org.Hs.eg.db,
 Using the expression values with batch effect removed by qr decomposition we find the top differentially expressed genes:
 
 ```{r DE, cache = TRUE}
-# Transform the log2 normalized by cqn to counts
-cqn.n <- apply(assays(thca.filtered)$qrexp, 1:2, function(x){2^(x)}) 
+# Transform the log2 normalized by cqn to counts with the surrogate variables
+n_counts <- apply(sv$sv, 1:2, function(x){2^(x)}) 
+
 # Normalize by mean variance with voom
-vo <- voom(cqn.n, mod, plot = TRUE)
-corfit <- duplicateCorrelation(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode)
-fit <- lmFit(vo, mod, block = colData(thca.filtered)$bcr_patient_barcode,
+vo <- voom(n_counts, design, plot = TRUE)
+corfit <- duplicateCorrelation(vo, design, block = variables.info$bcr_patient_barcode)
+fit <- lmFit(vo, design, block = variables.info$bcr_patient_barcode,
              correlation = corfit$consensus.correlation)
-fit <- eBayes(fit)
-res <- decideTests(fit)
+cm <- makeContrasts(
+    FemaleDiseaseVsFemaleNormal = tumor.FEMALE-normal.FEMALE,
+    MaleDiseaseVsMaleNormal = tumor.MALE-normal.MALE,
+    MaleDiseaseVsFemaleDisease = tumor.MALE-tumor.FEMALE,
+    MaleNormalVsFemaleNormal = normal.MALE-normal.FEMALE,
+    NormalVsDisease = (tumor.MALE+tumor.FEMALE)-(normal.MALE+normal.FEMALE),
+    FemaleVsMale = (tumor.FEMALE+normal.FEMALE)-(tumor.MALE+normal.MALE),
+    levels = design)
+fit2 <- contrasts.fit(fit, cm)
+fit2 <- eBayes(fit2)
+res <- decideTests(fit2, lfc = 1)
 summary(res)
 ```
 
-List of differentially expressed genes annotated with symbol and ensembl id:
+Based on these we are only interested in four contrast which will be annotated with symbol and ensembl id:
 
 ```{r tt, cache = TRUE}
-tt_tumor <- topTable(fit, number = Inf, coef = "typetumor")
-tt_gender <- topTable(fit, number = Inf, coef = "genderMALE")
+tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease")
+tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale")
+tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal")
+tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal")
+    
 
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
@@ -955,18 +974,33 @@ head(tt_tumor)
 Diagnostics plot:
 
 ```{r accuracy, cache = TRUE}
-pars <- par(mfrow = c(2, 2), mar = c(4, 5, 2, 2))
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
-qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual[2], main = "", pch = ".", cex = 3)
-qqline(fit$t[, 2], lwd = 2, col = "red")
+qqt(fit2$t[, 6], df = fit2$df.prior + fit2$df.residual[6], main = "", pch = ".", cex = 3)
+qqline(fit2$t[, 6], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between gender", outer = TRUE, cex = 1.5, side = 3, line = -2)
+
 hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
-qqt(fit$t[, 3], df = fit$df.prior + fit$df.residual[3], main = "", pch = ".", cex = 3)
-qqline(fit$t[, 3], lwd = 2, col = "red")
+qqt(fit2$t[, 5], df = fit2$df.prior + fit2$df.residual[5], main = "", pch = ".", cex = 3)
+qqline(fit2$t[, 5], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between patients and healthy.", outer = TRUE, cex = 1.5, 
-      side = 3, line = -23)
+      side = 3, line = -2)
+
+hist(tt_females$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit2$t[, 1], df = fit2$df.prior + fit2$df.residual[1], main = "", pch = ".", cex = 3)
+qqline(fit2$t[, 1], lwd = 2, col = "red")
+abline(0, 1, lwd = 2)
+mtext("Comparing genes between females patients and healthy.", outer = TRUE, cex = 1.5, 
+      side = 3, line = -2)
+
+hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
+qqline(fit2$t[, 2], lwd = 2, col = "red")
+abline(0, 1, lwd = 2)
+mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 1.5, 
+      side = 3, line = -2)
 ```
 
 Volcano plot:
@@ -974,11 +1008,21 @@ Volcano plot:
 ```{r volcanoplot}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 
-volcanoplot(fit, coef = 2, highlight = 7, fit$genes$symbol, main = "model Gender", las = 1)
+volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7, fit2$genes$symbol, main = "model Gender", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
-volcanoplot(fit, coef = 3, highlight = 7, fit$genes$symbol, main = "model Disease", las = 1)
+volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7, fit2$genes$symbol, main = "model Disease", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
+
+volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7, fit2$genes$symbol, main = "Comparing males", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
+
+volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7, fit2$genes$symbol, main = "Comparing Females", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
@@ -989,80 +1033,16 @@ The number of genes which are differentialed expressed
 ```{r de.number}
 dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6,])[1]
 dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
+dim(tt_males[abs(tt_males$logFC) > 2 & tt_males$B > 4.6,])[1]
+dim(tt_females[abs(tt_gender$logFC) > 2 & tt_females$B > 4.6,])[1]
 ```
 
-## Differential expression of patients
-
-Using the expression values with batch effect removed by qr decomposition we find the top differentially expressed genes:
-
-```{r DE_tumors, cache = TRUE}
-mod_tumors <- mod[1:22,]
-# Normalize by mean variance with voom
-vo <- voom(cqn.n[, rownames(mod_tumors)], mod_tumors, plot = TRUE)
-fit <- lmFit(vo, mod_tumors)
-fit <- eBayes(fit)
-res <- decideTests(fit)
-summary(res)
-```
-
-List of differentially expressed genes annotated with symbol and ensembl id:
-
-```{r tt, cache = TRUE}
-tt_tumor <- topTable(fit, number = Inf, coef = "typetumor")
-tt_gender <- topTable(fit, number = Inf, coef = "genderMALE")
-
-# Annotate with the gene symbol
-tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
-                  all.x = T, all.y = F)
-tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID", 
-                   all.x = T, all.y = F)
-head(tt_tumor)
-```
-
-Diagnostics plot:
-
-```{r accuracy, cache = TRUE}
-pars <- par(mfrow = c(2, 2), mar = c(4, 5, 2, 2))
-hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
-qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual[2], main = "", pch = ".", cex = 3)
-qqline(fit$t[, 2], lwd = 2, col = "red")
-abline(0, 1, lwd = 2)
-mtext("Comparing genes between gender", outer = TRUE, cex = 1.5, side = 3, line = -2)
-hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
-qqt(fit$t[, 3], df = fit$df.prior + fit$df.residual[3], main = "", pch = ".", cex = 3)
-qqline(fit$t[, 3], lwd = 2, col = "red")
-abline(0, 1, lwd = 2)
-mtext("Comparing genes between patients and healthy.", outer = TRUE, cex = 1.5, 
-      side = 3, line = -23)
-```
-
-Volcano plot:
-
-```{r volcanoplot}
-pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
-
-volcanoplot(fit, coef = 2, highlight = 7, fit$genes$symbol, main = "model Gender", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
-volcanoplot(fit, coef = 3, highlight = 7, fit$genes$symbol, main = "model Disease", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
-```
-
-The number of genes which are differentialed expressed
-
-```{r de.number}
-dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6,])[1]
-dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6,])[1]
-```
 
 ##Functional enrichment
 
 We can perform a functional enrichment on our data with the GO already stored
 
-```{r fun.enrich.params}
+```{r fun.enrich.params_tumors}
 library(GOstats)
 
 DE_tumor <- unique(tt_tumor[abs(tt_tumor$logFC) > 2 & 
@@ -1088,7 +1068,7 @@ params_gender <- new("GOHyperGParams", geneIds = DE_tumor,
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor, cache = TRUE}
+```{r fun.enrich.tumor_tumors, cache = TRUE}
 hgOver_tumor <- hyperGTest(params_tumor)
 hgOver_tumor
 
@@ -1117,7 +1097,7 @@ rownames(GO_tumor) <- 1:nrow(GO_tumor)
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender, eval=FALSE, include=FALSE}
+```{r fun.enrich.gender_tumors, eval=FALSE, include=FALSE}
 hgOver_gender <- hyperGTest(params_gender)
 hgOver_gender
 
@@ -1139,10 +1119,10 @@ rownames(GO_gender) <- 1:nrow(GO_gender)
 
 Looking into the table:
 
-```{r fun.enrich.visualize}
+```{r fun.enrich.visualize_tumors}
 library(xtable)
 xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-print(xtab_tumor)
+# print(xtab_tumor)
 # print(xtab_tumor, file="GO_tumor.html", type="html")
 # 
 # browseURL("GO_tumor.html")
