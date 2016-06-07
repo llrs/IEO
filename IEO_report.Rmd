@@ -736,7 +736,7 @@ plot.batch(sampleDendrogram, tss, thca.filtered, outcome)
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome)
 ```
 ```{r clustering.n5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n1}Figure 13.E: Hierarchical clustering of the samples by prospective collection"}
-plot.batch(sampleDendrogram, as.character(thca.filtered$prospective_collection), thca.filtered, outcome)
+plot.batch(sampleDendrogram, plate , thca.filtered, outcome)
 ```
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
