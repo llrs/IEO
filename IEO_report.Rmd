@@ -967,19 +967,20 @@ cm <- makeContrasts(
     levels = design)
 fit2 <- contrasts.fit(fit, cm)
 fit2 <- eBayes(fit2)
-res <- decideTests(fit2, lfc = 1)
+# Decide the threshold of differentially expressed genes
+lfc_threshold <- log2(4)
+res <- decideTests(fit2, lfc = lfc_threshold)
 summary(res)
 ```
 
 Based on these we are only interested in four contrast which will be annotated with symbol and ensembl id:
 
 ```{r tt, cache = TRUE}
-tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease")
-tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale")
-tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal")
-tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal")
+tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease", p.value = 0.05)
+tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale", p.value = 0.05)
+tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal", p.value = 0.05)
+tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal", p.value = 0.05)
     
-
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
                   all.x = T, all.y = F)
@@ -1023,43 +1024,133 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
 Volcano plot:
 
 ```{r volcanoplot}
-pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 
-volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7, fit2$genes$symbol, main = "model Gender", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
-volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7, fit2$genes$symbol, main = "model Disease", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
+library("gridExtra")
+volcano <- function(data, title){
+    ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
+        ggtitle(title) + geom_vline(xintercept = c(2, -2) )+ 
+        geom_hline(yintercept = 4.6)
+}
 
-volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7, fit2$genes$symbol, main = "Comparing males", las = 1)
+v1 <- volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7,
+                  fit2$genes$symbol, main = "model Gender", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
+v2 <- volcano(tt_gender, "Comparing males vs females")
+grid.arrange(v1, v2, ncol=2)
+volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7,
+            fit2$genes$symbol, main = "model Disease", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
+volcano(tt_tumor, "Comparing healthy vs tumoral")
 
-volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7, fit2$genes$symbol, main = "Comparing Females", las = 1)
+volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7,
+            fit2$genes$symbol, main = "Comparing males", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
+volcano(tt_males, "Comparing males: healthy vs tumoral")
+
+volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7,
+            fit2$genes$symbol, main = "Comparing Females", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
+volcano(tt_females, "Comparing females: healthy vs tumoral")
 ```
 
 The number of genes which are differentialed expressed
 
 ```{r de.number}
-de_tumor <- subset(tt_tumor, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
-de_gender <- subset(tt_gender, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
-de_males <- subset(tt_males, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
-de_females <- subset(tt_females, abs(logFC) > 2 & B > 4.6 & adj.P.Val < 0.05)
-nrow(de_tumor)
-nrow(de_gender)
-nrow(de_males)
-nrow(de_females)
+de_tumor <- subset(tt_tumor, abs(logFC) >= lfc_threshold & B >= 4.6 )
+de_gender <- subset(tt_gender, abs(logFC) >= lfc_threshold & B >= 4.6)
+de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6)
+de_females <- subset(tt_females, abs(logFC) >= lfc_threshold & B >= 4.6)
+
+# Number of genes which pass the filter
+de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_males), nrow(de_females))
+names(de_genes) <- c("Normal vs Disease", "Females vs Males", "Males", "Females")
+de_genes
 ```
 
 As we can see there aren't any gene of the  comparison male vs female that pass the filter.
-However we can extract the names of the other comparisons to see how much they overlap:
+We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated:
+
+```{r up_down}
+
+up_down <- function(data,  names = NULL){
+    # Classify the genes in up or down, names are the names of the genes and 
+    # should be on the same order
+    dif_genes <- ifelse(data$logFC >0, "up", "down")
+    if (is.null(names)){
+        names(dif_genes) <- rownames(data)
+    } else {
+        names(dif_genes) <- names
+    }
+    
+    dif_genes
+}
+
+classify <- function(regulated1, regulated2){
+    # Check how much up regulated genes in one comparison are down regulated in others
+
+    inter <- intersect(names(regulated1), names(regulated2))
+    
+    genes <- c()
+    genes2 <- c()
+    
+    # Reorder them by the name for the comparison with table
+    for (name in inter){
+        genes <- c(genes, regulated1[name])
+        genes2 <- c(genes2, regulated2[name])
+    }
+    
+    # Perform the comparison
+    table(genes, genes2, 
+          dnn = c(deparse(substitute(regulated1)), deparse(substitute(regulated2))))
+}
+
+genes_names <- function(regulated1, regulated2){
+    # Extract the names of those up-regulated, down-regulated or not clear in
+    # both lists
+    inter <- intersect(names(regulated1), names(regulated2))
+    
+    up <- c()
+    down <- c()
+    not_clear <- c()
+    for (name in inter){
+        if (regulated1[name] == regulated2[name]){
+            if (regulated1[name] == "up"){
+                up <- c(up, name)
+            } else{
+                down <- c(down, name)
+            }
+        } else{
+            not_clear <- c(not_clear, name)
+        }
+    }
+    
+    list(up = up, down = down, not_clear =not_clear)
+}
+
+r_tumor <- up_down(de_tumor)
+r_females <- up_down(de_females)
+r_males <- up_down(de_males)
+
+# We collect the name of genes for further studies
+genes_females_males <- genes_names(r_females, r_males)
+genes_tumor_males <- genes_names(r_tumor, r_males)
+genes_tumor_females <- genes_names(r_tumor, r_females)
+
+# We see how do they overlap, more up-regulated, or more dow-regulated genes.
+classify(r_tumor, r_males)
+classify(r_tumor, r_females)
+classify(r_females, r_males)
+```
+
+We can observe that all the genes that are up-regulated in one comparison are too up-regulated in other comparisons. Furthermore we can extract the names of the other comparisons to see how much they overlap:
 
 ```{r names_overlap}
 DE_tumor <- unique(rownames(de_tumor))
