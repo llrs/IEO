@@ -77,6 +77,10 @@ The aim of our project deviates from being a replicate of the TCGA project. Our 
 
 
 \section*{Materials and Methods}
+\subsection*{Data Availability}
+In order to shed light on the previous hypothesis we have centered our study in Papillary Thyroid Carcinoma with RNA-seq data of The Cancer Genome Atlas \citep{tcga}. Concretely, the datasets used have been the ones preprocessed by \citep{Rahman2015} using the \citep{subread} pipeline. However, although the data has been preprocessed we have had to apply different filters to speed up the analysis. While exploring the data we realized that all 'normal' type samples came from  individuals who had 'tumor' type samples too so we only kept values coming from paired data (see Supplementary Materials). In addition, from the subset we discarted those samples whose depth is substantially lower or higher than the rest specifically between 40 and 70 million reads (see Supplementary Materials). Moreover, we have considered a cutoff of 1 log CPM unit as minimum value of expression to select genes being expressed across samples. Using this cutoff we have filtered out lowly-expressed genes (see Supplementary Materials). Finally,the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals whose type of cancer is the "classical" Papillary Thyroid Carcinoma (see Supplementary Materials). The final subset for the analysis end up with 20115 genes, 44 samples (22 normal and 22 tumor) from 22 patients. To reduce the size of the subset we also discarded clinical variables without available information or under 60 \% of the information available (see Supplementary Materials). 
+
+
 \subsection*{Normalization}
 All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed within \textit{SummarizedExperiment} class object container \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. Before any analysis, we have normalized the data following the edgeR pipeline for normalizing RNA-seq data \citep{Robinson2010}. Robinson's guide consist on first of all scaling the data into \textit{counts per million reads} (CPM) and then using the \textit{Trimmed Mean of M-values }(TMM) method implemented in the \textit{edgeR} R/Bioconductor package \citep{Robinson2010a}. After that, we also have perfomed a quantile normalization on the RNA-seq count data using the \textit{cqn} R/Bioconductor package \citep{Hansen2012}. 
 
@@ -88,11 +92,7 @@ portion and plate (see Supplementary Materials). A part from that, we also have 
 
 \subsection*{Functional enrichment}
 
-\subsection*{Data Availability}
 
-At the end of the Materials and Methods section, include a statement on reagent and data availability. Please read the Data and Reagent Policy before writing the statement. Make sure to list the accession numbers or DOIs of any data you have placed in public repositories. List the file names and descriptions of any data you will upload as supplemental information. The statement should also include any applicable IRB numbers. You may include specifications for how to properly acknowledge or cite the data.
-
-For example: Strains are available upon request. File S1 contains detailed descriptions of all supplemental files. File S2 contains SNP ID numbers and locations. File S3 contains genotypes for each individual. Sequence data are available at GenBank and the accession numbers are listed in File S3. Gene expression data are available at GEO with the accession number: GDS1234. Code used to generate the simulated data is provided in file S4. 
 
 
 \section*{Results and Discussion}
