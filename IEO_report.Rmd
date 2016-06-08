@@ -757,10 +757,17 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 
 ### ComBat
 
-After the looking for the batch effect we couldn't find clearly the cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
+After looking for batch effect we couldn't find a clear cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
 ```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15.A: Hierarchical clustering of the samples with ComBat correction."}
 library("sva")
-combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
+
+# Create the right design matrix
+variables.info <- colData(thca.filtered)[, variable.info > 0.6]
+treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
+design <- model.matrix(~0+treat)
+colnames(design) <- levels(treat)
+
+combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[,-1])
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
 cluster.combat <- hclust(d)
@@ -787,12 +794,6 @@ To improve the batch effect removal we look if QR decomposition yields better re
 
 ```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.1}Figure 16.A: Hierarchical clustering of the samples with QR descompostion for sample vial"}
 library("limma")
-
-# Create the right design matrix
-variables.info <- colData(thca.filtered)[, variable.info > 0.6]
-treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
-design <- model.matrix(~0+treat)
-colnames(design) <- levels(treat)
 
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = design)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
@@ -935,7 +936,7 @@ annot <- select(org.Hs.eg.db,
                 keys = rownames(thca.filtered),
                 keytype = "ENTREZID")
 all.Human.GO <- select(org.Hs.eg.db,
-                       columns = "GO", 
+                       columns = c("GO", "SYMBOL"), 
                        key = keys(org.Hs.eg.db, keytype = "ENTREZID"), 
                        keytype = "ENTREZID")
 annot.Entrez.GO <- select(org.Hs.eg.db, 
@@ -1024,21 +1025,19 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
 Volcano plot:
 
 ```{r volcanoplot}
-
-library("gridExtra")
 volcano <- function(data, title){
     ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
         ggtitle(title) + geom_vline(xintercept = c(2, -2) )+ 
         geom_hline(yintercept = 4.6)
 }
 
-v1 <- volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7,
+volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7,
                   fit2$genes$symbol, main = "model Gender", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
-v2 <- volcano(tt_gender, "Comparing males vs females")
-grid.arrange(v1, v2, ncol=2)
+volcano(tt_gender, "Comparing males vs females")
+
 volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7,
             fit2$genes$symbol, main = "model Disease", las = 1)
 abline(h = 4.6) # 99% of confidence
@@ -1160,7 +1159,7 @@ DE_females <- unique(rownames(de_females))
 
 To visualize it we plot them with venn diagrams:
 
-```{r venn_plots}
+```{r venn_plots, message=FALSE, warning=FALSE}
 library("VennDiagram")
 library("Vennerable")
 
@@ -1182,77 +1181,117 @@ We can perform a functional enrichment on our data with the GO already stored
 
 ```{r fun.enrich.params_tumors}
 library(GOstats)
-params_tumor <- new("GOHyperGParams", geneIds = DE_tumor,
+
+go_obj <- function(genes_id){
+    # Create an object for GOstat from ENTREZIDs
+    new("GOHyperGParams", geneIds = genes_id,
                     universeGeneIds = unique(all.Human.GO$ENTREZID),
                     annotation = "org.Hs.eg.db", ontology = "BP",
                     pvalueCutoff = 0.05, testDirection = "over", 
                     conditional = TRUE)
+}
+
+params_tumor <- go_obj(DE_tumor)
+
 # The set of differentially expressed only in females
 mask <- DE_females %in% intersect(DE_males, DE_females)
 DE_females_exc <- DE_females[!mask]
-params_female_exc <- new("GOHyperGParams", geneIds = DE_females_exc,
-                    universeGeneIds = unique(all.Human.GO$ENTREZID),
-                    annotation = "org.Hs.eg.db", ontology = "BP",
-                    pvalueCutoff = 0.05, testDirection = "over", 
-                    conditional = TRUE)
+DE_females_exc <- DE_females_exc[!DE_females_exc %in% intersect(DE_females_exc, DE_tumor)]
+
+params_female_exc <- go_obj(DE_females_exc)
+
+# We explore those genes that are shared among the comparisons
+go_females_males_up <- go_obj(genes_females_males$up)
+go_females_males_down <- go_obj(genes_females_males$down)
+go_tumor_males_up <- go_obj(genes_tumor_males$up)
+go_tumor_males_down <- go_obj(genes_tumor_males$down)
+go_tumor_females_up <- go_obj(genes_tumor_females$up)
+go_tumor_females_down <- go_obj(genes_tumor_females$down)
 ```
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor_tumors, cache = TRUE}
-hgOver_tumor <- hyperGTest(params_tumor)
-hgOver_tumor
+```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, cache=TRUE}
+go_analisys <- function(go_obj, annots.GO){
+    hgOver <- hyperGTest(go_obj)
+    
+    GO <- GOstats::summary(hgOver)
+    
+    GO <- subset(GO, Size >= 5 & Count >= 5 & Pvalue <= 0.05)
+    # Visualize the data
+    plotgo <- ggplot(GO, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
+        geom_point() + b
+    
+    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
+    resume <- function(id, annot){
+        a <- unique(annot[annot$ENTREZID == id, "SYMBOL"])
+        if (length(a) >=1){
+            return(a)
+        } else{
+            return("")
+        }
+    }
+    geneIDs <- geneIdsByCategory(hgOver)[GO$GOBPID]
+    geneSYMs <- sapply(geneIDs, resume, annot = annots.GO)
+    geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+    GO <- cbind(GO, Genes = geneSYMs)
+    rownames(GO) <- 1:nrow(GO)
+    list(GO = GO, plot = plotgo)
+}
 
-GO_tumor <- GOstats::summary(hgOver_tumor)
-
-dim(GO_tumor)
-
-GO_tumor <- subset(GO_tumor, Size >= 5 & Count >= 5 & Pvalue <= 0.05)
-
-dim(GO_tumor)
-
-ggplot(GO_tumor, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
-    geom_point() + b
-
-GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing = TRUE), ]
-head(GO_tumor)
-
-geneIDs <- geneIdsByCategory(hgOver_tumor)[GO_tumor$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db,
-                    columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
-geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
-GO_tumor <- cbind(GO_tumor, Genes = geneSYMs)
-rownames(GO_tumor) <- 1:nrow(GO_tumor)
-
+GO_tumor <- go_analisys(params_tumor, all.Human.GO)
+head(GO_tumor$GO)
+plot(GO_tumor$plotgo)
 ```
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender_tumors, eval=FALSE, include=FALSE}
-hgOver_female_exc <- hyperGTest(params_female_exc)
-hgOver_female_exc
+```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE}
+GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
+head(GO_female_exc$GO)
+plot(GO_female_exc$plotgo)
+```
 
-GO_female_exc <- GOstats::summary(hgOver_female_exc)
 
-GO_female_exc <- subset(GO_female_exc, Size >= 1 & Count >= 1 & Pvalue <= 0.05)
+```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
+head(GO_females_males_up$GO)
+plot(GO_females_males_up$plotgo)
+```
 
-dim(GO_female_exc)
+```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE}
+GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
+head(GO_females_males_down$GO)
+plot(GO_females_males_down$plotgo)
+```
 
-ggplot(GO_female_exc, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
-    geom_point() + b
+```{r fun.enrich.tmu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_males_up <- go_analisys(go_tumor_males_up, all.Human.GO)
+head(GO_tumor_males_up$GO)
+plot(GO_tumor_males_up$plotgo)
+```
 
-GO_female_exc <- GO_female_exc[order(GO_female_exc$OddsRatio, decreasing = TRUE), ]
-head(GO_female_exc)
 
-geneIDs <- geneIdsByCategory(hgOver_female_exc)[GO_female_exc$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db,
-                    columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
-geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
-GO_female_exc <- cbind(GO_female_exc, Genes = geneSYMs)
-rownames(GO_female_exc) <- 1:nrow(GO_female_exc)
+```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_males_down <- go_analisys(go_tumor_males_down, all.Human.GO)
+head(GO_tumor_males_down$GO)
+plot(GO_tumor_males_down$plotgo)
+```
+
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_females_up <- go_analisys(go_tumor_females_up, all.Human.GO)
+head(GO_tumor_females_up$GO)
+plot(GO_tumor_females_up$plotgo)
+```
+
+```{r fun.enrich.tfd, echo=TRUE, message=FALSE}
+GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
+head(GO_tumor_females_down$GO)
+plot(GO_tumor_females_down$plotgo)
 ```
 
 The first thing we can observe is the change of scale in the Odds ratio, now is much more bigger than the previous one.
+
 Looking into the table:
 
 ```{r fun.enrich.visualize_tumors}
@@ -1275,6 +1314,7 @@ xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 ```{r sessionInfo}
 sessionInfo()
 ```
+
 
 ##Bibliography
 
