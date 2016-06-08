@@ -936,7 +936,7 @@ annot <- select(org.Hs.eg.db,
                 keys = rownames(thca.filtered),
                 keytype = "ENTREZID")
 all.Human.GO <- select(org.Hs.eg.db,
-                       columns = "GO", 
+                       columns = c("GO", "SYMBOL"), 
                        key = keys(org.Hs.eg.db, keytype = "ENTREZID"), 
                        keytype = "ENTREZID")
 annot.Entrez.GO <- select(org.Hs.eg.db, 
@@ -1211,69 +1211,83 @@ go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor_tumors, message=FALSE, cache=TRUE}
-go_analisys <- function(go_obj){
-    hgOver_tumor <- hyperGTest(go_obj)
+```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, cache=TRUE}
+go_analisys <- function(go_obj, annots.GO){
+    hgOver <- hyperGTest(go_obj)
     
-    GO_tumor <- GOstats::summary(hgOver_tumor)
+    GO <- GOstats::summary(hgOver)
     
-    GO_tumor <- subset(GO_tumor, Size >= 5 & Count >= 5 & Pvalue <= 0.05)
-    
-    ggplot(GO_tumor, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
+    GO <- subset(GO, Size >= 5 & Count >= 5 & Pvalue <= 0.05)
+    # Visualize the data
+    plotgo <- ggplot(GO, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
         geom_point() + b
     
-    GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing = TRUE), ]
-    
-    geneIDs <- geneIdsByCategory(hgOver_tumor)[GO_tumor$GOBPID]
-    geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db,
-                        columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
+    resume <- function(id, annot){
+        a <- unique(annot[annot$ENTREZID == id, "SYMBOL"])
+        if (length(a) >=1){
+            return(a)
+        } else{
+            return("")
+        }
+    }
+    geneIDs <- geneIdsByCategory(hgOver)[GO$GOBPID]
+    geneSYMs <- sapply(geneIDs, resume, annot = annots.GO)
     geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
-    GO_tumor <- cbind(GO_tumor, Genes = geneSYMs)
-    rownames(GO_tumor) <- 1:nrow(GO_tumor)
-    GO_tumor
+    GO <- cbind(GO, Genes = geneSYMs)
+    rownames(GO) <- 1:nrow(GO)
+    list(GO = GO, plot = plotgo)
 }
 
-GO_tumor <- go_analisys(params_tumor)
-head(GO_tumor)
+GO_tumor <- go_analisys(params_tumor, all.Human.GO)
+head(GO_tumor$GO)
+plot(GO_tumor$plotgo)
 ```
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE}
-GO_female_exc <- go_analisys(params_female_exc)
-head(GO_female_exc)
+```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE}
+GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
+head(GO_female_exc$GO)
+plot(GO_female_exc$plotgo)
 ```
 
 
-```{r fun.enrich.fmu, echo=TRUE, message=FALSE}
-GO_females_males_up <- go_analisys(go_females_males_up)
-head(GO_females_males_up)
+```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
+head(GO_females_males_up$GO)
+plot(GO_females_males_up$plotgo)
 ```
 
-```{r fun.enrich.fmd, echo=TRUE, message=FALSE}
-GO_females_males_down <- go_analisys(go_females_males_down)
-head(GO_females_males_down)
+```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE}
+GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
+head(GO_females_males_down$GO)
+plot(GO_females_males_down$plotgo)
 ```
 
-```{r fun.enrich.tmu, echo=TRUE, message=FALSE}
-GO_tumor_males_up <- go_analisys(go_tumor_males_up)
-head(GO_tumor_males_up)
+```{r fun.enrich.tmu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_males_up <- go_analisys(go_tumor_males_up, all.Human.GO)
+head(GO_tumor_males_up$GO)
+plot(GO_tumor_males_up$plotgo)
 ```
 
 
-```{r fun.enrich.tmd, echo=TRUE, message=FALSE}
-GO_tumor_males_down <- go_analisys(go_tumor_males_down)
-head(GO_tumor_males_down)
+```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_males_down <- go_analisys(go_tumor_males_down, all.Human.GO)
+head(GO_tumor_males_down$GO)
+plot(GO_tumor_males_down$plotgo)
 ```
 
-```{r fun.enrich.tfu, echo=TRUE, message=FALSE}
-GO_tumor_females_up <- go_analisys(go_tumor_females_up)
-head(GO_tumor_females_up)
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_females_up <- go_analisys(go_tumor_females_up, all.Human.GO)
+head(GO_tumor_females_up$GO)
+plot(GO_tumor_females_up$plotgo)
 ```
 
 ```{r fun.enrich.tfd, echo=TRUE, message=FALSE}
-GO_tumor_females_down <- go_analisys(go_tumor_females_down)
-head(GO_tumor_females_down)
+GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
+head(GO_tumor_females_down$GO)
+plot(GO_tumor_females_down$plotgo)
 ```
 
 The first thing we can observe is the change of scale in the Odds ratio, now is much more bigger than the previous one.
