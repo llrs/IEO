@@ -1131,7 +1131,7 @@ genes_names <- function(regulated1, regulated2){
         }
     }
     
-    list(up = up, down = down, not_clear =not_clear)
+    list(up = up, down = down, not_clear = not_clear)
 }
 
 r_tumor <- up_down(de_tumor)
@@ -1149,7 +1149,7 @@ classify(r_tumor, r_females)
 classify(r_females, r_males)
 ```
 
-We can observe that all the genes that are up-regulated in one comparison are too up-regulated in other comparisons. Furthermore we can extract the names of the other comparisons to see how much they overlap:
+We can observe that not all genes that are up regulated in some comparison are up-regulated in other comparisons. Furthermore we can extract the names of the other comparisons to see how much they overlap:
 
 ```{r names_overlap}
 DE_tumor <- unique(rownames(de_tumor))
@@ -1160,7 +1160,6 @@ DE_females <- unique(rownames(de_females))
 To visualize it we plot them with venn diagrams:
 
 ```{r venn_plots, message=FALSE, warning=FALSE}
-library("VennDiagram")
 library("Vennerable")
 
 plot(Venn(list(DE_tumor, DE_females),
@@ -1203,21 +1202,25 @@ params_female_exc <- go_obj(DE_females_exc)
 # We explore those genes that are shared among the comparisons
 go_females_males_up <- go_obj(genes_females_males$up)
 go_females_males_down <- go_obj(genes_females_males$down)
-go_tumor_males_up <- go_obj(genes_tumor_males$up)
-go_tumor_males_down <- go_obj(genes_tumor_males$down)
-go_tumor_females_up <- go_obj(genes_tumor_females$up)
+go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
+go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 go_tumor_females_down <- go_obj(genes_tumor_females$down)
 ```
 
 Once prepared with the object we can run the analysis:
 
 ```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, cache=TRUE}
-go_analisys <- function(go_obj, annots.GO){
+go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     hgOver <- hyperGTest(go_obj)
     
     GO <- GOstats::summary(hgOver)
     
-    GO <- subset(GO, Size >= 5 & Count >= 5 & Pvalue <= 0.05)
+    GO <- subset(GO, Size >= size & Count >= count & Pvalue <= pvalue)
+    if (nrow(GO) == 0){
+        warning("Not significant GO on this group with these settings.")
+        return(NULL)
+    }
+    
     # Visualize the data
     plotgo <- ggplot(GO, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
         geom_point() + b
@@ -1240,54 +1243,62 @@ go_analisys <- function(go_obj, annots.GO){
 }
 
 GO_tumor <- go_analisys(params_tumor, all.Human.GO)
-head(GO_tumor$GO)
-plot(GO_tumor$plotgo)
+if (!is.null(GO_tumor)){
+    head(GO_tumor$GO)
+    plot(GO_tumor$plot)
+}
 ```
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
 ```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE}
 GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
-head(GO_female_exc$GO)
-plot(GO_female_exc$plotgo)
+if (!is.null(GO_female_exc)){
+    head(GO_female_exc$GO)
+    plot(GO_female_exc$plot)
+}
 ```
 
 
 ```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE}
 GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
-head(GO_females_males_up$GO)
-plot(GO_females_males_up$plotgo)
+if (!is.null(GO_females_males_up)){
+    head(GO_females_males_up$GO)
+    plot(GO_females_males_up$plot)
+}
 ```
 
 ```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE}
 GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
-head(GO_females_males_down$GO)
-plot(GO_females_males_down$plotgo)
-```
-
-```{r fun.enrich.tmu, echo=TRUE, message=FALSE, warning=FALSE}
-GO_tumor_males_up <- go_analisys(go_tumor_males_up, all.Human.GO)
-head(GO_tumor_males_up$GO)
-plot(GO_tumor_males_up$plotgo)
+if (!is.null(GO_females_males_down)){
+    head(GO_females_males_down$GO)
+    plot(GO_females_males_down$plot)
+}
 ```
 
 
 ```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE}
-GO_tumor_males_down <- go_analisys(go_tumor_males_down, all.Human.GO)
-head(GO_tumor_males_down$GO)
-plot(GO_tumor_males_down$plotgo)
+GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, all.Human.GO)
+if (!is.null(GO_tumor_males_not_clear)){
+    head(GO_tumor_males_not_clear$GO)
+    plot(GO_tumor_males_not_clear$plot)
+}
 ```
 
 ```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE}
-GO_tumor_females_up <- go_analisys(go_tumor_females_up, all.Human.GO)
-head(GO_tumor_females_up$GO)
-plot(GO_tumor_females_up$plotgo)
+GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, all.Human.GO)
+if (!is.null(GO_tumor_females_not_clear)){
+    head(GO_tumor_females_not_clear$GO)
+    plot(GO_tumor_females_not_clear$plot)
+}
 ```
 
 ```{r fun.enrich.tfd, echo=TRUE, message=FALSE}
 GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
-head(GO_tumor_females_down$GO)
-plot(GO_tumor_females_down$plotgo)
+if (!is.null(GO_tumor_females_down)){
+    head(GO_tumor_females_down$GO)
+    plot(GO_tumor_females_down$plot)
+}
 ```
 
 The first thing we can observe is the change of scale in the Odds ratio, now is much more bigger than the previous one.
