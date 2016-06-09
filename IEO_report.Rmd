@@ -1,11 +1,11 @@
 ---
 title: "Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)"
 output:
-  html_document:
-    toc: true
-    theme: united
   pdf_document:
-    toc: true
+    toc: yes
+  html_document:
+    theme: united
+    toc: yes
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
 library("knitr")
@@ -1306,8 +1306,8 @@ The first thing we can observe is the change of scale in the Odds ratio, now is 
 Looking into the table:
 
 ```{r fun.enrich.visualize_tumors}
-library(xtable)
-xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+#library(xtable)
+#xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 # print(xtab_tumor)
 # print(xtab_tumor, file="GO_tumor.html", type="html")
 # 
