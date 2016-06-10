@@ -1304,15 +1304,10 @@ if (!is.null(GO_tumor_females_down)){
 We should look in details to those values and associations in the tables.
 
 
-<<<<<<< HEAD
 
-#library(xtable)
-#xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-=======
 ```{r fun.enrich.visualize_tumors, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 library(xtable)
 # xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
->>>>>>> 003b5a6d2d01683e04190cffd6c6d6927e6243b5
 # print(xtab_tumor)
 # print(xtab_tumor, file="GO_tumor.html", type="html")
 # 
