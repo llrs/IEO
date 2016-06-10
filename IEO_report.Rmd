@@ -1,10 +1,10 @@
 ---
 title: "Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     theme: united
+    toc: yes
+  pdf_document:
     toc: yes
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
@@ -1305,7 +1305,7 @@ We should look in details to those values and associations in the tables.
 
 
 <<<<<<< HEAD
-```{r fun.enrich.visualize_tumors}
+
 #library(xtable)
 #xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 =======
