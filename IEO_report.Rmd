@@ -4,6 +4,10 @@ output:
   html_document:
     theme: united
     toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
   pdf_document:
     toc: yes
 ---
@@ -169,6 +173,8 @@ thca <- readRDS("seTHCA.rds")
 thca
 ```
 
+### Data exploration
+
 Explore the column (phenotypic) data, which in this case corresponds to clinical
 variables, and their corresponding metadata.
 
@@ -184,8 +190,7 @@ col.data.meta
 Now, explore the row (feature) data.
 
 ```{r explore2}
-row.ranges <- rowRanges(thca)
-row.ranges
+rowRanges(thca)
 ```
 
 Looking deeper into col.data with:
@@ -250,6 +255,8 @@ dim(filtered)
 meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
 ```
 
+### Associated variables exploration
+
 To explore the data we first create an object with `ggplot`:
 ```{r ggplot.config}
 library("ggplot2")
@@ -257,12 +264,14 @@ fplot <- ggplot(as.data.frame(filtered))
 
 ## ggplot options for axes and background color
 # Options of the labels
-l <- theme(axis.text.x=element_text(angle = -90, hjust = 0, vjust = 1))
+l <- theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 1))
 # Removing the background
 b <-  theme(axis.line = element_line(colour = "black"),
             panel.grid.major.x = element_blank(),
-            panel.grid.major.y = element_line(colour = "grey", size = 0.5, linetype = 2),
-            panel.grid.minor.y = element_line(colour = "grey", size = 0.25, linetype = 3),
+            panel.grid.major.y = element_line(colour = "grey", 
+                                              size = 0.5, linetype = 2),
+            panel.grid.minor.y = element_line(colour = "grey", 
+                                              size = 0.25, linetype = 3),
             panel.border = element_blank(),
             panel.background = element_blank())
 y.axis <- ylab("number of cases")
@@ -279,17 +288,23 @@ In the "normal" type samples most of the information is not available. This coul
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
     ggtitle("Gender distribution across normal and tumour samples")
 ```
+
 As expected, there are more female samples than male samples. As we mentioned before, thyroid cancer is more prevalent in women than men and we can see that not only for tumor samples but for normals samples too. In addition, there are more tumor cases than normal cases.
+
 ```{r plots3B,fig.cap="\\label{fig:plots3B}Figure 3.B"}
 fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + 
     ggtitle("Tumor status across normal and tumour samples")
 ```
+
 We also have examined the tumor status of the tumor samples. There are more cancer patients without tumor ("tumor free") than with the tumor ("with tumor") after the collection of the data. We assume that most of the patients that participate in the study have recovered after it. 
+
 ```{r plots3C, fig.cap="\\label{fig:plots3C}Figure 3.C"}
 fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + 
     y.axis + ggtitle("Ethnicity distribution across normal and tumour samples")
 ```
+
 In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
+
 ```{r plots3D, fig.cap="\\label{fig:plots3D}Figure 3.D"}
 labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
             "WHITE", "NA")
@@ -297,17 +312,24 @@ fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
     l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
     ggtitle("Gender distribution across different ethnicity and race.")
 ```
+
 If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
+
 ```{r plots3E, fig.cap="\\label{fig:plots3E}Figure 3.E"}
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
     ggtitle("Ethnicity distribution in male and female")
 ```
+
 If we ignore the hispanic origin of the individuals and just focus on the main ethnicities of the study we can observe that for both female and male samples there is  a majority of "white" individuals. However, the fact that "white" subjects are hispanic or not can provide some variability so that is something we will take into account later. 
+
 ```{r plots3F, fig.cap="\\label{fig:plots3F}Figure 3.F"}
 fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
-    l + y.axis + xlab("tumor focality") + ggtitle("Gender distribution in different tumour focality")
+    l + y.axis + xlab("tumor focality") + 
+    ggtitle("Gender distribution in different tumour focality")
 ```
+
 There is no data about tumor focality in the normal samples... 
+
 ```{r plots3G, fig.cap="\\label{fig:plots3G}Figure 3.G"}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
@@ -317,7 +339,9 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis +
     y.axis + 
     ggtitle("Gender distribution across different types of hystologic diagnosis")
 ```
+
 Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
+
 ```{r plots3H, fig.cap="\\label{fig:plots3H}Figure 3.H", fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
@@ -325,11 +349,17 @@ ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) +
     geom_bar(aes(age_at_diagnosis, na.rm = TRUE, fill = histologic_diagnosis)) +
     b + l + labs(x="age at diagnosis") + y.axis + 
     scale_fill_discrete(name = "histologic diagnosis", breaks = waiver(), 
-    labels = labels) + ggtitle("Histologic diagnosis distribution across different ages")
+    labels = labels) + 
+    ggtitle("Histologic diagnosis distribution across different ages")
 ```
+
 Even thought, thyroid cancer is commontly diagnosed at mature ages (~50) this plot shows that the classical papillary thyroid cancer has similar representation in all ages for this dataset.
 
-As a summary from the previous plots, the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to enviromental or epigenetic factors) as much as possible. To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
+As a summary from the previous plots, the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals, whose tumoral sample correspond to the most common cancer in thyroids: Papillary Thyroid Carcinoma(PTC). 
+
+### Subseting
+
+With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to enviromental or epigenetic factors) as much as possible. To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
 
 ```{r subset}
 # Paired data
@@ -340,10 +370,11 @@ paired_mask <- thca$bcr_patient_barcode %in% paired
 filtered_filt <- filtered[paired_mask, ]
 
 # Imposing the selected conditions
-tumor_names <- row.names(subset(filtered_filt, type == "tumor" &
-                                race == "WHITE" &
-                                histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
-                                ethnicity == "NOT HISPANIC OR LATINO" ))
+tumor_names <- row.names(subset(filtered_filt, 
+    type == "tumor" &
+    race == "WHITE" &
+    histologic_diagnosis == "Thyroid Papillary Carcinoma - Classical/usual" &
+    ethnicity == "NOT HISPANIC OR LATINO" ))
 
 # Extracting the participants identifiers
 participants <- unlist(lapply(tumor_names, substr, 9, 12))
@@ -361,39 +392,43 @@ check <- function(x, checklist){
 sample_names <- unlist(lapply(row.names(filtered_filt), check, 
                               checklist = participants))
 thca.filtered <- thca[, sample_names]
-
-#Imposing known col.Data in paired normal samples
-filtered_filt$race <- replace(filtered_filt$race, 
-                          which(is.na(filtered_filt$race)), "WHITE")
-filtered_filt$ethnicity <- replace(filtered_filt$ethnicity, 
-                               which(is.na(filtered_filt$ethnicity)), "NOT HISPANIC OR LATINO")
 ```
 
 We explore again the variables for this subset. In this case, we show just some of the relationship plots we have seen previously:
+
 ```{r subset.explore1, fig.cap="\\label{fig:subset.explore1}Figure 4.A"}
 filtered_filt <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(filtered_filt) + y.axis
 mplot + geom_bar(aes(type, fill = gender)) + b +
   ggtitle("Ethnicity and type of sample after filtering")
 ```
+
 This plot just checks whether we have the same number of cases in normal sample and tumor sample so that we have done correctly the filtering.
+
 ```{r subset.explore2, fig.cap="\\label{fig:subset.explore2}Figure 4.B"}
 mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b +
   ggtitle("Hispanic origin, gender and type of sample after filtering")
 ```
+
 Hispanic origin data is only available for tumor samples but as we have mentioned before we can extrapolate ethinicity and origin to the normal samples because they are paired (see below). 
+
 ```{r subset.explore3, fig.cap="\\label{fig:subset.explore3}Figure 4.C"}
 mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l +
   ggtitle("Gender samples and hispanic origin after filtering")
 ```
+
 Same proportion of being or not being "hispanic or latino" in females and males. Subset filtering has not modified the fact that we have more female samples than males. 
+
 ```{r subset.explore4, fig.cap="\\label{fig:subset.explore4}Figure 4.D"}
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + 
     scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
     labels = c("Papillary - Classical", "NA")) + 
-    ggtitle("Gender distribution across different types of hystologic diagnosis after filtering")
+    ggtitle("Gender distribution across different types of hystologic diagnosis
+            after filtering")
 ```
+
 Papillary Classical Thyroid cancer in the same proportion as "NA" because we have the same number of normal cases and classical thyroid tumor cases. 
+
 ```{r subset.explore5, fig.cap="\\label{fig:subset.explore5}Figure 4.E"}
 ggplot(filtered_filt[!is.na(filtered_filt$age_at_diagnosis), ]) +
     geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis +
@@ -401,7 +436,10 @@ ggplot(filtered_filt[!is.na(filtered_filt$age_at_diagnosis), ]) +
     breaks=waiver(), labels = c("Papillary - Classical", "NA")) + 
     ggtitle("Histologic diagnosis distribution across different ages after filtering")
 ```
+
 Number of cases across ages is more or less similar after the filtering exept for some ages that have more cases around 30, 34, 42 and 47. 
+
+### Transforming counts to rpkm
 
 To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
@@ -409,10 +447,10 @@ create a `DGEList' object.
 
 ```{r edgeR, message = FALSE}
 library(edgeR)
-
 # Normalization just with the selected samples
-dge.subset <- DGEList(counts=assays(thca.filtered)$counts, genes=mcols(thca.filtered))
-dge <- DGEList(counts=assays(thca)$counts, genes=mcols(thca))
+dge.subset <- DGEList(counts = assays(thca.filtered)$counts, 
+                      genes = as.data.frame(mcols(thca.filtered)))
+dge <- DGEList(counts = assays(thca)$counts, genes = as.data.frame(mcols(thca)))
 ```
 
 Now calculate $\log_2$ CPM values of expression and put them as an additional
@@ -421,7 +459,6 @@ assay element to ease their manipulation.
 ```{r logCPM}
 assays(thca.filtered)$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
 assays(thca.filtered)$logCPM[1:5, 1:5]
-logCPM <- assays(thca.filtered)$logCPM
 ```
 
 ## Quality assessment and normalization
@@ -431,25 +468,26 @@ logCPM <- assays(thca.filtered)$logCPM
 Let's examine the library sizes in terms of total number of sequence read counts
 per sample. Figure 5 below shows library sizes per sample in increasing order.
 
-<!---
-you can control the height and width in pixels of the figure with 'out.height' and 'out.width'
---->
-
 ```{r libsizes1, echo=FALSE, out.width="600px", fig.cap="Figure 5.A: Library sizes in increasing order."}
-ord <- order(dge$sample$lib.size/1e6)
+ord <- order(dge$sample$lib.size)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
+        xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1],
+        border = NA)
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
-Plotting for all samples makes it impossible to see accurately the blue and red colors corresponding to tumor and normal respectively.
+
+Plotting for all samples makes it impossible to see accurately the blue and red colors 
+corresponding to tumor and normal respectively.
+
 ```{r libsizes2, echo=FALSE, out.width="600px", fig.cap="Figure 5.B: Library sizes in increasing order."}
-ord.subset <- order(dge.subset$sample$lib.size/1e6)
+ord.subset <- order(dge.subset$sample$lib.size)
 barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1])
+        xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1],
+        border = NA)
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
-After the filtering the subset plot allows one to see that there is similar heterogeneity in tumor and normal library sizes. In addition, this figure reveals substantial differences in sequencing depth between samples and we may consider discarding those samples whose depth is substantially lower than the rest. To identify which are these samples we may simply look at the
-actual numbers including portion of the sample identifier that distinguishes them.
+
+After the filtering the subset plot allows one to see that there is similar heterogeneity in tumor and normal library sizes. In addition, this figure reveals substantial differences in sequencing depth between samples and we may consider discarding those samples whose depth is substantially lower than the rest. To identify which are these samples we may simply look at the actual numbers including portion of the sample identifier that distinguishes them.
 
 ```{r libsize.set, fig.cap="\\label{fig:libsize.set}Figure 6." }
 sampledepth <- round(dge.subset$sample$lib.size / 1e6, digits = 1)
@@ -459,10 +497,10 @@ qqnorm(sampledepth)
 qqline(sampledepth)
 ```
 
-Looking into the qqplot we decide to filter out those below 40 or above 70 but keeping only those that are paired:
+Looking into the qqplot we decide to filter out those below 40 but keeping only those that are paired:
 
 ```{r refiltering.names}
-sample_names <- sample_names[sampledepth > 40 & sampledepth < 70]
+sample_names <- sample_names[sampledepth > 40]
 
 keep.paired <- function(pattern, x){
     # Return the names if it is paired
@@ -476,8 +514,8 @@ sample_names <- unique(unlist(lapply(substr(sample_names, 9, 12),
                                      keep.paired, sample_names)))
 
 thca.filtered <- thca.filtered[, colnames(thca.filtered) %in% sample_names]
-dge.subset <- DGEList(counts=assays(thca.filtered)$counts, 
-                      genes=mcols(thca.filtered))
+dge.subset <- DGEList(counts = assays(thca.filtered)$counts, 
+                      genes = mcols(thca.filtered))
 ```
 
 ### Distribution of expression levels among samples
@@ -485,13 +523,6 @@ dge.subset <- DGEList(counts=assays(thca.filtered)$counts,
 Let's look at the distribution of expression values per sample in terms of
 logarithmic CPM units. Due to the large number of samples, we display tumor
 and normal samples separately, and are shown in Figure 7.
-
-<!---
-the option echo = FALSE hides the R code. When plotting in general one does not
-want to see the code. Options fig.height and fig.width control height and width
-of the plot in inches while out.height and out.width do it in the final output
-file; see http://yihui.name/knitr/options for full details.
---->
 
 ```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap="\\label{fig: distRawExp}Figure 7:Non-parametric density distribution of expression profiles per sample.", message=FALSE}
 library(geneplotter)
@@ -506,20 +537,35 @@ multidensity(as.list(as.data.frame(assays(thca.filtered[,
             las = 1)
 ```
 
-Seeing this plots we suspect the two spikes are due to the effect of the read length and GC content of each transcript. Therefore we will correct them with the package cqn:
+These two spikes are due to the lowly expressed genes and the highly expressed genes, but in the lowly expressed genes the effect of GC content and the read length may have higher impact.
+
+```{r gc_length}
+gc_len <- rowRanges(thca.filtered)
+cor(rowMeans(assays(thca.filtered)$counts), gc_len$txgc)
+cor(rowMeans(assays(thca.filtered)$counts), gc_len$txlen)
+
+par(mfrow=c(1,2))
+plot(log10(rowMeans(assays(thca.filtered)$counts)), gc_len$txgc, 
+     main = "GC content over expression", xlab = "Expression (log10)", 
+     ylab = "GC")
+plot(log10(rowMeans(assays(thca.filtered)$counts)), log10(gc_len$txlen), 
+     main = "Length over the expression", xlab = "Expression (log10)", 
+     ylab = "Length (log10)")
+```
+
+There is a low correlation on the counts and the GC content or the length but as there are clearly two groups based on the length, we will normalize also using the length with the package cqn:
 
 ```{r cqn, message=FALSE}
 library("cqn")
-cqn.subset <- cqn(assays(thca.filtered)$counts, 
-                  lengths = rowRanges(thca.filtered)$txlen,
-                  x = rowRanges(thca.filtered)$txgc,
-                  sizeFactors = colSums(assays(thca.filtered)$counts))
-par(mfrow=c(1,2))
-cqnplot(cqn.subset, n = 1, xlab = "GC content", lty = 1)
-cqnplot(cqn.subset, n = 2, xlab = "length", lty = 1)
+cqn.subset <- cqn(assays(thca.filtered)$counts, x = gc_len$txgc, lengths = gc_len$txlen)
+par(mfrow = c(1, 2))
+boxplot(cqn.subset$func1, names = FALSE, xlab = "Samples", 
+        main = "Estimated effect of GC")
+boxplot(cqn.subset$func2, names = FALSE, xlab = "Samples", 
+        main = "Estimated effect of length")
 ```
 
-The plot shows more variance on the extreme values of GC content and length, and more variability due to length than due to GC.
+As we thought the effect of the length is higher than the effect of GC content
 
 We can see if the distribution of expression values per sample in terms of logarithmic CPM units. Due to the large number of samples, we display tumor and normal samples separately:
 
@@ -603,6 +649,7 @@ multidensity(as.list(as.data.frame(
     assays(thca.filtered[,thca.filtered$type ==  "tumor"])$cqn.logCPM)),
     xlab = "log 2 CPM", legend = NULL, main = "Normal samples", las = 1)
 ```
+
 The normalization after filtering lowly-expressed genes with 'cqn' package clusters samples into one thin gaussian curve whereas normalization with calcNormFactors makes it thiker. 
 
 ### MA-plots
@@ -650,7 +697,14 @@ for (i in 1:ncol(setmp)) {
 }
 ```
 
-We do not observe either important expression-level dependent biases among the normal samples.
+We do not observe either important expression-level dependent biases among the normal samples except on the sample TCGA-BJ-A3PR. Which we proceed to remove it from the cqn.logCP:
+
+```{r remove_sample}
+mask <- -grep("TCGA.BJ.A3PR", colnames(thca.filtered))
+thca.filtered <- thca.filtered[,mask]
+sample_names <- sample_names[mask]
+dge.subset <- dge.subset[,mask]
+```
 
 ### Batch identification
 
@@ -741,7 +795,9 @@ We can see that the sample from A3PR-normal clusters with the tumoral ones, and 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 14: Multidimensional scaling plot of the samples."}
-for (batching in list(portion, as.character(thca.filtered$type), as.character(thca.filtered$gender))){
+batch_effects <- list(portion, tss, as.character(thca.filtered$type),
+                      as.character(thca.filtered$gender))
+for (batching in batch_effects){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
     plotMDS(dge.subset, labels = outcome, col = batch)
@@ -760,13 +816,12 @@ After looking for batch effect we couldn't find a clear cause of the batch effec
 ```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15.A: Hierarchical clustering of the samples with ComBat correction."}
 library("sva")
 
-# Create the right design matrix
-variables.info <- colData(thca.filtered)[, variable.info > 0.6]
-treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
-design <- model.matrix(~0+treat)
+# Create the design matrix involving tumor and normal samples and males and females
+treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
+design <- model.matrix(~0 + treat)
 colnames(design) <- levels(treat)
 
-combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[,-1])
+combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[, -1])
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
 cluster.combat <- hclust(d)
@@ -850,16 +905,14 @@ After all the process the best one, that separates better tumor and normal sampl
 assays(thca.filtered)$qrexp <- qrexp
 ```
 
-## Differential expression
+## Initial assesment on differential expression
 
 We perform a simple examination of expression changes and their associated p-values
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
 
 ```{r sva.model, cache=TRUE}
-variables0 <- colnames(filtered) # All variables available
-
-mod0 <- model.matrix(~ 1 , data = variables.info)
+mod0 <- model.matrix(~ 1 , data = colData(thca.filtered))
 pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
@@ -906,9 +959,10 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
 
-After all this first analysis, we can conclude that aproximatelly 4300 genes have different expression levels among tumor and normal samples. 
+After this preliminary analysis, we can conclude that aproximatelly 4300 genes have different expression levels among tumor and normal samples. 
 
-We remove the surrogate variable:
+Instead of working with the surrogate variables in the model, we remove them for commodity to from latter on the contrasts.
+
 ```{r remove_surrogates}
 # Code from https://www.biostars.org/p/121489/#121500
 cleanY = function(y, mod, svs) {
@@ -924,9 +978,11 @@ cleanY = function(y, mod, svs) {
 e.no_surrogates <- cleanY(assays(thca.filtered)$qrexp, design, sv$sv)
 ```
 
+The object e.no_surrogates contains the expression after removing the surrogates variables.
+
 ## Functional Annotation
 
-We want ensembl annotation, and gene symbol of our probes, and we want also the gene ontologies from all the human genes (will be later used for functional enrichment:
+We want ensembl annotation, and gene symbol of our probes, and we want also the gene ontologies from all the human genes (will be later used for functional enrichment):
 
 ```{r annot, cache = TRUE}
 library("org.Hs.eg.db")
@@ -944,9 +1000,11 @@ annot.Entrez.GO <- select(org.Hs.eg.db,
                 keytype = "ENTREZID")
 ```
 
+The different objects contain different information: `annot` contains the Symbol and Ensembl identifier from the remaining genes, `all.Human.GO` is the object with Gene Ontologies and Symbols for all human genes, while anot.Entrez.GO has the GO and the symbols for the genes.
+
 ## Differential expression of paired data
 
-Using the expression values with batch effect removed by qr decomposition we find the top differentially expressed genes:
+Using the expression values with batch effect removed by qr decomposition and without the surrogate variables, we proceed with the voom normalization
 
 ```{r DE, cache = TRUE}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
@@ -954,21 +1012,26 @@ n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
 
 # Normalize by mean variance with voom
 vo <- voom(n_counts, design, plot = TRUE)
-corfit <- duplicateCorrelation(vo, design, block = variables.info$bcr_patient_barcode)
-fit <- lmFit(vo, design, block = variables.info$bcr_patient_barcode,
+corfit <- duplicateCorrelation(vo, design, block = thca.filtered$bcr_patient_barcode)
+fit <- lmFit(vo, design, block = thca.filtered$bcr_patient_barcode,
              correlation = corfit$consensus.correlation)
+
+# Make the comparisons we are interested in based on our design
 cm <- makeContrasts(
-    FemaleDiseaseVsFemaleNormal = tumor.FEMALE-normal.FEMALE,
-    MaleDiseaseVsMaleNormal = tumor.MALE-normal.MALE,
-    MaleDiseaseVsFemaleDisease = tumor.MALE-tumor.FEMALE,
-    MaleNormalVsFemaleNormal = normal.MALE-normal.FEMALE,
-    NormalVsDisease = (tumor.MALE+tumor.FEMALE)-(normal.MALE+normal.FEMALE),
-    FemaleVsMale = (tumor.FEMALE+normal.FEMALE)-(tumor.MALE+normal.MALE),
+    FemaleDiseaseVsFemaleNormal = tumor.FEMALE - normal.FEMALE,
+    MaleDiseaseVsMaleNormal = tumor.MALE - normal.MALE,
+    MaleDiseaseVsFemaleDisease = tumor.MALE - tumor.FEMALE,
+    MaleNormalVsFemaleNormal = normal.MALE - normal.FEMALE,
+    NormalVsDisease = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
+    FemaleVsMale = (tumor.FEMALE+normal.FEMALE) - (tumor.MALE+normal.MALE),
     levels = design)
+
 fit2 <- contrasts.fit(fit, cm)
 fit2 <- eBayes(fit2)
+
 # Decide the threshold of differentially expressed genes
-lfc_threshold <- log2(4)
+DE_threshold <- 4
+lfc_threshold <- log2(DE_threshold)
 res <- decideTests(fit2, lfc = lfc_threshold)
 summary(res)
 ```
@@ -998,14 +1061,15 @@ hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 6], df = fit2$df.prior + fit2$df.residual[6], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 6], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
-mtext("Comparing genes between gender", outer = TRUE, cex = 1.5, side = 3, line = -2)
+mtext("Comparing genes between females and males patients", 
+      outer = TRUE, cex = 1.5, side = 3, line = -2)
 
 hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 5], df = fit2$df.prior + fit2$df.residual[5], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 5], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
-mtext("Comparing genes between patients and healthy.", outer = TRUE, cex = 1.5, 
-      side = 3, line = -2)
+mtext("Comparing genes between healthy and tumoral patients", 
+      outer = TRUE, cex = 1.5, side = 3, line = -2)
 
 hist(tt_females$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 1], df = fit2$df.prior + fit2$df.residual[1], main = "", pch = ".", cex = 3)
@@ -1022,41 +1086,19 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
       side = 3, line = -2)
 ```
 
-Volcano plot:
+We can see in volanco plots how look like the data
 
 ```{r volcanoplot}
 volcano <- function(data, title){
+    # Plot a volcano plot of a toptable output of limma
     ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
-        ggtitle(title) + geom_vline(xintercept = c(2, -2) )+ 
-        geom_hline(yintercept = 4.6)
+        ggtitle(title) + geom_vline(xintercept = c(2, -2), col = "red")+ 
+        geom_hline(yintercept = 4.6, col = "red")
 }
 
-volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7,
-                  fit2$genes$symbol, main = "model Gender", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
-volcano(tt_gender, "Comparing males vs females")
-
-volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7,
-            fit2$genes$symbol, main = "model Disease", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
 volcano(tt_tumor, "Comparing healthy vs tumoral")
-
-volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7,
-            fit2$genes$symbol, main = "Comparing males", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
+volcano(tt_gender, "Comparing males vs females")
 volcano(tt_males, "Comparing males: healthy vs tumoral")
-
-volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7,
-            fit2$genes$symbol, main = "Comparing Females", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
 volcano(tt_females, "Comparing females: healthy vs tumoral")
 ```
 
@@ -1075,14 +1117,14 @@ de_genes
 ```
 
 As we can see there aren't any gene of the  comparison male vs female that pass the filter.
-We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated:
+We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated. But we create some function to make it easier to compare several lists:
 
 ```{r up_down}
 
 up_down <- function(data,  names = NULL){
     # Classify the genes in up or down, names are the names of the genes and 
     # should be on the same order
-    dif_genes <- ifelse(data$logFC >0, "up", "down")
+    dif_genes <- ifelse(data$logFC > 0, "up", "down")
     if (is.null(names)){
         names(dif_genes) <- rownames(data)
     } else {
@@ -1133,7 +1175,11 @@ genes_names <- function(regulated1, regulated2){
     
     list(up = up, down = down, not_clear = not_clear)
 }
+```
 
+The function `up_down` classify the genes in up-regulated and down-regulated. The function `classify` given two lists of genes up or down regulates, find the genes common in them and check if in both lists are up-regulated or down-regulated, however it doesn't display the names, just the numbers. However the function `genes_names` classify the genes on the three elements of the list: up if in both sets is up-regulated, down if in both sets the genes is down-regulated and not_clear if in a dataset the gene is up-regulated and in the other is down-regulated. We can see here the results of several comparisons:
+
+```{r compares}
 r_tumor <- up_down(de_tumor)
 r_females <- up_down(de_females)
 r_males <- up_down(de_males)
@@ -1149,7 +1195,7 @@ classify(r_tumor, r_females)
 classify(r_females, r_males)
 ```
 
-We can observe that there are length `r length(genes_tumor_males$not_clear)` which depending on the comparison they change the direction from up-regulated to dow-regulated or vice versa. We have already obtained list of genes classified by the behavior in two comparisons with genes_names function. Furthermore we can extract all the names of the other comparisons to see how much they overlap:
+We can observe that there are `r length(genes_tumor_males$not_clear)` genes which depending on the comparison they change the direction from up-regulated to dow-regulated or vice versa. We have already obtained list of genes classified by the behavior in two comparisons with genes_names function. Furthermore we can extract all the names of the other comparisons to see how much they overlap:
 
 ```{r names_overlap}
 DE_tumor <- unique(rownames(de_tumor))
@@ -1174,7 +1220,7 @@ plot(Venn(list(DE_females, DE_males),
 
 As we can observe of the comparison, many genes differentially expressed on females comparing healthy samples and tumoral ones are not found on males.
 
-##Functional enrichment
+## Functional enrichment
 
 We can perform a functional enrichment on our data with the GO already stored
 
