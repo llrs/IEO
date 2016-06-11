@@ -2,10 +2,10 @@
 title: "Analysis of a TCGA RNA-seq data set on Thyroid carcinoma (THCA)"
 output:
   html_document:
-    toc: true
     theme: united
+    toc: yes
   pdf_document:
-    toc: true
+    toc: yes
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
 library("knitr")
@@ -14,8 +14,7 @@ dumpcssfile <- function(fname) {
         collapse = "\n")
 }
 
-opts_chunk$set(cache = TRUE,
-               autodep = TRUE,
+opts_chunk$set(autodep = TRUE,
                fig.align = "center",
                comment = "",
                tidy = TRUE,
@@ -736,7 +735,7 @@ plot.batch(sampleDendrogram, tss, thca.filtered, outcome)
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome)
 ```
 ```{r clustering.n5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n1}Figure 13.E: Hierarchical clustering of the samples by prospective collection"}
-plot.batch(sampleDendrogram, as.character(thca.filtered$prospective_collection), thca.filtered, outcome)
+plot.batch(sampleDendrogram, plate , thca.filtered, outcome)
 ```
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
@@ -757,10 +756,17 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 
 ### ComBat
 
-After the looking for the batch effect we couldn't find clearly the cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
+After looking for batch effect we couldn't find a clear cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
 ```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15.A: Hierarchical clustering of the samples with ComBat correction."}
 library("sva")
-combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, batch)
+
+# Create the right design matrix
+variables.info <- colData(thca.filtered)[, variable.info > 0.6]
+treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
+design <- model.matrix(~0+treat)
+colnames(design) <- levels(treat)
+
+combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[,-1])
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
 cluster.combat <- hclust(d)
@@ -787,12 +793,6 @@ To improve the batch effect removal we look if QR decomposition yields better re
 
 ```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.1}Figure 16.A: Hierarchical clustering of the samples with QR descompostion for sample vial"}
 library("limma")
-
-# Create the right design matrix
-variables.info <- colData(thca.filtered)[, variable.info > 0.6]
-treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
-design <- model.matrix(~0+treat)
-colnames(design) <- levels(treat)
 
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = design)
 d <- as.dist(1 - cor(qrexp, method = "spearman"))
@@ -935,7 +935,7 @@ annot <- select(org.Hs.eg.db,
                 keys = rownames(thca.filtered),
                 keytype = "ENTREZID")
 all.Human.GO <- select(org.Hs.eg.db,
-                       columns = "GO", 
+                       columns = c("GO", "SYMBOL"), 
                        key = keys(org.Hs.eg.db, keytype = "ENTREZID"), 
                        keytype = "ENTREZID")
 annot.Entrez.GO <- select(org.Hs.eg.db, 
@@ -967,19 +967,21 @@ cm <- makeContrasts(
     levels = design)
 fit2 <- contrasts.fit(fit, cm)
 fit2 <- eBayes(fit2)
-res <- decideTests(fit2, lfc = 1)
+# Decide the threshold of differentially expressed genes
+lfc_threshold <- log2(4)
+res <- decideTests(fit2, lfc = lfc_threshold)
 summary(res)
 ```
 
+We decided a threshold of differentially expressed genes of 4 (thus log2 of it is 2), meaning that it must be 4 times more expressed in one group than in other in orther to pass the filter.
 Based on these we are only interested in four contrast which will be annotated with symbol and ensembl id:
 
 ```{r tt, cache = TRUE}
-tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease")
-tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale")
-tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal")
-tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal")
+tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease", p.value = 0.05)
+tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale", p.value = 0.05)
+tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal", p.value = 0.05)
+tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal", p.value = 0.05)
     
-
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
                   all.x = T, all.y = F)
@@ -1023,150 +1025,298 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
 Volcano plot:
 
 ```{r volcanoplot}
-pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+volcano <- function(data, title){
+    ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
+        ggtitle(title) + geom_vline(xintercept = c(2, -2) )+ 
+        geom_hline(yintercept = 4.6)
+}
 
-volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7, fit2$genes$symbol, main = "model Gender", las = 1)
+volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7,
+                  fit2$genes$symbol, main = "model Gender", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
-volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7, fit2$genes$symbol, main = "model Disease", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
+volcano(tt_gender, "Comparing males vs females")
 
-volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7, fit2$genes$symbol, main = "Comparing males", las = 1)
+volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7,
+            fit2$genes$symbol, main = "model Disease", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
+volcano(tt_tumor, "Comparing healthy vs tumoral")
 
-volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7, fit2$genes$symbol, main = "Comparing Females", las = 1)
+volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7,
+            fit2$genes$symbol, main = "Comparing males", las = 1)
 abline(h = 4.6) # 99% of confidence
 abline(v = 2)
 abline(v = -2)
+volcano(tt_males, "Comparing males: healthy vs tumoral")
+
+volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7,
+            fit2$genes$symbol, main = "Comparing Females", las = 1)
+abline(h = 4.6) # 99% of confidence
+abline(v = 2)
+abline(v = -2)
+volcano(tt_females, "Comparing females: healthy vs tumoral")
 ```
 
 The number of genes which are differentialed expressed
 
 ```{r de.number}
-dim(tt_tumor[abs(tt_tumor$logFC) > 2 & tt_tumor$B > 4.6 & tt_tumor$adj.P.Val < 0.05,])[1]
-dim(tt_gender[abs(tt_gender$logFC) > 2 & tt_gender$B > 4.6 & tt_gender$adj.P.Val < 0.05,])[1]
-dim(tt_males[abs(tt_males$logFC) > 2 & tt_males$B > 4.6 & tt_males$adj.P.Val < 0.05,])[1]
-dim(tt_females[abs(tt_females$logFC) > 2 & tt_females$B > 4.6 & tt_females$adj.P.Val < 0.05,])[1]
+de_tumor <- subset(tt_tumor, abs(logFC) >= lfc_threshold & B >= 4.6 )
+de_gender <- subset(tt_gender, abs(logFC) >= lfc_threshold & B >= 4.6)
+de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6)
+de_females <- subset(tt_females, abs(logFC) >= lfc_threshold & B >= 4.6)
+
+# Number of genes which pass the filter
+de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_males), nrow(de_females))
+names(de_genes) <- c("Normal vs Disease", "Females vs Males", "Males", "Females")
+de_genes
 ```
 
-##Functional enrichment
+As we can see there aren't any gene of the  comparison male vs female that pass the filter.
+We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated:
 
-We can perform a functional enrichment on our data with the GO already stored
+```{r up_down}
+
+up_down <- function(data,  names = NULL){
+    # Classify the genes in up or down, names are the names of the genes and 
+    # should be on the same order
+    dif_genes <- ifelse(data$logFC >0, "up", "down")
+    if (is.null(names)){
+        names(dif_genes) <- rownames(data)
+    } else {
+        names(dif_genes) <- names
+    }
+    
+    dif_genes
+}
+
+classify <- function(regulated1, regulated2){
+    # Check how much up regulated genes in one comparison are down regulated in others
+
+    inter <- intersect(names(regulated1), names(regulated2))
+    
+    genes <- c()
+    genes2 <- c()
+    
+    # Reorder them by the name for the comparison with table
+    for (name in inter){
+        genes <- c(genes, regulated1[name])
+        genes2 <- c(genes2, regulated2[name])
+    }
+    
+    # Perform the comparison
+    table(genes, genes2, 
+          dnn = c(deparse(substitute(regulated1)), deparse(substitute(regulated2))))
+}
+
+genes_names <- function(regulated1, regulated2){
+    # Extract the names of those up-regulated, down-regulated or not clear in
+    # both lists
+    inter <- intersect(names(regulated1), names(regulated2))
+    
+    up <- c()
+    down <- c()
+    not_clear <- c()
+    for (name in inter){
+        if (regulated1[name] == regulated2[name]){
+            if (regulated1[name] == "up"){
+                up <- c(up, name)
+            } else{
+                down <- c(down, name)
+            }
+        } else{
+            not_clear <- c(not_clear, name)
+        }
+    }
+    
+    list(up = up, down = down, not_clear = not_clear)
+}
+
+r_tumor <- up_down(de_tumor)
+r_females <- up_down(de_females)
+r_males <- up_down(de_males)
+
+# We collect the name of genes for further studies
+genes_females_males <- genes_names(r_females, r_males)
+genes_tumor_males <- genes_names(r_tumor, r_males)
+genes_tumor_females <- genes_names(r_tumor, r_females)
+
+# We see how do they overlap, more up-regulated, or more dow-regulated genes.
+classify(r_tumor, r_males)
+classify(r_tumor, r_females)
+classify(r_females, r_males)
+```
+
+We can observe that there are length `r length(genes_tumor_males$not_clear)` which depending on the comparison they change the direction from up-regulated to dow-regulated or vice versa. We have already obtained list of genes classified by the behavior in two comparisons with genes_names function. Furthermore we can extract all the names of the other comparisons to see how much they overlap:
 
 ```{r names_overlap}
-DE_tumor <- unique(tt_tumor[abs(tt_tumor$logFC) > 2 & 
-                                  tt_tumor$B > 4.6 & 
-                                  tt_tumor$adj.P.Val < 0.05, "Row.names"])
-
-DE_gender <- unique(tt_gender[abs(tt_gender$logFC) > 2 & 
-                                  tt_gender$B > 4.6 & 
-                                  tt_gender$adj.P.Val < 0.05, "Row.names"])
-
-DE_males <- unique(tt_males[abs(tt_males$logFC) > 2 & 
-                                  tt_males$B > 4.6 & 
-                                  tt_males$adj.P.Val < 0.05, "Row.names"])
-
-DE_females <- unique(tt_females[abs(tt_females$logFC) > 2 & 
-                                  tt_females$B > 4.6 & 
-                                  tt_females$adj.P.Val < 0.05, "Row.names"])
+DE_tumor <- unique(rownames(de_tumor))
+DE_males <- unique(rownames(de_males))
+DE_females <- unique(rownames(de_females))
 ```
 
-Next we can plot the Venn with the names of the overlapping genes
+To visualize it we plot them with venn diagrams:
 
-```{r venn_plots}
-library("VennDiagram")
+```{r venn_plots, message=FALSE, warning=FALSE}
 library("Vennerable")
+pars <- par(mfrow = c(3, 1))
+plot(Venn(list(DE_tumor, DE_females),
+              SetNames = c("Tumoral", "Females")))
+
+plot(Venn(list(DE_tumor, DE_males),
+              SetNames = c("Tumoral", "Males")))
+
+plot(Venn(list(DE_females, DE_males),
+              SetNames = c("Females", "Males")))
 ```
+
+As we can observe of the comparison, many genes differentially expressed on females comparing healthy samples and tumoral ones are not found on males.
 
 ##Functional enrichment
 
 We can perform a functional enrichment on our data with the GO already stored
 
-```{r fun.enrich.params_tumors}
+```{r fun.enrich.params_tumors, message=FALSE}
 library(GOstats)
-params_tumor <- new("GOHyperGParams", geneIds = DE_tumor,
-                    universeGeneIds = unique(all.Human.GO$ENTREZID),
-                    annotation = "org.Hs.eg.db", ontology = "BP",
-                    pvalueCutoff = 0.05, testDirection = "over", 
-                    conditional = TRUE)
 
-params_gender <- new("GOHyperGParams", geneIds = DE_tumor,
+go_obj <- function(genes_id){
+    # Create an object for GOstat from ENTREZIDs
+    new("GOHyperGParams", geneIds = genes_id,
                     universeGeneIds = unique(all.Human.GO$ENTREZID),
                     annotation = "org.Hs.eg.db", ontology = "BP",
                     pvalueCutoff = 0.05, testDirection = "over", 
                     conditional = TRUE)
+}
+
+params_tumor <- go_obj(DE_tumor)
+
+# The set of differentially expressed only in females
+mask <- DE_females %in% intersect(DE_males, DE_females)
+DE_females_exc <- DE_females[!mask]
+DE_females_exc <- DE_females_exc[!DE_females_exc %in% intersect(DE_females_exc, DE_tumor)]
+
+params_female_exc <- go_obj(DE_females_exc)
+
+# We explore those genes that are shared among the comparisons
+go_females_males_up <- go_obj(genes_females_males$up)
+go_females_males_down <- go_obj(genes_females_males$down)
+go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
+go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
+go_tumor_females_down <- go_obj(genes_tumor_females$down)
 ```
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor_tumors, cache = TRUE}
-hgOver_tumor <- hyperGTest(params_tumor)
-hgOver_tumor
+```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, cache=TRUE}
+go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
+    hgOver <- hyperGTest(go_obj)
+    
+    GO <- GOstats::summary(hgOver)
+    
+    GO <- subset(GO, Size >= size & Count >= count & Pvalue <= pvalue)
+    if (nrow(GO) == 0){
+        warning("Not significant GO on this group with these settings.")
+        return(NULL)
+    }
+    
+    # Visualize the data
+    plotgo <- ggplot(GO, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
+        geom_point() + b + ggtitle(deparse(substitute(go_obj)))
+    
+    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
+    resume <- function(id, annot){
+        a <- unique(annot[annot$ENTREZID == id, "SYMBOL"])
+        if (length(a) >=1){
+            return(a)
+        } else{
+            return("")
+        }
+    }
+    geneIDs <- geneIdsByCategory(hgOver)[GO$GOBPID]
+    geneSYMs <- sapply(geneIDs, resume, annot = annots.GO)
+    geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+    GO <- cbind(GO, Genes = geneSYMs)
+    rownames(GO) <- 1:nrow(GO)
+    list(GO = GO, plot = plotgo)
+}
 
-GO_tumor <- GOstats::summary(hgOver_tumor)
-
-dim(GO_tumor)
-
-GO_tumor <- GO_tumor[GO_tumor$Size >= 10 & GO_tumor$Count >= 10, ]
-
-dim(GO_tumor)
-
-ggplot(GO_tumor, aes(Size, Count, size = OddsRatio, colour = Pvalue)) + 
-    geom_point() + b
-
-GO_tumor <- GO_tumor[order(GO_tumor$OddsRatio, decreasing = TRUE), ]
-head(GO_tumor)
-
-geneIDs <- geneIdsByCategory(hgOver_tumor)[GO_tumor$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db,
-                    columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
-geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
-GO_tumor <- cbind(GO_tumor, Genes = geneSYMs)
-rownames(GO_tumor) <- 1:nrow(GO_tumor)
-
+GO_tumor <- go_analisys(params_tumor, all.Human.GO)
+if (!is.null(GO_tumor)){
+    print(head(GO_tumor$GO))
+    plot(GO_tumor$plot)
+}
 ```
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender_tumors, eval=FALSE, include=FALSE}
-hgOver_gender <- hyperGTest(params_gender)
-hgOver_gender
-
-summary <- GOstats::summary
-GO_gender <- summary(hgOver_tumor)
-
-GO_gender <- GO_gender[GO_gender$Size >= 5 & GO_gender$Count >= 5, ]
-GO_gender <- GO_gender[order(GO_gender$OddsRatio, decreasing = TRUE), ]
-head(GO_gender)
-
-geneIDs <- geneIdsByCategory(hgOver_gender)[GO_gender$GOBPID]
-geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, 
-            columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
-geneSYMs <- sapply(geneSYMs, paste, collapse=", ")
-GO_gender <- cbind(GO_gender, Genes = geneSYMs)
-rownames(GO_gender) <- 1:nrow(GO_gender)
-
+```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE}
+GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
+if (!is.null(GO_female_exc)){
+    print(head(GO_female_exc$GO))
+    plot(GO_female_exc$plot)
+}
 ```
 
-Looking into the table:
 
-```{r fun.enrich.visualize_tumors}
+```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
+if (!is.null(GO_females_males_up)){
+    print(head(GO_females_males_up$GO))
+    plot(GO_females_males_up$plot)
+}
+```
+
+```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE}
+GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
+if (!is.null(GO_females_males_down)){
+    print(head(GO_females_males_down$GO))
+    plot(GO_females_males_down$plot)
+}
+```
+
+
+```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, all.Human.GO)
+if (!is.null(GO_tumor_males_not_clear)){
+    print(head(GO_tumor_males_not_clear$GO))
+    plot(GO_tumor_males_not_clear$plot)
+}
+```
+
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE}
+GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, all.Human.GO)
+if (!is.null(GO_tumor_females_not_clear)){
+    print(head(GO_tumor_females_not_clear$GO))
+    plot(GO_tumor_females_not_clear$plot)
+}
+```
+
+```{r fun.enrich.tfd, echo=TRUE, message=FALSE}
+GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
+if (!is.null(GO_tumor_females_down)){
+    print(head(GO_tumor_females_down$GO))
+    plot(GO_tumor_females_down$plot)
+}
+```
+
+We should look in details to those values and associations in the tables.
+
+
+
+```{r fun.enrich.visualize_tumors, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 library(xtable)
-xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+# xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 # print(xtab_tumor)
 # print(xtab_tumor, file="GO_tumor.html", type="html")
 # 
 # browseURL("GO_tumor.html")
 # 
-# xtab_gender <- xtable(GO_gender, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-# print(xtab_gender, file="GO_gender.html", type="html")
+# xtab_gender <- xtable(hgOver_female_exc, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+# print(xtab_gender, file="hgOver_female_exc.html", type="html")
 # 
-# browseURL("GO_gender.html")
+# browseURL("hgOver_female_exc.html")
 ```
 
 
@@ -1175,6 +1325,7 @@ xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 ```{r sessionInfo}
 sessionInfo()
 ```
+
 
 ##Bibliography
 
