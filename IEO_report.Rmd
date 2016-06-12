@@ -990,6 +990,8 @@ cleanY = function(y, mod, svs) {
 e.no_surrogates <- cleanY(assays(thca.filtered)$qrexp, design, sv$sv)
 ```
 
+The object e.no_surrogates contains the expression after removing the surrogates variables.
+
 ## Functional Annotation
 
 We want ensembl annotation, and gene symbol of our probes, and we want also the gene ontologies from all the human genes (will be later used for functional enrichment:
@@ -1009,6 +1011,8 @@ annot.Entrez.GO <- select(org.Hs.eg.db,
                 keys = rownames(thca.filtered),
                 keytype = "ENTREZID")
 ```
+
+The different objects contain different information: `annot` contains the Symbol and Ensembl identifier from the remaining genes, `all.Human.GO` is the object with Gene Ontologies and Symbols for all human genes, while anot.Entrez.GO has the GO and the symbols for the genes.
 
 ## Differential expression of paired data
 
@@ -1058,28 +1062,36 @@ head(tt_tumor)
 
 Diagnostics plot:
 
-```{r accuracy, cache = TRUE}
+```{r accuracy,  fig.cap="\\label{accuracy}Figure 22.A: P-value distribution and comparison with the t-student distribution in the comparison Males vs Females."}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 6], df = fit2$df.prior + fit2$df.residual[6], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 6], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between gender", outer = TRUE, cex = 1.5, side = 3, line = -2)
+```
 
+```{r accuracy2, fig.cap="\\label{accuracy2}Figure 21.B: P-value distribution and comparison with the t-student distribution in the comparison Tumoral and Healthy samples."}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 5], df = fit2$df.prior + fit2$df.residual[5], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 5], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between patients and healthy.", outer = TRUE, cex = 1.5, 
       side = 3, line = -2)
+```
 
+```{r accuracy3, fig.cap="\\label{accuracy3}Figure 22.C: P-value distribution and comparison with the t-student distribution in the female comparison tumoral and healthy samples."}
 hist(tt_females$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 1], df = fit2$df.prior + fit2$df.residual[1], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 1], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between females patients and healthy.", outer = TRUE, cex = 1.5, 
       side = 3, line = -2)
+```
 
+```{r accuracy4, fig.cap="\\label{accuracy4}Figure 22.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples."}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 2], lwd = 2, col = "red")
@@ -1090,39 +1102,24 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
 
 Volcano plot:
 
-```{r volcanoplot}
+```{r volcanoplot, fig.cap="\\label{volcano1}Figure 23.A: Volcano plot of the comparison healthy vs tumoral."}
 volcano <- function(data, title){
     ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
         ggtitle(title) + geom_vline(xintercept = c(2, -2) )+ 
         geom_hline(yintercept = 4.6)
 }
-
-volcanoplot(fit2, coef = "FemaleVsMale", highlight = 7,
-                  fit2$genes$symbol, main = "model Gender", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
 volcano(tt_gender, "Comparing males vs females")
+```
 
-volcanoplot(fit2, coef = "NormalVsDisease", highlight = 7,
-            fit2$genes$symbol, main = "model Disease", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
+```{r volcano2, fig.cap="\\label{volcano2}Figure 23.B: Volcano plot of the comparison males vs females."}
 volcano(tt_tumor, "Comparing healthy vs tumoral")
+```
 
-volcanoplot(fit2, coef = "MaleDiseaseVsMaleNormal", highlight = 7,
-            fit2$genes$symbol, main = "Comparing males", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
+```{r volcano3, fig.cap="\\label{volcano3}Figure 23.C: Volcano plot of the comparison healthy males vs tumoral males."}
 volcano(tt_males, "Comparing males: healthy vs tumoral")
+```
 
-volcanoplot(fit2, coef = "FemaleDiseaseVsFemaleNormal", highlight = 7,
-            fit2$genes$symbol, main = "Comparing Females", las = 1)
-abline(h = 4.6) # 99% of confidence
-abline(v = 2)
-abline(v = -2)
+```{r volcano4, fig.cap="\\label{volcano4}Figure 23.C: Volcano plot of the comparison healthy fremales vs tumoral females."}
 volcano(tt_females, "Comparing females: healthy vs tumoral")
 ```
 
@@ -1225,15 +1222,18 @@ DE_females <- unique(rownames(de_females))
 
 To visualize it we plot them with venn diagrams:
 
-```{r venn_plots, message=FALSE, warning=FALSE}
+```{r venn_plots, message=FALSE, warning=FALSE, fig.cap="\\label{venn1}Figure 24.A: Representation of the number of genes differentially expressed in comparison between females, and healthy vs tumoral."}
 library("Vennerable")
-pars <- par(mfrow = c(3, 1))
 plot(Venn(list(DE_tumor, DE_females),
               SetNames = c("Tumoral", "Females")))
+```
 
+```{r venn2, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral."}
 plot(Venn(list(DE_tumor, DE_males),
               SetNames = c("Tumoral", "Males")))
+```
 
+```{r venn3, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females."}
 plot(Venn(list(DE_females, DE_males),
               SetNames = c("Females", "Males")))
 ```
@@ -1276,7 +1276,7 @@ go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, cache=TRUE}
+```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, fig.cap="\\label{tumor1}Figure 25.A: Representation of the P-value and effect of the GO of the comparison of healty and tumoral samples."}
 go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     hgOver <- hyperGTest(go_obj)
     
@@ -1318,7 +1318,7 @@ if (!is.null(GO_tumor)){
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.gender_tumors, echo=TRUE, fig.cap="\\label{tumor3}Figure 25.B: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females"}
 GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
 if (!is.null(GO_female_exc)){
     print(head(GO_female_exc$GO))
@@ -1327,7 +1327,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.fmu, echo=TRUE, message=FALSE, fig.cap="\\label{tumor3}Figure 25.C: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons"}
 GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
 if (!is.null(GO_females_males_up)){
     print(head(GO_females_males_up$GO))
@@ -1335,7 +1335,7 @@ if (!is.null(GO_females_males_up)){
 }
 ```
 
-```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.fmd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor4}Figure 25.D: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons"}
 GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
 if (!is.null(GO_females_males_down)){
     print(head(GO_females_males_down$GO))
@@ -1344,7 +1344,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.tmd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.E: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and males."}
 GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_males_not_clear)){
     print(head(GO_tumor_males_not_clear$GO))
@@ -1352,7 +1352,7 @@ if (!is.null(GO_tumor_males_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, fig.cap="\\label{tumor6}Figure 25.F: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females"}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1360,7 +1360,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfd, echo=TRUE, message=FALSE}
+```{r fun.enrich.tfd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor7}Figure 25.G: Representation of the P-value and effect of the GO of the genes with down-regulation in the comparison between normal and tumors and females"}
 GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
 if (!is.null(GO_tumor_females_down)){
     print(head(GO_tumor_females_down$GO))
@@ -1371,14 +1371,11 @@ if (!is.null(GO_tumor_females_down)){
 We should look in details to those values and associations in the tables.
 
 
-
-```{r fun.enrich.visualize_tumors, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r fun.enrich.visualize_tumors, message=FALSE, warning=FALSE}
 library(xtable)
 # xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-# print(xtab_tumor)
 # print(xtab_tumor, file="GO_tumor.html", type="html")
-# 
-# browseURL("GO_tumor.html")
+
 # 
 # xtab_gender <- xtable(hgOver_female_exc, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 # print(xtab_gender, file="hgOver_female_exc.html", type="html")
