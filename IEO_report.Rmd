@@ -13,12 +13,12 @@ output:
 ---
 ```{r setup0, message = FALSE, warning = FALSE, echo = FALSE, results='asis', cache=TRUE}
 library("knitr")
-dumpcssfile <- function(fname) {
-  paste(c('<style type = "text/css">', readLines(fname), '</style>\n'),
-        collapse = "\n")
-}
-
-cat(dumpcssfile(file.path("css", "ieo.css")))
+# dumpcssfile <- function(fname) {
+#   paste(c('<style type = "text/css">', readLines(fname), '</style>\n'),
+#         collapse = "\n")
+# }
+# 
+# cat(dumpcssfile(file.path("css", "ieo.css")))
 
 knitr::opts_chunk$set(autodep = TRUE,
                fig.align = "center",
