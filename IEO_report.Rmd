@@ -189,7 +189,8 @@ col.data.meta
 Now, explore the row (feature) data.
 
 ```{r explore2}
-rowRanges(thca)
+row.ranges <- rowRanges(thca)
+row.ranges
 ```
 
 Looking deeper into col.data with:
@@ -308,7 +309,7 @@ In this plot we can see clearly the lack of data for some variables regarding no
 ```{r plots3D, fig.cap="\\label{ethnicity2}Figure 3.D: Most samples are from asian."}
 labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
             "WHITE", "NA")
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b +
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
     l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
     ggtitle("Gender distribution across different ethnicity and race.")
 ```
@@ -478,16 +479,14 @@ you can control the height and width in pixels of the figure with 'out.height' a
 ```{r libsizes1, echo=FALSE, out.width="600px", fig.cap="\\label{libsize2}Figure 5.B: Library sizes in increasing order of the paired data."}
 ord <- order(dge$sample$lib.size/1e6)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", , border = FALSE,
-        col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
+        xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
 Plotting for all samples makes it impossible to see accurately the blue and red colors corresponding to tumor and normal respectively.
 ```{r libsizes2, echo=FALSE, out.width="600px", fig.cap="Figure 5.B: Library sizes in increasing order."}
 ord.subset <- order(dge.subset$sample$lib.size/1e6)
 barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", border = FALSE,
-        col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1])
+        xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1])
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 ```
 After the filtering the subset plot allows one to see that there is similar heterogeneity in tumor and normal library sizes. In addition, this figure reveals substantial differences in sequencing depth between samples and we may consider discarding those samples whose depth is substantially lower than the rest. To identify which are these samples we may simply look at the
@@ -504,7 +503,7 @@ qqline(sampledepth)
 Looking into the qqplot we decide to filter out those below 40 or above 70 but keeping only those that are paired:
 
 ```{r refiltering.names}
-sample_names <- sample_names[sampledepth > 40]
+sample_names <- sample_names[sampledepth > 40 & sampledepth < 70]
 
 keep.paired <- function(pattern, x){
     # Return the names if it is paired
@@ -718,7 +717,6 @@ for (i in 1:ncol(setmp)) {
   lines(lo$x, lo$y, col = "red", lwd = 2)
 }
 ```
-
 We do not observe either important expression-level dependent biases among the normal samples except on the sample TCGA-BJ-A3PR. Which we proceed to remove it:
 
 ```{r remove_sample}
@@ -822,9 +820,7 @@ We can see that the sample from A3PR-normal clusters with the tumoral ones, and 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{mds}Figure 15: Multidimensional scaling plot of the samples."}
-batch_effects <- list(portion, tss, as.character(thca.filtered$type),
- +                      as.character(thca.filtered$gender))
- +for (batching in batch_effects){
+for (batching in list(portion, as.character(thca.filtered$type), as.character(thca.filtered$gender))){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
     plotMDS(dge.subset, labels = outcome, col = batch)
@@ -844,11 +840,12 @@ After looking for batch effect we couldn't find a clear cause of the batch effec
 library("sva")
 
 # Create the right design matrix
-treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
-design <- model.matrix(~0 + treat)
+variables.info <- colData(thca.filtered)[, variable.info > 0.6]
+treat <- factor(paste(variables.info$type,variables.info$gender,sep="."))
+design <- model.matrix(~0+treat)
 colnames(design) <- levels(treat)
 
-combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[, -1])
+combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[,-1])
 
 d <- as.dist(1 - cor(combatexp, method = "spearman"))
 cluster.combat <- hclust(d)
@@ -939,15 +936,16 @@ After all the process the best one, that separates better tumor and normal sampl
 assays(thca.filtered)$qrexp <- qrexp
 ```
 
-## Initial assesment on differential expression
+## Differential expression
 
 We perform a simple examination of expression changes and their associated p-values
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
 
 ```{r sva.model, cache=TRUE}
+variables0 <- colnames(filtered) # All variables available
 
-mod0 <- model.matrix(~ 1 , data = colData(thca.filtered))
+mod0 <- model.matrix(~ 1 , data = variables.info)
 pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
@@ -990,7 +988,6 @@ Figure 19 shows the resulting distribution of p-values.
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1)
 ```
-
 ```{r psvdist2, out.width = "500px", fig.cap="\\label{psvdist2}Figure 20.B: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1, xlim = c(0, 0.1), breaks = 80)
@@ -1042,7 +1039,7 @@ The different objects contain different information: `annot` contains the Symbol
 
 ## Differential expression of paired data
 
-Using the expression values with batch effect removed by qr decomposition and without the surrogate variables, we proceed with the voom normalization
+Using the expression values with batch effect removed by qr decomposition we find the top differentially expressed genes:
 
 ```{r DE, cache = TRUE, fig.cap="\\label{voom} Figure 21: The effect of the normalization by voom."}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
