@@ -603,7 +603,7 @@ These "after-normalization" plots are quite better than the previous ones used w
 Let's calculate now the average expression per gene through all the samples. Figure 9
 shows the distribution of those values across genes.
 
-```{r exprdist, out.width = "400px", fig.cap="\\label{exprdist}Figure 11: Distribution of average expression level per gene using DGE normalization and cqn normalization"}
+```{r exprdist, out.width = "400px", fig.cap =  fig.cap = "\\label{exprdist}Figure 11: Distribution of average expression level per gene using DGE normalization and cqn normalization"}
 par(mfrow = c(1, 2))
 avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "Using DGEList normalization", las = 1)
@@ -1394,7 +1394,7 @@ if (!is.null(GO_tumor_females_down)){
 We should look in details to those values and associations in the tables.
 
 
-```{r make_tables, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r fun.enrich.visualize_tumors, message=FALSE, warning=FALSE}
 library(xtable)
 
 go_html_table <- function(obj, name){
