@@ -11,7 +11,7 @@ output:
   pdf_document:
     toc: yes
 ---
-```{r setup0, message = FALSE, warning = FALSE, include = FALSE}
+```{r setup0, message = FALSE, warning = FALSE, echo = FALSE, results='asis', cache=TRUE}
 library("knitr")
 dumpcssfile <- function(fname) {
   paste(c('<style type = "text/css">', readLines(fname), '</style>\n'),
@@ -20,7 +20,7 @@ dumpcssfile <- function(fname) {
 
 cat(dumpcssfile(file.path("css", "ieo.css")))
 
-opts_chunk$set(autodep = TRUE,
+knitr::opts_chunk$set(autodep = TRUE,
                fig.align = "center",
                comment = "",
                tidy = TRUE,
@@ -29,8 +29,10 @@ opts_chunk$set(autodep = TRUE,
     paste("\\begin{lstlisting}[numbers=left, firstnumber=last]\n", x, 
         "\\end{lstlisting}\n", sep = "")
 }) 
+ 
+ 
 ```
-```{r setup1, message = FALSE, warning=FALSE}
+```{r setup1, message = FALSE, warning = FALSE, echo = FALSE, results='asis', cache=TRUE}
 library("knitr")
 # Modifications based on https://rpubs.com/ajlyons/autonumfigs
 # A function for generating captions and cross-references
@@ -69,7 +71,7 @@ fig <- local({
         })
 })
 ```
-```{r setup2, message = FALSE, warning = FALSE}
+```{r setup2, message = FALSE, warning = FALSE, echo = FALSE, results='asis', cache=TRUE}
 ## This chunk replaces the default hook for processing plots. It achieves the purposes,
 ## of laying out auto-numbered captions, but other functionality may be gone.
 
@@ -99,9 +101,8 @@ knit_hooks$set(plot = function(x, options) {
     
 })
 ```
-```{r setup3, message = FALSE, warning = FALSE, eval = FALSE, include = FALSE}
+```{r setup3, message = FALSE, warning = FALSE, echo = FALSE, results='asis', cache=TRUE}
 library("knitr")
-library("plyr")
 ## This chucnk will read through *this* Rmd file, and attempt to extract all of the 
 ## labels (not caption text) used for Figure captions. These labels are used
 ## as anchors, so scanning through the document now will allow us to create cross references
@@ -669,7 +670,7 @@ control the relative image size in *inches*. The final image size results from
 'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
 --->
 
-```{r maPlotsTumor, fig.height = 13, fig.width = 6, dpi = 100, fig.cap = "\\label{maPlotsTumor}Figure 13.A: MA-plots of the tumor samples.", autodep=TRUE}
+```{r maPlotsTumor, fig.height = 10, fig.width = 6, dpi = 100, fig.cap = "\\label{maPlotsTumor}Figure 13.A: MA-plots of the tumor samples.", autodep=TRUE}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
@@ -690,7 +691,7 @@ We do not observe samples with major expression-level dependent biases.
 
 Let's look now to the normal samples:
 
-```{r maPlotsNormal, fig.height = 13, fig.width = 6, dpi = 100, fig.cap = "\\label{maPlotsNormal}Figure 13.B: MA-plots of the normal samples.", autodep=TRUE}
+```{r maPlotsNormal, fig.height = 10, fig.width = 6, dpi = 100, fig.cap = "\\label{maPlotsNormal}Figure 13.B: MA-plots of the normal samples.", autodep=TRUE}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
@@ -1019,7 +1020,7 @@ The different objects contain different information: `annot` contains the Symbol
 
 Using the expression values with batch effect removed by qr decomposition and without the surrogate variables, we proceed with the voom normalization
 
-```{r DE, autodep=TRUE}
+```{r DE, autodep=TRUE, fig.cap="\\label{voom} Figure 21: The effect of the normalization by voom."}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
 n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
 
@@ -1070,7 +1071,7 @@ head(tt_tumor)
 
 Diagnostics plot:
 
-```{r accuracy,  fig.cap="\\label{accuracy}Figure 21.A: P-value distribution and comparison with the t-student distribution in the comparison Males vs Females.", autodep=TRUE}
+```{r accuracy,  fig.cap="\\label{accuracy}Figure 22.A: P-value distribution and comparison with the t-student distribution in the comparison Males vs Females.", autodep=TRUE}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 6], df = fit2$df.prior + fit2$df.residual[6], main = "", pch = ".", cex = 3)
@@ -1079,7 +1080,7 @@ abline(0, 1, lwd = 2)
 mtext("Comparing genes between females and males patients", 
       outer = TRUE, cex = 1.5, side = 3, line = -2)
 ```
-```{r accuracy2, fig.cap="\\label{accuracy2}Figure 21.B: P-value distribution and comparison with the t-student distribution in the comparison Tumoral and Healthy samples.", autodep=TRUE}
+```{r accuracy2, fig.cap="\\label{accuracy2}Figure 22.B: P-value distribution and comparison with the t-student distribution in the comparison Tumoral and Healthy samples.", autodep=TRUE}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 5], df = fit2$df.prior + fit2$df.residual[5], main = "", pch = ".", cex = 3)
@@ -1088,7 +1089,7 @@ abline(0, 1, lwd = 2)
 mtext("Comparing genes between healthy and tumoral patients", 
       outer = TRUE, cex = 1.5, side = 3, line = -2)
 ```
-```{r accuracy3, fig.cap="\\label{accuracy3}Figure 21.C: P-value distribution and comparison with the t-student distribution in the female comparison tumoral and healthy samples.", autodep=TRUE}
+```{r accuracy3, fig.cap="\\label{accuracy3}Figure 22.C: P-value distribution and comparison with the t-student distribution in the female comparison tumoral and healthy samples.", autodep=TRUE}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_females$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 1], df = fit2$df.prior + fit2$df.residual[1], main = "", pch = ".", cex = 3)
@@ -1097,7 +1098,7 @@ abline(0, 1, lwd = 2)
 mtext("Comparing genes between females patients and healthy.", outer = TRUE, cex = 1.5, 
       side = 3, line = -2)
 ```
-```{r accuracy4, fig.cap="\\label{accuracy4}Figure 21.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples.", autodep=TRUE}
+```{r accuracy4, fig.cap="\\label{accuracy4}Figure 22.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples.", autodep=TRUE}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
@@ -1111,7 +1112,7 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
 
 We can see in volanco plots how look like the data
 
-```{r volcanoplot, fig.cap="\\label{volcano1}Figure 22.A: Volcano plot of the comparison healthy vs tumoral.", autodep=TRUE}
+```{r volcanoplot, fig.cap="\\label{volcano1}Figure 23.A: Volcano plot of the comparison healthy vs tumoral.", autodep=TRUE}
 volcano <- function(data, title){
     # Plot a volcano plot of a toptable output of limma
     ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
@@ -1121,13 +1122,13 @@ volcano <- function(data, title){
 
 volcano(tt_tumor, "Comparing healthy vs tumoral")
 ```
-```{r volcano2, fig.cap="\\label{volcano2}Figure 22.B: Volcano plot of the comparison males vs females.", autodep=TRUE}
+```{r volcano2, fig.cap="\\label{volcano2}Figure 23.B: Volcano plot of the comparison males vs females.", autodep=TRUE}
 volcano(tt_gender, "Comparing males vs females")
 ```
-```{r volcano3, fig.cap="\\label{volcano3}Figure 22.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE}
+```{r volcano3, fig.cap="\\label{volcano3}Figure 23.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE}
 volcano(tt_males, "Comparing males: healthy vs tumoral")
 ```
-```{r volcano4, fig.cap="\\label{volcano4}Figure 22.C: Volcano plot of the comparison healthy fremales vs tumoral females.", autodep=TRUE}
+```{r volcano4, fig.cap="\\label{volcano4}Figure 23.C: Volcano plot of the comparison healthy fremales vs tumoral females.", autodep=TRUE}
 volcano(tt_females, "Comparing females: healthy vs tumoral")
 ```
 
@@ -1237,16 +1238,16 @@ DE_females <- unique(rownames(de_females))
 
 To visualize it we plot them with venn diagrams:
 
-```{r venn_plots, message=FALSE, warning=FALSE, fig.cap="\\label{venn1}Figure 23.A: Representation of the number of genes differentially expressed in comparison between females, and healthy vs tumoral.", autodep=TRUE}
+```{r venn_plots, message=FALSE, warning=FALSE, fig.cap="\\label{venn1}Figure 24.A: Representation of the number of genes differentially expressed in comparison between females, and healthy vs tumoral.", autodep=TRUE}
 library("Vennerable")
 plot(Venn(list(DE_tumor, DE_females),
               SetNames = c("Tumoral", "Females")))
 ```
-```{r venn2, fig.cap="\\label{venn2}Figure 23.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE}
+```{r venn2, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE}
 plot(Venn(list(DE_tumor, DE_males),
               SetNames = c("Tumoral", "Males")))
 ```
-```{r venn3, fig.cap="\\label{venn3}Figure 23.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE}
+```{r venn3, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE}
 plot(Venn(list(DE_females, DE_males),
               SetNames = c("Females", "Males")))
 ```
@@ -1288,7 +1289,7 @@ go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, fig.cap="\\label{tumor1}Figure 24.A: Representation of the P-value and effect of the GO of the comparison of healty and tumoral samples.", autodep=TRUE}
+```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, fig.cap="\\label{tumor1}Figure 25.A: Representation of the P-value and effect of the GO of the comparison of healty and tumoral samples.", autodep=TRUE}
 go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     hgOver <- hyperGTest(go_obj)
     
@@ -1330,7 +1331,7 @@ if (!is.null(GO_tumor)){
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor3}Figure 24.B: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", autodep=TRUE}
+```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor3}Figure 25.B: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", autodep=TRUE}
 GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
 if (!is.null(GO_female_exc)){
     print(head(GO_female_exc$GO))
@@ -1339,7 +1340,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor3}Figure 24.C: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
+```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor3}Figure 25.C: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
 GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
 if (!is.null(GO_females_males_up)){
     print(head(GO_females_males_up$GO))
@@ -1347,7 +1348,7 @@ if (!is.null(GO_females_males_up)){
 }
 ```
 
-```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor4}Figure 24.D: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons", autodep=TRUE}
+```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor4}Figure 25.D: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons", autodep=TRUE}
 GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
 if (!is.null(GO_females_males_down)){
     print(head(GO_females_males_down$GO))
@@ -1356,7 +1357,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor5}Figure 24.E: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and males.", autodep=TRUE}
+```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor5}Figure 25.E: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and males.", autodep=TRUE}
 GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_males_not_clear)){
     print(head(GO_tumor_males_not_clear$GO))
@@ -1364,7 +1365,7 @@ if (!is.null(GO_tumor_males_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 24.F: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.F: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1372,7 +1373,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor7}Figure 24.G: Representation of the P-value and effect of the GO of the genes with down-regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor7}Figure 25.G: Representation of the P-value and effect of the GO of the genes with down-regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
 if (!is.null(GO_tumor_females_down)){
     print(head(GO_tumor_females_down$GO))
