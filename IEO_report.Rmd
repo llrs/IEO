@@ -11,12 +11,14 @@ output:
   pdf_document:
     toc: yes
 ---
-```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
+```{r setup0, message = FALSE, warning = FALSE, include = FALSE}
 library("knitr")
 dumpcssfile <- function(fname) {
   paste(c('<style type = "text/css">', readLines(fname), '</style>\n'),
         collapse = "\n")
 }
+
+cat(dumpcssfile(file.path("css", "ieo.css")))
 
 opts_chunk$set(autodep = TRUE,
                fig.align = "center",
@@ -27,34 +29,14 @@ opts_chunk$set(autodep = TRUE,
     paste("\\begin{lstlisting}[numbers=left, firstnumber=last]\n", x, 
         "\\end{lstlisting}\n", sep = "")
 }) 
-# Some modifications from http://stackoverflow.com/a/27633734/2886003
-
-knit_hooks$set(error = function(x, options) stop(x),
-               fig.cap = function(before, options, envir) {
-                 if (!before) {
-                   paste0('<p class = "caption">', options$fig.cap, "</p>")
-                 }
-               })
-
+```
+```{r setup1, message = FALSE, warning=FALSE}
+library("knitr")
 # Modifications based on https://rpubs.com/ajlyons/autonumfigs
 # A function for generating captions and cross-references
 fig <- local({
     i <- 0
     list(
-        cap=function(refName, text, center=FALSE, col="black", inline=FALSE) {
-            i <<- i + 1
-            ref[[refName]] <<- i
-            css_ctr <- ""
-            if (center) css_ctr <- "text-align:center; display:inline-block; width:100%;"
-            cap_txt <- paste0("<span style=\"color:", col, "; ", css_ctr, "\">Figure ", i, ": ", text , "</span>")
-            anchor <- paste0("<a name=\"", refName, "\"></a>")
-            if (inline) {
-                paste0(anchor, cap_txt)    
-            } else {
-                list(anchor=anchor, cap_txt=cap_txt)
-            }
-        },
-        
         ref=function(refName, link=FALSE, checkRef=TRUE) {
             
             ## This function puts in a cross reference to a caption. You refer to the
@@ -68,15 +50,30 @@ fig <- local({
                 paste0("Figure ", ref[[refName]])
             }
         },
-        
+        cap=function(refName, text, center=FALSE, col="black", inline=FALSE) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            css_ctr <- ""
+            if (center) css_ctr <- "text-align:center; display:inline-block; width:100%;"
+            cap_txt <- paste0("<span style=\"color:", col, "; ", css_ctr, "\">Figure ", i, ": ", text , "</span>")
+            anchor <- paste0("<a name=\"", refName, "\"></a>")
+            if (inline) {
+                paste0(anchor, cap_txt)    
+            } else {
+                list(anchor=anchor, cap_txt=cap_txt)
+            }
+        },
         ref_all=function(){
             ## For debugging
             ref
         })
 })
-
+```
+```{r setup2, message = FALSE, warning = FALSE}
 ## This chunk replaces the default hook for processing plots. It achieves the purposes,
 ## of laying out auto-numbered captions, but other functionality may be gone.
+
+library("knitr")
 knit_hooks$set(plot = function(x, options) {
     sty <- ""
     if (options$fig.align == 'default') {
@@ -101,8 +98,11 @@ knit_hooks$set(plot = function(x, options) {
         sep = '')
     
 })
-
-## This chunck will read through *this* Rmd file, and attempt to extract all of the 
+```
+```{r setup3, message = FALSE, warning = FALSE, eval = FALSE, include = FALSE}
+library("knitr")
+library("plyr")
+## This chucnk will read through *this* Rmd file, and attempt to extract all of the 
 ## labels (not caption text) used for Figure captions. These labels are used
 ## as anchors, so scanning through the document now will allow us to create cross references
 ## before the caption actually appears. 
@@ -122,7 +122,7 @@ rmdLines <- rmdLines[figscap_idx]
 
 ## Get rid of everything up until the start of the caption label
 ## This presumes the caption label is the first argument of fig$cap()
-## E.g., fig.cap = fig$cap("my_label", ...)
+## E.g., fig.cap = "\\label{my_label", ...)
 rmdLinesSansPre <- sub("(.*)fig\\$cap(.*?)[\"']", "", rmdLines)
 
 ## Identify everything up until the first quote
@@ -143,8 +143,6 @@ if (length(fig_labels) > 0) {
     ref <- as.list(1:length(fig_labels))
     names(ref) <- fig_labels
 }    
-
-cat(dumpcssfile(file.path("css", "ieo.css")))
 ```
 
 #### Mauro Álvarez (mauro.alvarez01@estudiant.upf.edu)
@@ -166,7 +164,7 @@ Research from The Cancer Genome Atlas [(TCGA)](http://cancergenome.nih.gov/cance
 
 We start importing the raw table of counts.
 
-```{r start, message=FALSE}
+```{r start, message=FALSE, autodep=TRUE}
 library(SummarizedExperiment)
 
 thca <- readRDS("seTHCA.rds") 
@@ -178,7 +176,7 @@ thca
 Explore the column (phenotypic) data, which in this case corresponds to clinical
 variables, and their corresponding metadata.
 
-```{r explore1}
+```{r explore1, autodep=TRUE}
 dim(colData(thca))
 col.data <- colData(thca)
 col.data[1:5, 1:5]
@@ -189,19 +187,19 @@ col.data.meta
 
 Now, explore the row (feature) data.
 
-```{r explore2}
+```{r explore2, autodep=TRUE}
 rowRanges(thca)
 ```
 
 Looking deeper into col.data with:
 
-```{r explore.col.data}
+```{r explore.col.data, autodep=TRUE}
 col.data[1:5, 30:35]
 ```
 
 We observed that there are different ways to indicate that the data is not available (NA, [Not Available]...). Consequently, we decide to study which variables have more information. To do so, we create two functions, one (`na.replace`) to change those values into the standarized `NA` nomenclature, and `filter.info` to quantify how many of each variable is not `NA`.
 
-```{r functions}
+```{r functions, autodep=TRUE}
 
 na.replace <- function(x){
     # Remove the unwanted factors
@@ -226,7 +224,7 @@ filter.info <- function(x){
 
 We apply these functions to the `col.data` and we visualize it:
 
-```{r col.data.analysis, fig.cap="\\label{fig:col.data.analysis}Figure 1."}
+```{r data.analysis, fig.cap="\\label{fig:col.data.analysis}Figure 1. Information in each column", autodep=TRUE}
 meta.info <- as.data.frame(lapply(col.data, na.replace))
 variable.info <- sapply(meta.info, filter.info)
 
@@ -234,12 +232,12 @@ variable.info <- sapply(meta.info, filter.info)
 relative.info <- variable.info[order(variable.info)]/sum(variable.info)
 plot(relative.info, main="Information brought by column")
 ```
-```{r col.data.analysis2, fig.cap="\\label{fig:col.data.analysis2}Figure 2.A"}
+```{r col.data.analysis2, fig.cap="\\label{col.data.analysis2}Figure 2.A Histogram of information of additional information per sample.", autodep=TRUE}
 # Plotting the histogram of the information
 hist(variable.info, 
      main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
 ```
-```{r col.data.analysis3, fig.cap="\\label{fig:col.data.analysis3}Figure 2.B"}
+```{r col.data.analysis3, fig.cap="\\label{\\label{col.data.analysis3}Figure 2.B: A zoom on the most informative variables.", autodep=TRUE}
 # Seeing the most informative to set a threshold,
 # frequency are the number of columns with such % of information
 hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35), 
@@ -248,7 +246,7 @@ hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35),
 
 As we can see, in many variables the main value is just `NA` or other derivatives meaning "No information available for this variable". Therefore, in order to keep the most informative variables, we apply a threshold of 60% (of the values containing informative data) to select the relevant ones:
 
-```{r select.filtered}
+```{r select.filtered, autodep=TRUE}
 filtered <- meta.info[, variable.info  > 0.6]
 
 dim(filtered)
@@ -258,7 +256,7 @@ meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
 ### Associated variables exploration
 
 To explore the data we first create an object with `ggplot`:
-```{r ggplot.config}
+```{r ggplot.config, autodep=TRUE}
 library("ggplot2")
 fplot <- ggplot(as.data.frame(filtered))
 
@@ -284,45 +282,45 @@ In the "normal" type samples most of the information is not available. This coul
 And we plot some relationships for some significant variables:
 In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
-```{r plots3A, fig.cap="\\label{fig:plots3A}Figure 3.A"}
+```{r plots3A, fig.cap="\\label{gender}Figure 3.A: The gender distribution: threre are more females than males.", autodep=TRUE}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
     ggtitle("Gender distribution across normal and tumour samples")
 ```
 
 As expected, there are more female samples than male samples. As we mentioned before, thyroid cancer is more prevalent in women than men and we can see that not only for tumor samples but for normals samples too. In addition, there are more tumor cases than normal cases.
 
-```{r plots3B,fig.cap="\\label{fig:plots3B}Figure 3.B"}
+```{r plots3B,fig.cap="\\label{status}Figure 3.B: Some tumoral samples are not clearly assigned a tumor status.", autodep=TRUE}
 fplot + geom_bar(aes(type, fill = tumor_status)) + b + y.axis + 
     ggtitle("Tumor status across normal and tumour samples")
 ```
 
 We also have examined the tumor status of the tumor samples. There are more cancer patients without tumor ("tumor free") than with the tumor ("with tumor") after the collection of the data. We assume that most of the patients that participate in the study have recovered after it. 
 
-```{r plots3C, fig.cap="\\label{fig:plots3C}Figure 3.C"}
+```{r plots3C, fig.cap="\\label{ethnicity}Figure 3.C: The predominant ethnicity are not hispanic or latino", autodep=TRUE}
 fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b + 
     y.axis + ggtitle("Ethnicity distribution across normal and tumour samples")
 ```
 
 In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
 
-```{r plots3D, fig.cap="\\label{fig:plots3D}Figure 3.D"}
+```{r plots3D, fig.cap="\\label{ethnicity2}Figure 3.D: Most samples are from asian.", autodep=TRUE}
 labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
             "WHITE", "NA")
-fplot + facet_wrap(~ ethnicity) + geom_bar(aes(ethnicity, fill = gender)) + b +
+fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b +
     l + y.axis + scale_x_discrete(breaks=waiver(), labels = labels) +
     ggtitle("Gender distribution across different ethnicity and race.")
 ```
 
 If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
 
-```{r plots3E, fig.cap="\\label{fig:plots3E}Figure 3.E"}
+```{r plots3E, fig.cap="\\label{race}Figure 3.E: Both in males and females the most abundant race is white.", autodep=TRUE}
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
     ggtitle("Ethnicity distribution in male and female")
 ```
 
 If we ignore the hispanic origin of the individuals and just focus on the main ethnicities of the study we can observe that for both female and male samples there is  a majority of "white" individuals. However, the fact that "white" subjects are hispanic or not can provide some variability so that is something we will take into account later. 
 
-```{r plots3F, fig.cap="\\label{fig:plots3F}Figure 3.F"}
+```{r plots3F, fig.cap="\\label{focality}Figure 3.F: There are some tumors which we don't know the focality.", autodep=TRUE}
 fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
     l + y.axis + xlab("tumor focality") + 
     ggtitle("Gender distribution in different tumour focality")
@@ -330,7 +328,7 @@ fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
 
 There is no data about tumor focality in the normal samples... 
 
-```{r plots3G, fig.cap="\\label{fig:plots3G}Figure 3.G"}
+```{r plots3G, fig.cap="\\label{diagnosis}Figure 3.G The most common diagnosticated tumor is Papillary thyroid Carcinoma.", autodep=TRUE}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
 hd.xaxis <-  scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
@@ -342,7 +340,7 @@ fplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + hd.xaxis +
 
 Here, we can see that the tumor samples came mainly from classical Papillary Thyroid Carcinoma. We expect differential expression between the different thyroid cancer phenotypes so this might be a source of variability.
 
-```{r plots3H, fig.cap="\\label{fig:plots3H}Figure 3.H", fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE}
+```{r plots3H, fig.cap="\\label{diagnosis2}Figure 3.H: There is a representative sample of diagnosis over the age of patients.", fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, autodep=TRUE}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
             "Papillary - Tall Cell", "NA")
 ggplot(filtered[!is.na(filtered$age_at_diagnosis), ]) + 
@@ -361,7 +359,7 @@ As a summary from the previous plots, the most abundant population in the sample
 
 With this approach we want to avoid to include in the analysis, samples that introduce variability (mainly differential expression due to enviromental or epigenetic factors) as much as possible. To have more insight on the disease we want to have just paired samples, that is, samples from the same participant. So we filter the data accordingly:
 
-```{r subset}
+```{r subset, autodep=TRUE}
 # Paired data
 paired <- intersect(thca[, thca$type == 'tumor']$bcr_patient_barcode, 
                     thca[, thca$type == 'normal']$bcr_patient_barcode)
@@ -396,7 +394,7 @@ thca.filtered <- thca[, sample_names]
 
 We explore again the variables for this subset. In this case, we show just some of the relationship plots we have seen previously:
 
-```{r subset.explore1, fig.cap="\\label{fig:subset.explore1}Figure 4.A"}
+```{r subset.explore1, fig.cap="\\label{pairedg}Figure 4.A: The samples are consistent with the paired data.", autodep=TRUE}
 filtered_filt <- filtered_filt[row.names(filtered_filt) %in% sample_names, ]
 mplot <- ggplot(filtered_filt) + y.axis
 mplot + geom_bar(aes(type, fill = gender)) + b +
@@ -405,21 +403,21 @@ mplot + geom_bar(aes(type, fill = gender)) + b +
 
 This plot just checks whether we have the same number of cases in normal sample and tumor sample so that we have done correctly the filtering.
 
-```{r subset.explore2, fig.cap="\\label{fig:subset.explore2}Figure 4.B"}
+```{r subset.explore2, fig.cap="\\label{pairede}Figure 4.B: The ethnicity is also consistent with the filter applied", autodep=TRUE}
 mplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b +
   ggtitle("Hispanic origin, gender and type of sample after filtering")
 ```
 
 Hispanic origin data is only available for tumor samples but as we have mentioned before we can extrapolate ethinicity and origin to the normal samples because they are paired (see below). 
 
-```{r subset.explore3, fig.cap="\\label{fig:subset.explore3}Figure 4.C"}
+```{r subset.explore3, fig.cap="\\label{pairedge}Figure 4.C: The samples not from the tumor are correclty assigned NA", autodep=TRUE}
 mplot + geom_bar(aes(x=gender, fill = ethnicity)) + b + l +
   ggtitle("Gender samples and hispanic origin after filtering")
 ```
 
 Same proportion of being or not being "hispanic or latino" in females and males. Subset filtering has not modified the fact that we have more female samples than males. 
 
-```{r subset.explore4, fig.cap="\\label{fig:subset.explore4}Figure 4.D"}
+```{r subset.explore4, fig.cap="\\label{paireda}Figure 4.D: The paired data comprises a wide range of period of life, from people with 18 years to 81", autodep=TRUE}
 mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l + 
     scale_x_discrete(name = "histologic diagnosis", breaks=waiver(), 
     labels = c("Papillary - Classical", "NA")) + 
@@ -429,7 +427,7 @@ mplot + geom_bar(aes(histologic_diagnosis, fill = gender)) + b + l +
 
 Papillary Classical Thyroid cancer in the same proportion as "NA" because we have the same number of normal cases and classical thyroid tumor cases. 
 
-```{r subset.explore5, fig.cap="\\label{fig:subset.explore5}Figure 4.E"}
+```{r subset.explore5, fig.cap="\\label{fig:subset.explore5}Figure 4.E: We have a epresentative sample of all ages.", autodep=TRUE}
 ggplot(filtered_filt[!is.na(filtered_filt$age_at_diagnosis), ]) +
     geom_bar(aes(age_at_diagnosis, fill = histologic_diagnosis)) + b + l + y.axis +
     xlab("age at diagnosis") + scale_fill_discrete(name = "histologic diagnosis",
@@ -445,7 +443,7 @@ To perform quality assessment and normalization we need first to load the
 [edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
 create a `DGEList' object.
 
-```{r edgeR, message = FALSE}
+```{r edgeR, message = FALSE, autodep=TRUE}
 library(edgeR)
 # Normalization just with the selected samples
 dge.subset <- DGEList(counts = assays(thca.filtered)$counts, 
@@ -456,7 +454,7 @@ dge <- DGEList(counts = assays(thca)$counts, genes = as.data.frame(mcols(thca)))
 Now calculate $\log_2$ CPM values of expression and put them as an additional
 assay element to ease their manipulation.
 
-```{r logCPM}
+```{r logCPM, autodep=TRUE}
 assays(thca.filtered)$logCPM <- cpm(dge.subset, log=TRUE, prior.count=3)
 assays(thca.filtered)$logCPM[1:5, 1:5]
 ```
@@ -468,7 +466,7 @@ assays(thca.filtered)$logCPM[1:5, 1:5]
 Let's examine the library sizes in terms of total number of sequence read counts
 per sample. Figure 5 below shows library sizes per sample in increasing order.
 
-```{r libsizes1, echo=FALSE, out.width="600px", fig.cap="Figure 5.A: Library sizes in increasing order."}
+```{r libsizes1, echo=FALSE, out.width="600px", fig.cap="\\label{libsize1}Figure 5.A: Library sizes in increasing order of the whole dataset", autodep=TRUE}
 ord <- order(dge$sample$lib.size)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1],
@@ -479,7 +477,7 @@ legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 Plotting for all samples makes it impossible to see accurately the blue and red colors 
 corresponding to tumor and normal respectively.
 
-```{r libsizes2, echo=FALSE, out.width="600px", fig.cap="Figure 5.B: Library sizes in increasing order."}
+```{r libsizes2, echo=FALSE, out.width="600px", fig.cap="\\label{libsize2}Figure 5.B: Library sizes in increasing order of the paired data.", autodep=TRUE}
 ord.subset <- order(dge.subset$sample$lib.size)
 barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1],
@@ -489,7 +487,7 @@ legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 
 After the filtering the subset plot allows one to see that there is similar heterogeneity in tumor and normal library sizes. In addition, this figure reveals substantial differences in sequencing depth between samples and we may consider discarding those samples whose depth is substantially lower than the rest. To identify which are these samples we may simply look at the actual numbers including portion of the sample identifier that distinguishes them.
 
-```{r libsize.set, fig.cap="\\label{fig:libsize.set}Figure 6." }
+```{r libsize.set, fig.cap="\\label{libsizen}Figure 6: Distribution of library size compared with the normal distribution.", autodep=TRUE}
 sampledepth <- round(dge.subset$sample$lib.size / 1e6, digits = 1)
 names(sampledepth) <- substr(sample_names, 6, 12)
 
@@ -499,7 +497,7 @@ qqline(sampledepth)
 
 Looking into the qqplot we decide to filter out those below 40 but keeping only those that are paired:
 
-```{r refiltering.names}
+```{r refiltering.names, autodep=TRUE}
 sample_names <- sample_names[sampledepth > 40]
 
 keep.paired <- function(pattern, x){
@@ -524,7 +522,7 @@ Let's look at the distribution of expression values per sample in terms of
 logarithmic CPM units. Due to the large number of samples, we display tumor
 and normal samples separately, and are shown in Figure 7.
 
-```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap="\\label{fig: distRawExp}Figure 7:Non-parametric density distribution of expression profiles per sample.", message=FALSE}
+```{r distRawExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap="\\label{distRawExp}Figure 7: Non-parametric density distribution of expression profiles per sample.", message=FALSE, autodep=TRUE}
 library(geneplotter)
 par(mfrow = c(1, 2))
 multidensity(as.list(as.data.frame(assays(thca.filtered[, 
@@ -539,7 +537,11 @@ multidensity(as.list(as.data.frame(assays(thca.filtered[,
 
 These two spikes are due to the lowly expressed genes and the highly expressed genes, but in the lowly expressed genes the effect of GC content and the read length may have higher impact.
 
-```{r gc_length}
+### GC and length effect
+
+To see the impact of GC and length on the number of read we plot them:
+
+```{r gc_length, fig.cap="\\label{gc_length}Figure 8: Relationship between GC content and length with the mean expression of genes.", autodep=TRUE}
 gc_len <- rowRanges(thca.filtered)
 cor(rowMeans(assays(thca.filtered)$counts), gc_len$txgc)
 cor(rowMeans(assays(thca.filtered)$counts), gc_len$txlen)
@@ -553,9 +555,9 @@ plot(log10(rowMeans(assays(thca.filtered)$counts)), log10(gc_len$txlen),
      ylab = "Length (log10)")
 ```
 
-There is a low correlation on the counts and the GC content or the length but as there are clearly two groups based on the length, we will normalize also using the length with the package cqn:
+There is a low correlation on the counts and the GC content or the length but as there are clearly two groups based on the length, so we will normalize also using the length with the package cqn:
 
-```{r cqn, message=FALSE}
+```{r cqn, message=FALSE, autodep=TRUE, fig.cap="\\label{cqn}Figure 9: The effect of GC and length on each sample."}
 library("cqn")
 cqn.subset <- cqn(assays(thca.filtered)$counts, x = gc_len$txgc, lengths = gc_len$txlen)
 par(mfrow = c(1, 2))
@@ -569,7 +571,7 @@ As we thought the effect of the length is higher than the effect of GC content
 
 We can see if the distribution of expression values per sample in terms of logarithmic CPM units. Due to the large number of samples, we display tumor and normal samples separately:
 
-```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap = "Figure 8: Non-parametric density distribution of expression profiles per sample."}
+```{r distExp, fig.height = 4, fig.width = 10, out.width = "800px", fig.cap="\\label{distExp}Figure 10: Non-parametric density distribution of expression profiles per sample.", autodep=TRUE}
 cqn.logCPM <- cqn.subset$y + cqn.subset$offset
 assays(thca.filtered)$cqn.logCPM <- cqn.logCPM
 par(mfrow = c(1, 2))
@@ -588,7 +590,7 @@ These "after-normalization" plots are quite better than the previous ones used w
 Let's calculate now the average expression per gene through all the samples. Figure 9
 shows the distribution of those values across genes.
 
-```{r exprdist, out.width = "400px", fig.cap = "Figure 9: Distribution of average expression level per gene."}
+```{r exprdist, out.width = "400px", fig.cap = "\\label{exprdist}Figure 11: Distribution of average expression level per gene using DGE normalization and cqn normalization", autodep=TRUE}
 par(mfrow = c(1, 2))
 avgexp <- rowMeans(assays(thca.filtered)$logCPM)
 hist(avgexp, xlab = "log2 CPM", main = "Using DGEList normalization", las = 1)
@@ -606,7 +608,7 @@ In the light of previous plot, we may consider a cutoff of 1 log CPM unit as min
 of expression to select genes being expressed across samples. Using this cutoff we proceed
 to filter out lowly-expressed genes.
 
-```{r filter.low.expr}
+```{r filter.low.expr, autodep=TRUE}
 mask <- avgexp.cqn > 1
 sum(mask)
 thca.filtered <- thca.filtered[mask, ]
@@ -617,7 +619,7 @@ dge.subset <- dge.subset[mask, ]
 
 Since we will use the offsets computed by `cqn`, there is no need to normalize using the normalization tools from `edgeR`, such as `calcNormFactors` according to cqn vignette.
 
-```{r norm, fig.cap="\\label{fig: norm}Figure10: Tumor and Normal samples after filtering, without normalization, with calcNormFactors normalization and with cqn normalization " }
+```{r norm, fig.height = 16, fig.cap="\\label{norm}Figure 12: Tumor and Normal samples after filtering, without normalization, with calcNormFactors normalization and with cqn normalization", autodep=TRUE}
 dge.subset$offset <- cqn.subset$glm.offset
 
 dge.norm <- calcNormFactors(dge.subset)
@@ -654,6 +656,8 @@ The normalization after filtering lowly-expressed genes with 'cqn' package clust
 
 ### MA-plots
 
+#### Tumoral samples
+
 We examine now the MA-plots of the normalized expression profiles. We look first to
 the tumor samples.
 
@@ -665,7 +669,7 @@ control the relative image size in *inches*. The final image size results from
 'out.width' and 'out.height'. More information at http://yihui.name/knitr/options
 --->
 
-```{r maPlotsTumor, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure 11: MA-plots of the tumor samples."}
+```{r maPlotsTumor, fig.height = 13, fig.width = 6, dpi = 100, fig.cap = "\\label{maPlotsTumor}Figure 13.A: MA-plots of the tumor samples.", autodep=TRUE}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
@@ -680,9 +684,13 @@ for (i in 1:ncol(setmp)) {
 }
 ```
 
-We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
+We do not observe samples with major expression-level dependent biases. 
 
-```{r maPlotsNormal, fig.height = 16, fig.width = 6, dpi = 100, fig.cap = "Figure 12: MA-plots of the normal samples."}
+#### Healthy samples
+
+Let's look now to the normal samples:
+
+```{r maPlotsNormal, fig.height = 13, fig.width = 6, dpi = 100, fig.cap = "\\label{maPlotsNormal}Figure 13.B: MA-plots of the normal samples.", autodep=TRUE}
 par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
@@ -699,7 +707,7 @@ for (i in 1:ncol(setmp)) {
 
 We do not observe either important expression-level dependent biases among the normal samples except on the sample TCGA-BJ-A3PR. Which we proceed to remove it from the cqn.logCP:
 
-```{r remove_sample}
+```{r remove_sample, autodep=TRUE}
 mask <- -grep("TCGA.BJ.A3PR", colnames(thca.filtered))
 thca.filtered <- thca.filtered[,mask]
 sample_names <- sample_names[mask]
@@ -712,7 +720,7 @@ We will search now for potential surrogate of batch effect indicators. Given tha
 names corresponds to a TCGA barcode (see the [wiki](https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode)), following the strategy described [here](http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview) we are going to derive different elements of the TCGA barcode and examine their distribution
 across samples.
 
-```{r barcodes}
+```{r barcodes, autodep=TRUE}
 tss <- substr(sample_names, 6, 7)
 table(tss)
 samplevial <- substr(sample_names, 14, 16)
@@ -732,7 +740,7 @@ We are going to check if the previous variables of the barcode are surrogate of 
 of interest as molecular changes between sample types, tumor vs. normal, we will examine now
 the cross-classification of this outcome with the variables:
 
-```{r table.barcodes}
+```{r table.barcodes, autodep=TRUE}
 table(data.frame(TYPE = thca.filtered$type, TSS = tss))
 # We will check for the other variables
 table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
@@ -743,7 +751,7 @@ From the tables we can already see that all of them can be candidates as indicat
 
 To double check if they have some effect on the batch we make the hierarchical clustering of them. First, we set some functions to plot the hierarhcical clustering:
 
-```{r clustering.func}
+```{r clustering.func, autodep=TRUE}
 help.dendogram <- function(x, batch, labels) {
     # Helper function to plot dendograms
     if (is.leaf(x)) {
@@ -769,7 +777,7 @@ plot.batch <- function(dendrogram, batching, se, out){
 
 With this functions to plot the clustering with different labelings is easier:
 
-```{r clustering.n1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n1}Figure 13.A: Hierarchical clustering of the samples by portion"}
+```{r clustering.n1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.n1}Figure 14.A: Hierarchical clustering of the samples by portion", autodep=TRUE}
 d <- as.dist(1-cor(assays(thca.filtered)$cqn.logCPM, method = "spearman"))
 sampleClustering <- hclust(d)
 sampleDendrogram <- as.dendrogram(sampleClustering, hang = 0.1)
@@ -779,22 +787,22 @@ names(outcome) <- colnames(thca.filtered)
 par(mfrow = c(1,1))
 plot.batch(sampleDendrogram, portion, thca.filtered, outcome)
 ```
-```{r clustering.n2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n2}Figure 13.B: Hierarchical clustering of the samples by sample vial"}
+```{r clustering.n2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.n2}Figure 14.B: Hierarchical clustering of the samples by sample vial", autodep=TRUE}
 plot.batch(sampleDendrogram, samplevial, thca.filtered, outcome)
 ```
-```{r clustering.n3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n3}Figure 13.C: Hierarchical clustering of the samples by TSS"}
+```{r clustering.n3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clusering.n3}Figure 14.C: Hierarchical clustering of the samples by TSS", autodep=TRUE}
 plot.batch(sampleDendrogram, tss, thca.filtered, outcome)
 ```
-```{r clustering.n4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n4}Figure 13.D: Hierarchical clustering of the samples by type"}
+```{r clustering.n4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.n5}Figure 14.D: Hierarchical clustering of the samples by type", autodep=TRUE}
 plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, outcome)
 ```
-```{r clustering.n5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.n1}Figure 13.E: Hierarchical clustering of the samples by prospective collection"}
+```{r clustering.n5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.n5}Figure 14.E: Hierarchical clustering of the samples by prospective collection", autodep=TRUE}
 plot.batch(sampleDendrogram, plate , thca.filtered, outcome)
 ```
 We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients. 
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions. We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person. We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
-```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 14: Multidimensional scaling plot of the samples."}
+```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 15: Multidimensional scaling plot of the samples.", autodep=TRUE}
 batch_effects <- list(portion, tss, as.character(thca.filtered$type),
                       as.character(thca.filtered$gender))
 for (batching in batch_effects){
@@ -813,7 +821,7 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 ### ComBat
 
 After looking for batch effect we couldn't find a clear cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
-```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15.A: Hierarchical clustering of the samples with ComBat correction."}
+```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat}Figure 16.A: Hierarchical clustering of the samples with ComBat correction.", autodep=TRUE}
 library("sva")
 
 # Create the design matrix involving tumor and normal samples and males and females
@@ -833,10 +841,10 @@ names(outcome) <- colnames(thca.filtered)
 
 plot.batch(cluster.combat, samplevial, thca.filtered, outcome)
 ```
-```{r clustering.combat2, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15.B: Hierarchical clustering of the samples with ComBat correction coloured by gender."}
+```{r clustering.combat2, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat2}Figure 16.B: Hierarchical clustering of the samples with ComBat correction coloured by gender.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$gender, thca.filtered, outcome)
 ```
-```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "Figure 15.C: Hierarchical clustering of the samples with ComBat coloured by type."}
+```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat3}Figure 16.C: Hierarchical clustering of the samples with ComBat coloured by type.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$type, thca.filtered, outcome)
 ```
 
@@ -846,7 +854,7 @@ We can observe a slightly improvement, but still some tumoral samples cluster to
 
 To improve the batch effect removal we look if QR decomposition yields better results. In this case, we look for sample vial and TSS batch effects removal. To do so, we have to built the full model which would include gender and type as fixed effects. 
 
-```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.1}Figure 16.A: Hierarchical clustering of the samples with QR descompostion for sample vial"}
+```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.1}Figure 17.A: Hierarchical clustering of the samples with QR descompostion for sample vial", autodep=TRUE}
 library("limma")
 
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = design)
@@ -856,13 +864,13 @@ cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
 
 plot.batch(cluster.qr, samplevial, thca.filtered, outcome)
 ```
-```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.2}Figure 16.B: Hierarchical clustering of the samples with QR descompostion for TSS"}
+```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.2}Figure 17.B: Hierarchical clustering of the samples with QR descompostion for TSS", autodep=TRUE}
 plot.batch(cluster.qr, tss, thca.filtered, outcome)
 ```
-```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.3}Figure 16.C: Hierarchical clustering of the samples with QR descompostion for gender"}
+```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.3}Figure 17.C: Hierarchical clustering of the samples with QR descompostion for gender", autodep=TRUE}
 plot.batch(cluster.qr, thca.filtered$gender, thca.filtered, outcome)
 ```
-```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.QRdecomposition.4}Figure 16.D: Hierarchical clustering of the samples with QR descompostion for type"}
+```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.4}Figure 17.D: Hierarchical clustering of the samples with QR descompostion for type", autodep=TRUE}
 plot.batch(cluster.qr, thca.filtered$type, thca.filtered, outcome)
 plot.batch(cluster.qr, tss, thca.filtered, outcome)
 ```
@@ -873,7 +881,7 @@ With QR decomposition we can observe that just one normal sample clusters with t
 
 We further try if SVD returns a better result:
 
-```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.svd1}Figure 17.A: Hierarchical clustering of the samples with SVD for sample vial"}
+```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd1}Figure 18.A: Hierarchical clustering of the samples with SVD for sample vial", autodep=TRUE}
 library("corpcor")
 s <- fast.svd(t(scale(t(assays(thca.filtered)$cqn.logCPM),
                       center = TRUE, scale = TRUE)))
@@ -891,17 +899,17 @@ names(batch) <- colnames(thca.filtered)
 
 plot.batch(cluster.svd, samplevial, thca.filtered, outcome)
 ```
-```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.svd2}Figure 17.B: Hierarchical clustering of the samples with SVD for TSS"}
+```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd2}Figure 18.B: Hierarchical clustering of the samples with SVD for TSS", autodep=TRUE}
 plot.batch(cluster.svd, tss, thca.filtered, outcome)
 ```
-```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{fig:clustering.svd3}Figure 17.C: Hierarchical clustering of the samples with SVD for type"}
+```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 18.C: Hierarchical clustering of the samples with SVD for type", autodep=TRUE}
 plot.batch(cluster.svd, thca.filtered$type, thca.filtered, outcome)
 ```
 
 SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed.
 After all the process the best one, that separates better tumor and normal samples is the qr decomposition, which will be used for following-up analysis.
 
-```{r qrexpr}
+```{r qrexpr, autodep=TRUE}
 assays(thca.filtered)$qrexp <- qrexp
 ```
 
@@ -911,7 +919,7 @@ We perform a simple examination of expression changes and their associated p-val
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
 
-```{r sva.model, cache=TRUE}
+```{r sva.model, autodep=TRUE}
 mod0 <- model.matrix(~ 1 , data = colData(thca.filtered))
 pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
@@ -921,17 +929,19 @@ There are `r sum(p.adjust(pv, method = "fdr") < 0.01)` genes changing significan
 their expression at FDR < 1%. In Figure 18 below we show the distribution of the
 resulting p-values.
 
-```{r pdist, out.width = "500px", fig.cap = "Figure 18.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
+```{r pdist, out.width = "500px", fig.cap ="\\label{pdist}Figure 19.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples.", autodep=TRUE}
 par(mfrow=c(1,1))
 hist(pv, main = "Histogram of p-values", las = 1)
 ```
-```{r pdist2, out.width = "500px", fig.cap = "Figure 18.B: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
+```{r pdist2, out.width = "500px", fig.cap = "\\label{pdist2}Figure 18.B: Distribution of raw p-values for an F-test on every gene between tumor and normal samples.", autodep=TRUE}
 hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 ```
 
+### Surrogate variables with sva
+
 Now, let's estimate surrogate variables using the `sva()` function.
 
-```{r sva.variables, cache = TRUE}
+```{r sva.variables, autodep=TRUE}
 sv <- sva(assays(thca.filtered)$qrexp, design, mod0)
 sv$n
 ```
@@ -940,7 +950,7 @@ The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
 assess against the extent of differential expression this time adjusting for these
 surrogate variables.
 
-```{r svn.ftest, cache = TRUE}
+```{r svn.ftest, autodep=TRUE}
 modsv <- cbind(design, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
 pvsv <- f.pvalue(assays(thca.filtered)$qrexp, modsv, mod0sv)
@@ -950,21 +960,24 @@ sum(p.adjust(pvsv, method = "fdr") < 0.01)
 We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`.
 Figure 19 shows the resulting distribution of p-values.
 
-```{r psvdist, out.width = "500px", fig.cap = "Figure 19.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
+```{r psvdist, out.width = "500px", fig.cap = "\\label{psvdist}Figure 20.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.", autodep=TRUE}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1)
 ```
-```{r psvdist2, out.width = "500px", fig.cap = "Figure 19.B: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
+```{r psvdist2, out.width = "500px", fig.cap ="\\label{psvdist2}Figure 20.B: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.", autodep=TRUE}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
 
 After this preliminary analysis, we can conclude that aproximatelly 4300 genes have different expression levels among tumor and normal samples. 
 
+### Removing surrogate variables effect
+
 Instead of working with the surrogate variables in the model, we remove them for commodity to from latter on the contrasts.
 
-```{r remove_surrogates}
+```{r remove_surrogates, autodep=TRUE}
 # Code from https://www.biostars.org/p/121489/#121500
+
 cleanY = function(y, mod, svs) {
     X = cbind(mod, svs)
     Hat = solve(t(X) %*% X) %*% t(X)
@@ -984,7 +997,7 @@ The object e.no_surrogates contains the expression after removing the surrogates
 
 We want ensembl annotation, and gene symbol of our probes, and we want also the gene ontologies from all the human genes (will be later used for functional enrichment):
 
-```{r annot, cache = TRUE}
+```{r annot, autodep=TRUE}
 library("org.Hs.eg.db")
 annot <- select(org.Hs.eg.db, 
                 columns = c("SYMBOL", "ENSEMBL"),
@@ -1006,7 +1019,7 @@ The different objects contain different information: `annot` contains the Symbol
 
 Using the expression values with batch effect removed by qr decomposition and without the surrogate variables, we proceed with the voom normalization
 
-```{r DE, cache = TRUE}
+```{r DE, autodep=TRUE}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
 n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
 
@@ -1039,7 +1052,7 @@ summary(res)
 We decided a threshold of differentially expressed genes of 4 (thus log2 of it is 2), meaning that it must be 4 times more expressed in one group than in other in orther to pass the filter.
 Based on these we are only interested in four contrast which will be annotated with symbol and ensembl id:
 
-```{r tt, cache = TRUE}
+```{r tt, autodep=TRUE}
 tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease", p.value = 0.05)
 tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale", p.value = 0.05)
 tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal", p.value = 0.05)
@@ -1053,9 +1066,11 @@ tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID",
 head(tt_tumor)
 ```
 
+### Accuracy 
+
 Diagnostics plot:
 
-```{r accuracy, cache = TRUE}
+```{r accuracy,  fig.cap="\\label{accuracy}Figure 21.A: P-value distribution and comparison with the t-student distribution in the comparison Males vs Females.", autodep=TRUE}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_gender$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 6], df = fit2$df.prior + fit2$df.residual[6], main = "", pch = ".", cex = 3)
@@ -1063,21 +1078,27 @@ qqline(fit2$t[, 6], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between females and males patients", 
       outer = TRUE, cex = 1.5, side = 3, line = -2)
-
+```
+```{r accuracy2, fig.cap="\\label{accuracy2}Figure 21.B: P-value distribution and comparison with the t-student distribution in the comparison Tumoral and Healthy samples.", autodep=TRUE}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_tumor$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 5], df = fit2$df.prior + fit2$df.residual[5], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 5], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between healthy and tumoral patients", 
       outer = TRUE, cex = 1.5, side = 3, line = -2)
-
+```
+```{r accuracy3, fig.cap="\\label{accuracy3}Figure 21.C: P-value distribution and comparison with the t-student distribution in the female comparison tumoral and healthy samples.", autodep=TRUE}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_females$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 1], df = fit2$df.prior + fit2$df.residual[1], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 1], lwd = 2, col = "red")
 abline(0, 1, lwd = 2)
 mtext("Comparing genes between females patients and healthy.", outer = TRUE, cex = 1.5, 
       side = 3, line = -2)
-
+```
+```{r accuracy4, fig.cap="\\label{accuracy4}Figure 21.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples.", autodep=TRUE}
+pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
 qqline(fit2$t[, 2], lwd = 2, col = "red")
@@ -1086,9 +1107,11 @@ mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 
       side = 3, line = -2)
 ```
 
+### Volcano plots
+
 We can see in volanco plots how look like the data
 
-```{r volcanoplot}
+```{r volcanoplot, fig.cap="\\label{volcano1}Figure 22.A: Volcano plot of the comparison healthy vs tumoral.", autodep=TRUE}
 volcano <- function(data, title){
     # Plot a volcano plot of a toptable output of limma
     ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + b + 
@@ -1097,14 +1120,22 @@ volcano <- function(data, title){
 }
 
 volcano(tt_tumor, "Comparing healthy vs tumoral")
+```
+```{r volcano2, fig.cap="\\label{volcano2}Figure 22.B: Volcano plot of the comparison males vs females.", autodep=TRUE}
 volcano(tt_gender, "Comparing males vs females")
+```
+```{r volcano3, fig.cap="\\label{volcano3}Figure 22.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE}
 volcano(tt_males, "Comparing males: healthy vs tumoral")
+```
+```{r volcano4, fig.cap="\\label{volcano4}Figure 22.C: Volcano plot of the comparison healthy fremales vs tumoral females.", autodep=TRUE}
 volcano(tt_females, "Comparing females: healthy vs tumoral")
 ```
 
-The number of genes which are differentialed expressed
+### Genes differentially expressed
 
-```{r de.number}
+The number of genes which are differentialed expressed can be calculated with:
+
+```{r de.number, autodep=TRUE}
 de_tumor <- subset(tt_tumor, abs(logFC) >= lfc_threshold & B >= 4.6 )
 de_gender <- subset(tt_gender, abs(logFC) >= lfc_threshold & B >= 4.6)
 de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6)
@@ -1119,8 +1150,7 @@ de_genes
 As we can see there aren't any gene of the  comparison male vs female that pass the filter.
 We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated. But we create some function to make it easier to compare several lists:
 
-```{r up_down}
-
+```{r up_down, autodep=TRUE}
 up_down <- function(data,  names = NULL){
     # Classify the genes in up or down, names are the names of the genes and 
     # should be on the same order
@@ -1179,7 +1209,7 @@ genes_names <- function(regulated1, regulated2){
 
 The function `up_down` classify the genes in up-regulated and down-regulated. The function `classify` given two lists of genes up or down regulates, find the genes common in them and check if in both lists are up-regulated or down-regulated, however it doesn't display the names, just the numbers. However the function `genes_names` classify the genes on the three elements of the list: up if in both sets is up-regulated, down if in both sets the genes is down-regulated and not_clear if in a dataset the gene is up-regulated and in the other is down-regulated. We can see here the results of several comparisons:
 
-```{r compares}
+```{r compares, autodep=TRUE}
 r_tumor <- up_down(de_tumor)
 r_females <- up_down(de_females)
 r_males <- up_down(de_males)
@@ -1197,23 +1227,26 @@ classify(r_females, r_males)
 
 We can observe that there are `r length(genes_tumor_males$not_clear)` genes which depending on the comparison they change the direction from up-regulated to dow-regulated or vice versa. We have already obtained list of genes classified by the behavior in two comparisons with genes_names function. Furthermore we can extract all the names of the other comparisons to see how much they overlap:
 
-```{r names_overlap}
+```{r names_overlap, autodep=TRUE}
 DE_tumor <- unique(rownames(de_tumor))
 DE_males <- unique(rownames(de_males))
 DE_females <- unique(rownames(de_females))
 ```
 
+### Venn diagrams
+
 To visualize it we plot them with venn diagrams:
 
-```{r venn_plots, message=FALSE, warning=FALSE}
+```{r venn_plots, message=FALSE, warning=FALSE, fig.cap="\\label{venn1}Figure 23.A: Representation of the number of genes differentially expressed in comparison between females, and healthy vs tumoral.", autodep=TRUE}
 library("Vennerable")
-pars <- par(mfrow = c(3, 1))
 plot(Venn(list(DE_tumor, DE_females),
               SetNames = c("Tumoral", "Females")))
-
+```
+```{r venn2, fig.cap="\\label{venn2}Figure 23.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE}
 plot(Venn(list(DE_tumor, DE_males),
               SetNames = c("Tumoral", "Males")))
-
+```
+```{r venn3, fig.cap="\\label{venn3}Figure 23.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE}
 plot(Venn(list(DE_females, DE_males),
               SetNames = c("Females", "Males")))
 ```
@@ -1224,7 +1257,7 @@ As we can observe of the comparison, many genes differentially expressed on fema
 
 We can perform a functional enrichment on our data with the GO already stored
 
-```{r fun.enrich.params_tumors, message=FALSE}
+```{r fun.enrich.params_tumors, message=FALSE, autodep=TRUE}
 library(GOstats)
 
 go_obj <- function(genes_id){
@@ -1255,7 +1288,7 @@ go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
 Once prepared with the object we can run the analysis:
 
-```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, cache=TRUE}
+```{r fun.enrich.tumor_tumors, message=FALSE, warning=FALSE, fig.cap="\\label{tumor1}Figure 24.A: Representation of the P-value and effect of the GO of the comparison of healty and tumoral samples.", autodep=TRUE}
 go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     hgOver <- hyperGTest(go_obj)
     
@@ -1297,7 +1330,7 @@ if (!is.null(GO_tumor)){
 
 We should do the same if we had some genes differentially expressed on the comparison between gender.
 
-```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor3}Figure 24.B: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", autodep=TRUE}
 GO_female_exc <- go_analisys(params_female_exc, all.Human.GO)
 if (!is.null(GO_female_exc)){
     print(head(GO_female_exc$GO))
@@ -1306,7 +1339,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor3}Figure 24.C: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
 GO_females_males_up <- go_analisys(go_females_males_up, all.Human.GO)
 if (!is.null(GO_females_males_up)){
     print(head(GO_females_males_up$GO))
@@ -1314,7 +1347,7 @@ if (!is.null(GO_females_males_up)){
 }
 ```
 
-```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor4}Figure 24.D: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons", autodep=TRUE}
 GO_females_males_down <- go_analisys(go_females_males_down, all.Human.GO)
 if (!is.null(GO_females_males_down)){
     print(head(GO_females_males_down$GO))
@@ -1323,7 +1356,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.tmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor5}Figure 24.E: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and males.", autodep=TRUE}
 GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_males_not_clear)){
     print(head(GO_tumor_males_not_clear$GO))
@@ -1331,7 +1364,7 @@ if (!is.null(GO_tumor_males_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE}
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 24.F: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1339,7 +1372,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfd, echo=TRUE, message=FALSE}
+```{r fun.enrich.tfd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor7}Figure 24.G: Representation of the P-value and effect of the GO of the genes with down-regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
 if (!is.null(GO_tumor_females_down)){
     print(head(GO_tumor_females_down$GO))
@@ -1349,9 +1382,7 @@ if (!is.null(GO_tumor_females_down)){
 
 We should look in details to those values and associations in the tables.
 
-
-
-```{r fun.enrich.visualize_tumors, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r fun.enrich.visualize_tumors, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, autodep=TRUE}
 library(xtable)
 # xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 # print(xtab_tumor)
