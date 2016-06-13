@@ -924,7 +924,7 @@ using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
 
 ```{r sva.model, autodep=TRUE}
-mod0 <- model.matrix(~ 1 , data = colData(thca.filtered))
+mod0 <- model.matrix(~ 1 + type , data = colData(thca.filtered))
 pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
@@ -934,7 +934,6 @@ their expression at FDR < 1%. In Figure 18 below we show the distribution of the
 resulting p-values.
 
 ```{r pdist, out.width = "500px", fig.cap ="\\label{pdist}Figure 19.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples.", autodep=TRUE}
-par(mfrow=c(1,1))
 hist(pv, main = "Histogram of p-values", las = 1)
 ```
 
@@ -1160,7 +1159,11 @@ de_genes
 ```
 
 As we can see there aren't any gene of the  comparison male vs female that pass the filter.
-We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated. But we create some function to make it easier to compare several lists:
+We can compare if in the different comparisons such genes remain allways up-regulated or down-regulated. 
+
+#### Exploration of differential expressed genes
+
+But we create some function to make it easier to compare several lists:
 
 ```{r up_down, autodep=TRUE}
 up_down <- function(data,  names = NULL){
@@ -1245,7 +1248,7 @@ DE_males <- unique(rownames(de_males))
 DE_females <- unique(rownames(de_females))
 ```
 
-### Venn diagrams
+#### Venn diagrams
 
 To visualize it we plot them with venn diagrams:
 
@@ -1271,13 +1274,13 @@ As we can observe of the comparison, many genes differentially expressed on fema
 
 We can perform a functional enrichment on our data with the GO already stored
 
-```{r fun.enrich.params_tumors, message=FALSE, autodep=TRUE}
+```{r fun.enrich.params_tumors, message=FALSE, autodep=TRUE, warnings=FALSE}
 library(GOstats)
 
-go_obj <- function(genes_id){
+go_obj <- function(genes_id, universe = unique(all.Human.GO$ENTREZID)){
     # Create an object for GOstat from ENTREZIDs
     new("GOHyperGParams", geneIds = genes_id,
-                    universeGeneIds = unique(all.Human.GO$ENTREZID),
+                    universeGeneIds = universe,
                     annotation = "org.Hs.eg.db", ontology = "BP",
                     pvalueCutoff = 0.05, testDirection = "over", 
                     conditional = TRUE)
@@ -1297,7 +1300,6 @@ params_female_exc <- go_obj(DE_females_exc)
 # We explore those genes that are shared among the comparisons
 go_females_males_up <- go_obj(genes_females_males$up)
 go_females_males_down <- go_obj(genes_females_males$down)
-go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
 go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 go_tumor_females_down <- go_obj(genes_tumor_females$down)
 ```
@@ -1371,15 +1373,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tmd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.E: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and males.", autodep=TRUE}
-GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, all.Human.GO)
-if (!is.null(GO_tumor_males_not_clear)){
-    print(head(GO_tumor_males_not_clear$GO))
-    plot(GO_tumor_males_not_clear$plot)
-}
-```
-
-```{r fun.enrich.tfu, echo=TRUE, message=FALSE, fig.cap="\\label{tumor6}Figure 25.F: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfu, echo=TRUE, message=FALSE, fig.cap="\\label{tumor6}Figure 25.E: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, all.Human.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1387,7 +1381,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor7}Figure 25.G: Representation of the P-value and effect of the GO of the genes with down-regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor7}Figure 25.F: Representation of the P-value and effect of the GO of the genes with down-regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_down <- go_analisys(go_tumor_females_down, all.Human.GO)
 if (!is.null(GO_tumor_females_down)){
     print(head(GO_tumor_females_down$GO))
@@ -1395,7 +1389,7 @@ if (!is.null(GO_tumor_females_down)){
 }
 ```
 
-```{r fun.enrich.f, echo=TRUE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.H: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in females comparison", autodep=TRUE}
+```{r fun.enrich.f, echo=TRUE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.G: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in females comparison", autodep=TRUE}
 GO_females <- go_analisys(params_females, all.Human.GO)
 if (!is.null(GO_females)){
     print(head(GO_females$GO))
@@ -1403,7 +1397,7 @@ if (!is.null(GO_females)){
 }
 ```
 
-```{r fun.enrich.m, echo=TRUE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.I: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males comparison", autodep=TRUE}
+```{r fun.enrich.m, echo=TRUE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.H: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males comparison", autodep=TRUE}
 GO_males <- go_analisys(params_males, all.Human.GO)
 if (!is.null(GO_males)){
     print(head(GO_males$GO))
@@ -1413,20 +1407,25 @@ if (!is.null(GO_males)){
 
 We should look in details to those values and associations in the tables.
 
-```{r fun.enrich.visualize_tumors, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, autodep=TRUE}
+```{r tables_GO, message=FALSE, warning=FALSE, autodep=TRUE}
 library(xtable)
-# xtab_tumor <- xtable(GO_tumor, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-# print(xtab_tumor)
-# print(xtab_tumor, file="GO_tumor.html", type="html")
-# 
-# browseURL("GO_tumor.html")
-# 
-# xtab_gender <- xtable(hgOver_female_exc, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-# print(xtab_gender, file="hgOver_female_exc.html", type="html")
-# 
-# browseURL("hgOver_female_exc.html")
+go_table <- function(go_obj, ftitle){
+    # Function to output the table in html format
+    xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+    print(x=xtab_tumor, file = ftitle, type = "html")
+}
+
+go_table(GO_tumor$GO, "GO_tumor_table.html")
+go_table(GO_female_exc$GO, "GO_female_exc_table.html")
+go_table(GO_females_males_up$GO, "GO_females_males_up_table.html")
+go_table(GO_females_males_down$GO, "GO_females_males_down_table.html")
+go_table(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
+go_table(GO_tumor_females_down$GO, "GO_tumor_females_down_table.html")
+go_table(GO_females$GO, "GO_females_table.html")
+go_table(GO_males$GO, "GO_males_table.html")
 ```
 
+To explore more than the top 6 GO we should look into the tables generated with any browser.
 
 ## SessionInfo
 
