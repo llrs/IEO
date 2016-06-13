@@ -274,9 +274,6 @@ y.axis <- ylab("number of cases")
 And we plot some relationships for some significant variables:
 In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
 
-And we plot some relationships for some significant variables:
-In the "normal" type samples most of the information is not available. This could be due to the fact that all "normal" samples were obtained from patients with tumors. So in order to have the maximum information of each sample, we infer "normal" samples information from its paired sample data (mainly gender and ethnicity).
-
 ```{r plots3A, fig.cap="\\label{gender}Figure 3.A: The gender distribution: threre are more females than males.", autodep=TRUE}
 fplot + geom_bar(aes(type, fill = gender)) + b + y.axis + 
     ggtitle("Gender distribution across normal and tumour samples")
@@ -306,7 +303,7 @@ fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b +
     ggtitle("Gender distribution across different ethnicity and race.")
 ```
 
-If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals hispanic or latino.
+If we have a look at the ethnicities, gender and hispanic origin, the data shows more cases for "white" individuals "not hispanic or latino" than "white" individuals "hispanic or latino".
 
 ```{r plots3E, fig.cap="\\label{race}Figure 3.E: Both in males and females the most abundant race is white.", autodep=TRUE}
 fplot + geom_bar(aes(x=gender, fill = race)) + b + y.axis + 
