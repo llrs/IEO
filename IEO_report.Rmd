@@ -13,12 +13,12 @@ output:
 ---
 ```{r setup, cache = TRUE, echo = FALSE, results = 'asis'}
 library("knitr")
-dumpcssfile <- function(fname) {
-  paste(c('<style type = "text/css">', readLines(fname), '</style>\n'),
-        collapse = "\n")
-}
-
-cat(dumpcssfile(file.path("css", "ieo.css")))
+# dumpcssfile <- function(fname) {
+#   paste(c('<style type = "text/css">', readLines(fname), '</style>\n'),
+#         collapse = "\n")
+# }
+# 
+# cat(dumpcssfile(file.path("css", "ieo.css")))
 
 knitr::opts_chunk$set(autodep = TRUE,
                fig.align = "center",
@@ -251,6 +251,7 @@ meta.info.summary2 <- col.data.meta[variable.info  > 0.6,]
 ### Associated variables exploration
 
 To explore the data we first create an object with `ggplot`:
+
 ```{r ggplot.config, autodep=TRUE}
 library("ggplot2")
 fplot <- ggplot(as.data.frame(filtered))
@@ -295,7 +296,7 @@ fplot + facet_wrap(~ gender) + geom_bar(aes(type, fill = ethnicity)) + b +
 
 In this plot we can see clearly the lack of data for some variables regarding normal samples. In other words, there is no record for normal samples neither females nor males about the hispanic origin of the individuals.
 
-```{r plots3D, fig.cap="\\label{ethnicity2}Figure 3.D: Most samples are from asian.", autodep=TRUE}
+```{r plots3D, fig.cap="\\label{ethnicity2}Figure 3.D: Most samples are from white ancestry.", autodep=TRUE}
 labels <- c("AM. INDIAN OR ALASKA NAT.", "ASIAN", "BLACK OR AFRICAN AM.", 
             "WHITE", "NA")
 fplot + facet_wrap(~ ethnicity) + geom_bar(aes(race, fill = gender)) + b +
