@@ -319,7 +319,7 @@ fplot + facet_wrap(~ type ) + geom_bar(aes(tumor_focality, fill = gender)) + b +
     ggtitle("Gender distribution in different tumour focality")
 ```
 
-There is no data about tumor focality in the normal samples... 
+There is no data about tumor focality in the normal samples, but this could be due to the fact that are samples obtained probably during the tumor removal or for a biopsy, from a healty part of the tyroid gland. For this reason there is no reason for the normal samples to have this feature.
 
 ```{r plots3G, fig.cap="\\label{diagnosis}Figure 3.G The most common diagnosticated tumor is Papillary thyroid Carcinoma.", autodep=TRUE}
 labels <- c("Other specify", "Papillary - Classical", "Papillary - Follicular", 
