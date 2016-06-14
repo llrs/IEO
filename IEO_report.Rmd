@@ -1407,12 +1407,16 @@ if (!is.null(GO_males)){
 
 We should look in details to those values and associations in the tables.
 
-```{r tables_GO, message=FALSE, warning=FALSE, autodep=TRUE}
+```{r tables_GO, message=FALSE, autodep=TRUE}
 library(xtable)
 go_table <- function(go_obj, ftitle){
     # Function to output the table in html format
-    xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
-    print(x=xtab_tumor, file = ftitle, type = "html")
+    if (is.null(go_obj)){
+        warning("Null Object: unable to creat the table")
+    } else {
+        xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+        print(x=xtab_tumor, file = ftitle, type = "html")
+    }
 }
 
 go_table(GO_tumor$GO, "GO_tumor_table.html")
