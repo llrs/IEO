@@ -823,8 +823,9 @@ library("sva")
 
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
-design <- model.matrix(~0 + treat)
-colnames(design) <- levels(treat)
+paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
+design <- model.matrix(~0 + treat + paired)
+colnames(design) <- c(levels(treat), "paired")
 
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[, -1])
 
@@ -1030,9 +1031,7 @@ n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
 
 # Normalize by mean variance with voom
 vo <- voom(n_counts, design, plot = TRUE)
-corfit <- duplicateCorrelation(vo, design, block = thca.filtered$bcr_patient_barcode)
-fit <- lmFit(vo, design, block = thca.filtered$bcr_patient_barcode,
-             correlation = corfit$consensus.correlation)
+fit <- lmFit(vo, design)
 
 # Make the comparisons we are interested in based on our design
 cm <- makeContrasts(
