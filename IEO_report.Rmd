@@ -1340,8 +1340,12 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     }
     geneIDs <- geneIdsByCategory(hgOver)[GO$GOBPID]
     geneSYMs <- sapply(geneIDs, resume, annot = annots.GO)
-    geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
-    GO <- cbind(GO, Genes = geneSYMs)
+    if (is.matrix(geneSYMs)){
+        geneSYMs <- apply(geneSYMs, 2, paste, collapse = ", ")
+    } else {
+        geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+    }
+    GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
     rownames(GO) <- 1:nrow(GO)
     list(GO = GO, plot = plotgo)
 }
