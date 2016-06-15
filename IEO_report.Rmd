@@ -1275,7 +1275,7 @@ As we can observe of the comparison, many genes differentially expressed on fema
 
 We can perform a functional enrichment on our data with the GO already stored
 
-```{r fun.enrich.params_tumors, message=FALSE, autodep=TRUE, warnings=FALSE}
+```{r fun.enrich.params_tumors, message = FALSE, autodep = TRUE, warnings = FALSE}
 library(GOstats)
 
 go_obj <- function(genes_id, universe = unique(annot.Entrez.GO)){
