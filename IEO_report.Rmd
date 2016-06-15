@@ -1331,8 +1331,8 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
     resume <- function(id, annot){
         #
-        a <- unique(annot[annot$ENTREZID == id, "SYMBOL"])
-        if (length(a) >=1){
+        a <- unique(annot[annot$ENTREZID %in% id, "SYMBOL"])
+        if (length(a) >= 1){
             return(a)
         } else{
             return("")
