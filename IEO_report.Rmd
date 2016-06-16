@@ -1311,8 +1311,10 @@ DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor
 params_male_exc <- go_obj(DE_males_exc)
 
 # We explore those genes that are shared among the comparisons
+
 go_females_males_up <- go_obj(genes_females_males$up)
 go_females_males_down <- go_obj(genes_females_males$down)
+
 go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
 ```
