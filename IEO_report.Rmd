@@ -149,7 +149,7 @@ Thyroid cancer can develop from the different cells that form the follicles of t
 
 From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old.
 
-Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
+Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of PTC from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of Follicular Thyroid Adenoma (FTA) and Follicular Thyroid Cancer (FTC) also in follicular thyroid cells (Xing, 2013).
 
 Research from The Cancer Genome Atlas [(TCGA)](http://cancergenome.nih.gov/cancersselected/thyroid) focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer(Agrawal et al., 2014).
 
@@ -826,7 +826,7 @@ library("sva")
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
-design <- model.matrix(~0 + treat + paired)
+design <- model.matrix(~ 0 + treat + paired)
 colnames(design) <- c(levels(treat), "paired")
 
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[, -1])
@@ -918,6 +918,7 @@ After all the process the best one, that separates better tumor and normal sampl
 
 ```{r qrexpr, autodep=TRUE}
 assays(thca.filtered)$qrexp <- qrexp
+assays(thca.filtered)$combatexp <- combatexp
 ```
 
 ## Initial assesment on differential expression
@@ -928,7 +929,7 @@ We build the null model with just the intercept (=1) in order to compare it with
 
 ```{r sva.model, autodep=TRUE}
 mod0 <- model.matrix(~ 1 + type + paired, data = colData(thca.filtered))
-pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
+pv <- f.pvalue(assays(thca.filtered)$combatexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
 
@@ -949,7 +950,7 @@ hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 Now, let's estimate surrogate variables using the `sva()` function.
 
 ```{r sva.variables, autodep=TRUE}
-sv <- sva(assays(thca.filtered)$qrexp, design, mod0)
+sv <- sva(assays(thca.filtered)$combatexp, design, mod0)
 sv$n
 ```
 
@@ -960,7 +961,7 @@ surrogate variables.
 ```{r svn.ftest, autodep=TRUE}
 modsv <- cbind(design, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
-pvsv <- f.pvalue(assays(thca.filtered)$qrexp, modsv, mod0sv)
+pvsv <- f.pvalue(assays(thca.filtered)$combatexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
@@ -996,7 +997,7 @@ cleanY = function(y, mod, svs) {
     return(y - t(as.matrix(X[,-c(1:P)]) %*% beta[-c(1:P),]))
 }
 
-e.no_surrogates <- cleanY(assays(thca.filtered)$qrexp, design, sv$sv)
+e.no_surrogates <- cleanY(assays(thca.filtered)$combatexp, design, sv$sv)
 ```
 
 The object e.no_surrogates contains the expression after removing the surrogates variables.
@@ -1037,11 +1038,11 @@ fit <- lmFit(vo, design)
 
 # Make the comparisons we are interested in based on our design
 cm <- makeContrasts(
-    FemaleDiseaseVsFemaleNormal = tumor.FEMALE - normal.FEMALE,
-    MaleDiseaseVsMaleNormal = tumor.MALE - normal.MALE,
-    MaleDiseaseVsFemaleDisease = tumor.MALE - tumor.FEMALE,
-    MaleNormalVsFemaleNormal = normal.MALE - normal.FEMALE,
-    NormalVsDisease = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
+    FemaleTumorVsFemaleNormal = tumor.FEMALE - normal.FEMALE,
+    MaleTumorVsMaleNormal = tumor.MALE - normal.MALE,
+    FemaleTumorVsMaleTumor = tumor.FEMALE - tumor.MALE,
+    FemaleNormalVsMaleNormal = normal.FEMALE - normal.MALE,
+    TumorVsNormal = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
     FemaleVsMale = (tumor.FEMALE+normal.FEMALE) - (tumor.MALE+normal.MALE),
     levels = design)
 
@@ -1059,15 +1060,19 @@ We decided a threshold of differentially expressed genes of 4 (thus log2 of it i
 Based on these we are only interested in four contrast which will be annotated with symbol and ensembl id:
 
 ```{r tt, autodep=TRUE}
-tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease", p.value = 0.05)
+tt_tumor <- topTable(fit2, number = Inf, coef = "TumorVsNormal", p.value = 0.05)
 tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale", p.value = 0.05)
-tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal", p.value = 0.05)
-tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal", p.value = 0.05)
+tt_females <- topTable(fit2, number = Inf, coef = "FemaleTumorVsFemaleNormal", p.value = 0.05)
+tt_males <- topTable(fit2, number = Inf, coef = "MaleTumorVsMaleNormal", p.value = 0.05)
     
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
                   all.x = T, all.y = F)
+tt_males <- merge(tt_males, annot, by.x = 0, by.y = "ENTREZID", 
+                  all.x = T, all.y = F)
 tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID", 
+                   all.x = T, all.y = F)
+tt_females <- merge(tt_females, annot, by.x = 0, by.y = "ENTREZID", 
                    all.x = T, all.y = F)
 head(tt_tumor)
 ```
@@ -1155,7 +1160,7 @@ de_females <- subset(tt_females, abs(logFC) >= lfc_threshold & B >= 4.6)
 
 # Number of genes which pass the filter
 de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_males), nrow(de_females))
-names(de_genes) <- c("Normal vs Disease", "Females vs Males", "Males", "Females")
+names(de_genes) <- c("Tumor vs Normal", "Females vs Males", "Males", "Females")
 de_genes
 ```
 
@@ -1247,6 +1252,7 @@ We can observe that there are `r length(genes_tumor_males$not_clear)` genes whic
 DE_tumor <- unique(rownames(de_tumor))
 DE_males <- unique(rownames(de_males))
 DE_females <- unique(rownames(de_females))
+DE_gender <- unique(rownames(de_gender))
 ```
 
 #### Venn diagrams
@@ -1290,6 +1296,7 @@ go_obj <- function(genes_id, universe = unique(annot.Entrez.GO)){
 params_tumor <- go_obj(DE_tumor)
 params_males <- go_obj(DE_males)
 params_females <- go_obj(DE_females)
+parmas_gender <- go_obj(DE_gender)
 
 # The set of differentially expressed only in females
 mask <- DE_females %in% intersect(DE_males, DE_females)
@@ -1304,8 +1311,10 @@ DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor
 params_male_exc <- go_obj(DE_males_exc)
 
 # We explore those genes that are shared among the comparisons
+
 go_females_males_up <- go_obj(genes_females_males$up)
 go_females_males_down <- go_obj(genes_females_males$down)
+
 go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
 ```
@@ -1347,6 +1356,7 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     }
     GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
     rownames(GO) <- 1:nrow(GO)
+    colnames(GO) <- c(colnames(GO)[-ncol(GO)], "Genes")
     list(GO = GO, plot = plotgo)
 }
 
@@ -1424,11 +1434,23 @@ if (!is.null(GO_tumor_males_not_clear)){
     plot(GO_tumor_males_not_clear$plot)
 }
 ```
+
+
+```{r fun.enrich.gender, echo=TRUE, message=FALSE, fig.cap="\\label{tumor10}Figure 25.J: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in females againts males", autodep=TRUE}
+GO_gender <- go_analisys(parmas_gender, annot.Entrez.GO)
+if (!is.null(GO_gender)){
+    print(head(GO_gender$GO))
+    plot(GO_gender$plot)
+}
+```
+
+### Result tables
+
 We should look in details to those values and associations in the tables.
 
 ```{r tables_GO, message=FALSE, autodep=TRUE}
 library(xtable)
-go_table <- function(go_obj, ftitle){
+table_h <- function(go_obj, ftitle){
     # Function to output the table in html format
     if (is.null(go_obj)){
         warning("Null Object: unable to creat the table")
@@ -1438,22 +1460,42 @@ go_table <- function(go_obj, ftitle){
     }
 }
 
-go_table(GO_tumor$GO, "GO_tumor_table.html")
-go_table(GO_females$GO, "GO_females_table.html")
-go_table(GO_males$GO, "GO_males_table.html")
+table_h(GO_tumor$GO, "GO_tumor_table.html")
+table_h(GO_females$GO, "GO_females_table.html")
+table_h(GO_males$GO, "GO_males_table.html")
+table_h(GO_gender$GO, "GO_gender_table.html")
 
-go_table(GO_female_exc$GO, "GO_female_exc_table.html")
-go_table(GO_male_exc$GO, "GO_male_exc_table.html")
+table_h(GO_female_exc$GO, "GO_female_exc_table.html")
+table_h(GO_male_exc$GO, "GO_male_exc_table.html")
 
-go_table(GO_females_males_up$GO, "GO_females_males_up_table.html")
-go_table(GO_females_males_down$GO, "GO_females_males_down_table.html")
+table_h(GO_females_males_up$GO, "GO_females_males_up_table.html")
+table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
 
-go_table(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
-go_table(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
+table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
+table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 
+table_h(de_tumor, "DE_tumor.html")
+table_h(de_gender, "DE_gender.html")
+table_h(de_females, "DE_females.html")
+table_h(de_males, "DE_males.html")
 ```
 
+The table of genes which are differentially expressed genes are :
+The comparison of [tumoral vs normal](DE_tumor.html) samples.  
+The comparison of [females vs males](DE_gender.html) samples.  
+The comparison of [tumoral vs normal](DE_females.html) female samples.  
+The comparison of [tumoral vs normal](DE_males.html) male samples.  
+
 To explore more than the top 6 GO we should look into the tables generated with any browser.
+In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
+In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
+In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
+In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs normals of females, exclusively from females.  
+In [GO_male_exc](GO_male_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison male tumor vs normal samples, exclusively from males.  
+In [GO_females_males_up](GO_females_males_up_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are up-regulated.  
+In [GO_females_males_down](GO_females_males_down_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are down-regulated.  
+In [GO_tumor_females_not_clear](GO_tumor_females_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
+In [GO_tumor_males_not_clear](GO_tumor_males_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy males.   
 
 ## SessionInfo
 
