@@ -149,7 +149,7 @@ Thyroid cancer can develop from the different cells that form the follicles of t
 
 From the four types of thyroid cancer (papillary, follicular, medullary, and anaplastic thyroid cancer) Papillary Thyroid Carcinoma (PTC) is the most common type of thyroid cancer (Agrawal et al., 2014). It is more prevalent in women than men and its common diagnosis occurs around 49 years old.
 
-Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of papillary thyroid cancer (PTC) from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of follicular thyroid adenoma (FTA) and follicular thyroid cancer (FTC) also in follicular thyroid cells (Xing, 2013).
+Driver onco-mutations for this type of cancer appear as alterations of the MAPK signaling pathway and the PI3K-AKT pathway (Agrawal et al., 2014). Both are implied in cell proliferation and survival and in human tumorigenesis. The overactivation of the MAPK pathway because of mutations such as the BRAFV600E mutation, leads to the development of PTC from follicular thyroid cells (Xing, 2013). On the other hand, mutations that activate the PI3K-AKT pathway, such as mutations in RAS, PTEN and PIK3CA, mostly leads to development of Follicular Thyroid Adenoma (FTA) and Follicular Thyroid Cancer (FTC) also in follicular thyroid cells (Xing, 2013).
 
 Research from The Cancer Genome Atlas [(TCGA)](http://cancergenome.nih.gov/cancersselected/thyroid) focused on PTC and they found that a part from alterations in BRAF (specifically BRAFV600E) and RAS, there are other driver mutations such the ones in EIF1AX PPM1D, and CHEK2 genes that are main alterations for that type of thyroid cancer(Agrawal et al., 2014).
 
@@ -826,7 +826,7 @@ library("sva")
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
-design <- model.matrix(~0 + treat + paired)
+design <- model.matrix(~ 0 + treat + paired)
 colnames(design) <- c(levels(treat), "paired")
 
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design[, -1])
@@ -918,6 +918,7 @@ After all the process the best one, that separates better tumor and normal sampl
 
 ```{r qrexpr, autodep=TRUE}
 assays(thca.filtered)$qrexp <- qrexp
+assays(thca.filtered)$combatexp <- combatexp
 ```
 
 ## Initial assesment on differential expression
@@ -928,7 +929,7 @@ We build the null model with just the intercept (=1) in order to compare it with
 
 ```{r sva.model, autodep=TRUE}
 mod0 <- model.matrix(~ 1 + type + paired, data = colData(thca.filtered))
-pv <- f.pvalue(assays(thca.filtered)$qrexp, design, mod0)
+pv <- f.pvalue(assays(thca.filtered)$combatexp, design, mod0)
 sum(p.adjust(pv, method = "fdr") < 0.01)
 ```
 
@@ -949,7 +950,7 @@ hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 Now, let's estimate surrogate variables using the `sva()` function.
 
 ```{r sva.variables, autodep=TRUE}
-sv <- sva(assays(thca.filtered)$qrexp, design, mod0)
+sv <- sva(assays(thca.filtered)$combatexp, design, mod0)
 sv$n
 ```
 
@@ -960,7 +961,7 @@ surrogate variables.
 ```{r svn.ftest, autodep=TRUE}
 modsv <- cbind(design, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
-pvsv <- f.pvalue(assays(thca.filtered)$qrexp, modsv, mod0sv)
+pvsv <- f.pvalue(assays(thca.filtered)$combatexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
@@ -996,7 +997,7 @@ cleanY = function(y, mod, svs) {
     return(y - t(as.matrix(X[,-c(1:P)]) %*% beta[-c(1:P),]))
 }
 
-e.no_surrogates <- cleanY(assays(thca.filtered)$qrexp, design, sv$sv)
+e.no_surrogates <- cleanY(assays(thca.filtered)$combatexp, design, sv$sv)
 ```
 
 The object e.no_surrogates contains the expression after removing the surrogates variables.
@@ -1454,11 +1455,15 @@ go_table(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 
 ```
 
+
+### GO tables
+
 To explore more than the top 6 GO we should look into the tables generated with any browser.
 In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
 In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
 In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
-In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison Tumor vs Normals.  
+In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs normals of females, exclusively from females.  
+In [GO_male_exc](GO_male_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison male tumor vs normal samples, exclusively from males.  
 In [GO_females_males_up](GO_females_males_up_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are up-regulated.  
 In [GO_females_males_down](GO_females_males_down_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are down-regulated.  
 In [GO_tumor_females_not_clear](GO_tumor_females_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
