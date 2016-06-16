@@ -42,26 +42,10 @@ Please see additional guidelines notes on preparing your abstract below.
 \thispagestyle{firststyle}
 \marginmark
 \firstpagefootnote
-\correspondingauthoraffiliation{Please insert the affiliation correspondence address and email for the corresponding author. The corresponding author should be marked with a `1' in the author list, as shown in the example.}
+\correspondingauthoraffiliation{Universitat Pompeu Fabra. Doctor Aiguader, 80. 08003 Barcelona (Spain). 
+Email: lluis.revilla01@estudiant.upf.edu}
 \vspace{-11pt}%
 
-\lettrine[lines=2]{\color{color2}T}{}his \textit{Genetics} journal template is provided to help you write your work in the correct journal format. Instructions for use are provided below. 
-
-
-\section*{Your Abstract}
-
-In addition to the guidelines provided in the example abstract above, your abstract should:
-
-\begin{itemize}
-\item provide a synopsis of the entire article;
-\item begin with the broad context of the study, followed by specific background for the study;
-\item describe the purpose, methods and procedures, core findings and results, and conclusions of the study;
-\item emphasize new or important aspects of the research;
-\item engage the broad readership of GENETICS and be understandable to a diverse audience (avoid using jargon);
-\item be a single paragraph of less than 250 words;
-\item contain the full name of the organism studied;
-\item NOT contain citations or abbreviations.
-\end{itemize}
 
 \section*{Introduction}
 
@@ -81,8 +65,6 @@ The aim of our project deviates from being a replicate of the TCGA project. Our 
 \subsection*{Data Availability}
 In order to shed light on the previous hypothesis we have centered our study in Papillary Thyroid Carcinoma with RNA-seq data of The Cancer Genome Atlas \citep{tcga}. Concretely, the datasets used have been the ones preprocessed by \citet{Rahman2015} using the \citep{subread} pipeline. However, although the data has been preprocessed we have had to apply different filters to speed up the analysis. While exploring the data we realized that all 'normal' type samples came from  individuals who had 'tumor' type samples too so we only kept values coming from paired data (see Supplementary Materials). In addition, from the subset we discarted those samples whose depth is substantially lower than the rest specifically below 40 million reads (see Supplementary Materials). Moreover, we have considered a cutoff of 1 log CPM unit as minimum value of expression to select genes being expressed across samples. Using this cutoff we have filtered out lowly-expressed genes (see Supplementary Materials). Finally,the most abundant population in the samples is the "white" and "not hispanic or latino", so we decide to perform the analysis on this group of individuals whose type of cancer is the "classical" Papillary Thyroid Carcinoma (see Supplementary Materials). The final subset for the analysis end up with 11801 genes, 54 samples (27 normal and 27 tumor) from 27 patients. To reduce the size of the subset we also discarded clinical variables without available information or under 60 \% of the information available (see Supplementary Materials). 
 
-
-
 \subsection*{Normalization and Quality Assessment}
 All the analysis presented in this study has been done using the R statistical programming language \citep{R}. Data has been managed within \textit{SummarizedExperiment} class object container \citep{SummarizedExperiment} of the Bioconductor open-source and open-development software for R \citep{Gentleman2004}. Before any analysis, we have normalized the data following the edgeR pipeline for normalizing RNA-seq data \citep{Robinson2010}. Robinson's guide consist on first of all scaling the data into \textit{counts per million reads} (CPM). Then we have checked for biases in the data with MA plots (see Supplementary Materials). From the MA plots we decided to discard tumor and normal samples having  TCGA-BJ-A3PR as barcode because we detected a relevant expression-level dependent bias so the subset was reduced to 52 samples (26 tumor and 26 normal) from 26 patients. After that, we also have perfomed a quantile normalization on the RNA-seq count data using the \textit{cqn} R/Bioconductor package \citep{Hansen2012}. We decided not to use the function \textit{calcNormFactors} which has implemented the \textit{Trimmed Mean of M-values} (TMM) method of the \textit{edgeR} R/Bioconductor package \citep{Robinson2010a} because according to the \textit{cqn} vignette, there is no need to normalize using this type of tools as later we used the offsets computed by \textit{cqn} \citep{Hansen2012}. 
 
@@ -94,12 +76,12 @@ portion and plate (see Supplementary Materials). A part from that, we also have 
 In order to perform the differential expression analysis we used \textit{limma} R/Bioconductor package with a workflow based on what has been previously published \citep{limma}. We build the design matrix and calculated the observational-level weights. As we were working with paired data we estimated the correlation in repeated measurements before fitting the linear model. Finally we build and fitted contrast matrices related to gender and disease status (normal or tumor) and calculated moderated t-statistics. Moreover we used the \textit{sva} R/Bioconductor package to remove the effect of the surrogate variables \citep{sva}. Representation of differentially expressed gene sets was performed with the R package \textit{Vennerable} \citep{Venn}.
 
 \subsection*{Functional enrichment}
-The resulting sets of differentially expressed genes between different conditions according to gender or disease status (normal or tumor) was used to perform Gene Ontology (GO) analyses. For this purpose we used the R/Bioconductor package \textit{GOstats} with the Biological Process (BP) ontology and applied a conditional hypergeometric test in order to account for the hierarchical structure of GO terms \citep{GOstats}.
+The resulting sets of differentially expressed genes between different conditions according to gender or disease status (normal or tumor) was used to perform Gene Ontology (GO) analyses. For this purpose we used the R/Bioconductor package \textit{GOstats} with the Biological Process (BP) ontology and applied a conditional hypergeometric test in order to account for the hierarchical structure of GO terms \citep{Gostats}.
 
 
 \section*{Results and Discussion}
 
-After the filtering and normalization of the data mentioned before (see Materials and Methods) we searched for batch effects. Apparently, after applying hierarchical clutering in the filtered data the samples cluster into tumor and normal separately (see Supplementary Materials). However, from the dendrogram we can see that there is a group of tumor samples closer to the normal ones as if there were two subgroups of tumor samples. Cross-tables between the elements encoded in the TCGA barcode and type of samples (tumor/normal) showed unbalanced data in all of them so it could be that one of them is the source of variability within tumor samples. From the dendrogram plots after clustering for each of the elements (samplevial, tss, portion and plate) and also after considering a multidimensional scaling plot it did not seem clear to us which was the reason for such unaccurate clustering of the tumor samples (see Supplementary Materials). We decided to apply the three strategies mentioned before (see Materials and Methods) to see whether we could improve the clustering. Although, \textit{ComBat} function and the SVD method are supposed to improved the clutering, the one that gave us a better dendrogram has been QR descomposition method (see Supplementary Materials). For this removal strategy, we included two batch indicator variables, tss and samplevial, as the possible sources of variability and we also built the full model of our outcome of interest which included gender and type as fixed effects. As it has yield the best batch removal result, we decided to take it into account in the follow-up analysis. 
+After the filtering and normalization of the data, we searched for batch effects. Apparently, after applying hierarchical clustering in the filtered data the samples cluster into tumor and normal separately (see Supplementary Materials). However, from the dendrogram we can see that there is a group of tumor samples closer to the normal ones as if there were two subgroups of tumor samples. Cross-tables between the elements encoded in the TCGA barcode and type of samples (tumor/normal) showed unbalanced data in all of them so it could be that one of them is the source of variability within tumor samples. From the dendrogram plots after clustering for each of the elements (samplevial, tss, portion and plate) and also after considering a multidimensional scaling plot it did not seem clear to us which was the reason for such inaccurate clustering of the tumor samples (see Supplementary Materials). We decided to apply the three strategies mentioned before (see Materials and Methods) to see whether we could improve the clustering. Although, \textit{ComBat} function and the SVD method are supposed to improved the clustering, the one that gave us a better dendrogram has been QR descomposition method (see Supplementary Materials). For this removal strategy, we included two batch indicator variables, tss and samplevial, as the possible sources of variability and we also built the full model of our outcome of interest which included gender and type as fixed effects. As it has yield the best batch removal result, we decided to take it into account in the follow-up analysis. 
 
 A part from removing possible batch effect, we also have adjusted for the mean-variance relationship estimating weights at individual observation-by-gene level to fit the model. Furthermore, we have also adjusted for possible intra group correlation at individual level (blocking factor: \textit{bcr\_patient\_barcode}) which we included as a factor into the model. 
 
