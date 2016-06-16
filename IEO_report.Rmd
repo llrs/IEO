@@ -1038,11 +1038,11 @@ fit <- lmFit(vo, design)
 
 # Make the comparisons we are interested in based on our design
 cm <- makeContrasts(
-    FemaleDiseaseVsFemaleNormal = tumor.FEMALE - normal.FEMALE,
-    MaleDiseaseVsMaleNormal = tumor.MALE - normal.MALE,
-    MaleDiseaseVsFemaleDisease = tumor.MALE - tumor.FEMALE,
+    FemaleTumorVsFemaleNormal = tumor.FEMALE - normal.FEMALE,
+    MaleTumorVsMaleNormal = tumor.MALE - normal.MALE,
+    MaleTumorVsFemaleTumor = tumor.MALE - tumor.FEMALE,
     MaleNormalVsFemaleNormal = normal.MALE - normal.FEMALE,
-    NormalVsDisease = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
+    TumorVsNormal = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
     FemaleVsMale = (tumor.FEMALE+normal.FEMALE) - (tumor.MALE+normal.MALE),
     levels = design)
 
@@ -1060,10 +1060,10 @@ We decided a threshold of differentially expressed genes of 4 (thus log2 of it i
 Based on these we are only interested in four contrast which will be annotated with symbol and ensembl id:
 
 ```{r tt, autodep=TRUE}
-tt_tumor <- topTable(fit2, number = Inf, coef = "NormalVsDisease", p.value = 0.05)
+tt_tumor <- topTable(fit2, number = Inf, coef = "TumorVsNormal", p.value = 0.05)
 tt_gender <- topTable(fit2, number = Inf, coef = "FemaleVsMale", p.value = 0.05)
-tt_females <- topTable(fit2, number = Inf, coef = "FemaleDiseaseVsFemaleNormal", p.value = 0.05)
-tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal", p.value = 0.05)
+tt_females <- topTable(fit2, number = Inf, coef = "FemaleTumorVsFemaleNormal", p.value = 0.05)
+tt_males <- topTable(fit2, number = Inf, coef = "MaleTumorVsMaleNormal", p.value = 0.05)
     
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
@@ -1160,7 +1160,7 @@ de_females <- subset(tt_females, abs(logFC) >= lfc_threshold & B >= 4.6)
 
 # Number of genes which pass the filter
 de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_males), nrow(de_females))
-names(de_genes) <- c("Normal vs Disease", "Females vs Males", "Males", "Females")
+names(de_genes) <- c("Tumor vs Normal", "Females vs Males", "Males", "Females")
 de_genes
 ```
 
@@ -1478,8 +1478,11 @@ table_h(de_females, "DE_females.html")
 table_h(de_males, "DE_males.html")
 ```
 
-
-
+The table of genes which are differentially expressed genes are :
+The comparison of [tumoral vs normal](DE_tumor.html) samples.  
+The comparison of [females vs males](DE_gender.html) samples.  
+The comparison of [tumoral vs normal](DE_females.html) female samples.  
+The comparison of [tumoral vs normal](DE_males.html) male samples.  
 
 To explore more than the top 6 GO we should look into the tables generated with any browser.
 In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
