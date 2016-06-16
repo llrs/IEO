@@ -1434,7 +1434,7 @@ if (!is.null(GO_tumor_males_not_clear)){
 ```
 
 
-```{r fun.enrich.mn, echo=TRUE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in females againts males", autodep=TRUE}
+```{r fun.enrich.gender, echo=TRUE, message=FALSE, fig.cap="\\label{tumor10}Figure 25.J: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in females againts males", autodep=TRUE}
 GO_gender <- go_analisys(parmas_gender, annot.Entrez.GO)
 if (!is.null(GO_gender)){
     print(head(GO_gender$GO))
