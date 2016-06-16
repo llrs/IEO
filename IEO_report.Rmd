@@ -1347,6 +1347,7 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
     }
     GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
     rownames(GO) <- 1:nrow(GO)
+    colnames(GO) <- c(colnames(GO)[-ncol(GO)], "Genes")
     list(GO = GO, plot = plotgo)
 }
 
@@ -1454,6 +1455,14 @@ go_table(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 ```
 
 To explore more than the top 6 GO we should look into the tables generated with any browser.
+In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
+In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
+In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
+In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison Tumor vs Normals.  
+In [GO_females_males_up](GO_females_males_up_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are up-regulated.  
+In [GO_females_males_down](GO_females_males_down_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are down-regulated.  
+In [GO_tumor_females_not_clear](GO_tumor_females_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
+In [GO_tumor_males_not_clear](GO_tumor_males_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy males.   
 
 ## SessionInfo
 
