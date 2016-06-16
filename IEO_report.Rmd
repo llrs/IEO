@@ -821,7 +821,7 @@ for (batching in batch_effects){
 
 We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. And it seems that the females have more variance between healthy and tumoral.
 
-## Design of the tumor
+## Design of the effects on expression
 
 For now on we need to select our design and null hypothesis. We define them as:
 
@@ -829,12 +829,13 @@ For now on we need to select our design and null hypothesis. We define them as:
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
-design <- model.matrix(~ treat + paired, data=colData(thca.filtered))
+design <- model.matrix(~treat + paired, data=colData(thca.filtered))
 colnames(design) <- c(levels(treat), "paired")
+design <- cbind("(Intercept)" = 1, design)
 head(design)
 
 # And the null model
-mod0 <- model.matrix(~ gender + type + paired, data = colData(thca.filtered))
+mod0 <- model.matrix(~1 + gender + type + paired, data = colData(thca.filtered))
 head(mod0)
 ```
 
@@ -1059,8 +1060,8 @@ cm <- makeContrasts(
     MaleTumorVsMaleNormal = tumor.MALE - normal.MALE,
     FemaleTumorVsMaleTumor = tumor.FEMALE - tumor.MALE,
     FemaleNormalVsMaleNormal = normal.FEMALE - normal.MALE,
-    TumorVsNormal = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
-    FemaleVsMale = (tumor.FEMALE+normal.FEMALE) - (tumor.MALE+normal.MALE),
+    TumorVsNormal = (tumor.MALE + tumor.FEMALE) - (normal.MALE + normal.FEMALE),
+    FemaleVsMale = (tumor.FEMALE + normal.FEMALE) - (tumor.MALE + normal.MALE),
     levels = design)
 
 fit2 <- contrasts.fit(fit, cm)
@@ -1328,16 +1329,16 @@ DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor
 params_male_exc <- go_obj(DE_males_exc)
 
 # We explore those genes that are shared among the comparisons
-go_females_males_up <- go_obj(genes_females_males$up)
+# go_females_males_up <- go_obj(genes_females_males$up)
 go_females_males_down <- go_obj(genes_females_males$down)
 go_females_males_not_clear <- go_obj(genes_females_males$not_clear)
 
 # go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
-go_tumor_females_up <- go_obj(genes_tumor_females$up) # Genes not in the universe
+# go_tumor_females_up <- go_obj(genes_tumor_females$up) # Genes not in the universe
 go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
-# go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
-go_tumor_males_up <- go_obj(genes_tumor_males$up)
+go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
+# go_tumor_males_up <- go_obj(genes_tumor_males$up)
 go_tumor_males_down <- go_obj(genes_tumor_males$down)
 ```
 
