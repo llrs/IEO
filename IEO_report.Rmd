@@ -1068,7 +1068,11 @@ tt_males <- topTable(fit2, number = Inf, coef = "MaleDiseaseVsMaleNormal", p.val
 # Annotate with the gene symbol
 tt_tumor <- merge(tt_tumor, annot, by.x = 0, by.y = "ENTREZID", 
                   all.x = T, all.y = F)
+tt_males <- merge(tt_males, annot, by.x = 0, by.y = "ENTREZID", 
+                  all.x = T, all.y = F)
 tt_gender <- merge(tt_gender, annot, by.x = 0, by.y = "ENTREZID", 
+                   all.x = T, all.y = F)
+tt_females <- merge(tt_females, annot, by.x = 0, by.y = "ENTREZID", 
                    all.x = T, all.y = F)
 head(tt_tumor)
 ```
@@ -1248,6 +1252,7 @@ We can observe that there are `r length(genes_tumor_males$not_clear)` genes whic
 DE_tumor <- unique(rownames(de_tumor))
 DE_males <- unique(rownames(de_males))
 DE_females <- unique(rownames(de_females))
+DE_gender <- unique(rownames(de_gender))
 ```
 
 #### Venn diagrams
@@ -1291,6 +1296,7 @@ go_obj <- function(genes_id, universe = unique(annot.Entrez.GO)){
 params_tumor <- go_obj(DE_tumor)
 params_males <- go_obj(DE_males)
 params_females <- go_obj(DE_females)
+parmas_gender <- go_obj(DE_gender)
 
 # The set of differentially expressed only in females
 mask <- DE_females %in% intersect(DE_males, DE_females)
@@ -1426,11 +1432,23 @@ if (!is.null(GO_tumor_males_not_clear)){
     plot(GO_tumor_males_not_clear$plot)
 }
 ```
+
+
+```{r fun.enrich.mn, echo=TRUE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in females againts males", autodep=TRUE}
+GO_gender <- go_analisys(parmas_gender, annot.Entrez.GO)
+if (!is.null(GO_gender)){
+    print(head(GO_gender$GO))
+    plot(GO_gender$plot)
+}
+```
+
+### Result tables
+
 We should look in details to those values and associations in the tables.
 
 ```{r tables_GO, message=FALSE, autodep=TRUE}
 library(xtable)
-go_table <- function(go_obj, ftitle){
+table_h <- function(go_obj, ftitle){
     # Function to output the table in html format
     if (is.null(go_obj)){
         warning("Null Object: unable to creat the table")
@@ -1440,23 +1458,28 @@ go_table <- function(go_obj, ftitle){
     }
 }
 
-go_table(GO_tumor$GO, "GO_tumor_table.html")
-go_table(GO_females$GO, "GO_females_table.html")
-go_table(GO_males$GO, "GO_males_table.html")
+table_h(GO_tumor$GO, "GO_tumor_table.html")
+table_h(GO_females$GO, "GO_females_table.html")
+table_h(GO_males$GO, "GO_males_table.html")
+table_h(GO_gender$GO, "GO_gender_table.html")
 
-go_table(GO_female_exc$GO, "GO_female_exc_table.html")
-go_table(GO_male_exc$GO, "GO_male_exc_table.html")
+table_h(GO_female_exc$GO, "GO_female_exc_table.html")
+table_h(GO_male_exc$GO, "GO_male_exc_table.html")
 
-go_table(GO_females_males_up$GO, "GO_females_males_up_table.html")
-go_table(GO_females_males_down$GO, "GO_females_males_down_table.html")
+table_h(GO_females_males_up$GO, "GO_females_males_up_table.html")
+table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
 
-go_table(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
-go_table(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
+table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
+table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 
+table_h(de_tumor, "DE_tumor.html")
+table_h(de_gender, "DE_gender.html")
+table_h(de_females, "DE_females.html")
+table_h(de_males, "DE_males.html")
 ```
 
 
-### GO tables
+
 
 To explore more than the top 6 GO we should look into the tables generated with any browser.
 In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
