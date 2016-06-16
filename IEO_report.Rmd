@@ -1040,8 +1040,8 @@ fit <- lmFit(vo, design)
 cm <- makeContrasts(
     FemaleTumorVsFemaleNormal = tumor.FEMALE - normal.FEMALE,
     MaleTumorVsMaleNormal = tumor.MALE - normal.MALE,
-    MaleTumorVsFemaleTumor = tumor.MALE - tumor.FEMALE,
-    MaleNormalVsFemaleNormal = normal.MALE - normal.FEMALE,
+    FemaleTumorVsMaleTumor = tumor.FEMALE - tumor.MALE,
+    FemaleNormalVsMaleNormal = normal.FEMALE - normal.MALE,
     TumorVsNormal = (tumor.MALE+tumor.FEMALE) - (normal.MALE+normal.FEMALE),
     FemaleVsMale = (tumor.FEMALE+normal.FEMALE) - (tumor.MALE+normal.MALE),
     levels = design)
