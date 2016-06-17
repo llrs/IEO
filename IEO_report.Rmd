@@ -1378,7 +1378,7 @@ DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor
 go_females_males_down <- go_obj(genes_females_males$down)
 go_females_males_not_clear <- go_obj(genes_females_males$not_clear)
 
-go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
+# go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 # go_tumor_females_up <- go_obj(genes_tumor_females$up) # Genes not in the universe
 go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
@@ -1501,7 +1501,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tfn, eval=TRUE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfn, eval=FALSE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1588,7 +1588,7 @@ table_h(GO_female_exc$GO, "GO_female_exc_table.html")
 table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
 # table_h(GO_females_males_not_clear$GO, "GO_females_males_not_clear_table.html")
 
-table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
+# table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
 table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 # table_h(GO_tumor_females_up$GO, "GO_tumor_females_up_table.html")
 # table_h(GO_tumor_males_up$GO, "GO_tumor_males_up_table.html")
