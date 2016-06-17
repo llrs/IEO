@@ -91,11 +91,9 @@ After the filtering and normalization of the data, we searched for batch effects
 
 A part from removing possible batch effect, we also have adjusted for the mean-variance relationship estimating weights at individual observation-by-gene level to fit the model.  
 
-From the model, we were trying to figure out whether there was a gender effect in the expression level of certain genes in the context of thyroid tumor. So we were interested to see whether DE genes observed between tumor and normal were the same for within female samples (tumor  and normal) and within male samples (tumor and normal). For this reason, our contrasts of interest were made as 6 comparisons: Female vs. Male, Tumor vs. Normal, Female-Tumor vs. Female-Normal,  Male-Tumor vs. Male-Normal, Female-Normal vs. Male-Normal and Female-Tumor vs. Male-Tumor. Here we show the diagnostic plots for those comparisons that are more interesting (see Figure)...
+From the model, we wanted to figure out whether there is a gender effect in the expression level of certain genes in the context of thyroid tumor. So we were interested to see whether DE genes observed between tumor and normal were the same for within female samples (tumor  and normal) and within male samples (tumor and normal). For this reason, our contrasts of interest were made as 6 comparisons: Female vs. Male, Tumor vs. Normal, Female-Tumor vs. Female-Normal,  Male-Tumor vs. Male-Normal, Female-Normal vs. Male-Normal and Female-Tumor vs. Male-Tumor. Here we show the diagnostic plots for those comparisons that are more interesting (see Figure SCHEME)...
 
-We can see from the QQplots that DE genes from the comparison Tumor vs. Normal differs from adjusting to a t-Student distribution more than the gender comparison (Female vs. Male). We can see this behaviour also reflected within genders in the Female-Tumor vs. Female-Normal and Male-Tumor vs. Male-Normal comparisons. 
-
-The volcano plots (Figure...) reveal that DE genes within genders show a consistent pattern with the Tumor vs. Normal comparison rather then the Female vs. Male.. In other words, as expected disease condition (tumor or normal) is a much better predictor of DE genes than gender. Concretely, there are 714 DE genes between normal and tumor samples, 2 DE genes between female and male samples, 72 DE genes between Male-Normal vs. Male-Disease and 116 DE genes between Female-Normal vs. Female-Tumor.
+We can see from the QQplots that DE genes from all comparisons differ from adjusting to a t-Student distribution (see Supplementary material). The volcano plots (see Supplementary material) reveal an interesting extreme pattern in the comparisons between Tumor vs. Normal and Female-Tumor vs. Female-Normal where almost all DE expressed genes appear to be under-expressed. In contrast, the Male-Tumor vs. Male-Normal comparison present a less extreme volcano plot. Interestingly, in the comparison between Female vs. Male where the contrast is done by gender, without taking into account the sample type (tumor or normal), we see the opposite extreme pattern where females show over-expression of almost all genes. This is due to the main contribution of normal samples to this comparison. We can infer a higher gene expression in Female-Normal compared to Male-Normal samples whereas Female-Tumor and Male-Tumor samples do not have significant differences in gene expression (see Supplementary material). 
 
 Venn diagrams in Figure ... help to explore the consistency of the obtained DE genes among the different comparisons. From the set of DE genes between disease and normal condition only 3 are found to be also differentially expressed in females (Female-Normal vs. Female-Disease) and 2 in males (Male-Normal vs. Male-Disease). So, even though the pattern from the volcano plots and the QQ plots of the 3 comparisons were similar actually a small amount of DE genes are shared to be differentially expressed among them. In contrast, taking both within gender comparisons (Female-Normal vs. Female-Disease and Male-Normal vs. Male-Disease) a larger proportion of genes are shared (54). Furhtermore, the direction of the fold change is also consistent in both comparisons, giving a set of 26 genes that are down regulated and 28 up regulated.
 
@@ -147,6 +145,7 @@ Figure \ref{fig:spectrum} shows an example figure.
 
 \begin{figure}[htbp]
 \centering
+\includegraphics[width=\linewidth]{example-figure}
 \caption{Example figure from \url{10.1534/genetics.114.173807}. Please include your figures in the manuscript for the review process. You can upload figures to Overleaf via the Project menu. Upon acceptance, we'll ask for your figure files to be uploaded in any of the following formats: TIFF (.tiff), JPEG (.jpg), Microsoft PowerPoint (.ppt), EPS (.eps), or Adobe Illustrator (.ai).  Images should be a minimum of 300 dpi in resolution and 500 dpi minimum if line art images.  RGB, CMYK, and Grayscale are all acceptable. Halftones should be high contrast with sharp detail, because some loss of detail and contrast is inevitable in the production process. Figures should be 10-20 cm in width and 1-25 cm in height. Graph axes must be exactly perpendicular and all lines of equal density.
 Label multiple figure parts with A, B, etc. in bolded type, and use Arrows and numbers to draw attention to areas you want to highlight. Legends should start with a brief title and should be a self-contained description of the content of the figure that provides enough detail to fully understand the data presented. All conventional symbols used to indicate figure data points are available for typesetting; unconventional symbols should not be used. Italicize all mathematical variables (both in the figure legend and figure) , genotypes, and additional symbols that are normally italicized.  
 }%
@@ -159,6 +158,7 @@ Figure \ref{video:spectrum} shows how to include a video in your manuscript.
 
 \begin{figure}[htbp]
 \centering
+\includegraphics[width=\linewidth]{example-figure}
 \caption{Example movie (the figure file above is used as a placeholder for this example). \textit{GENETICS} supports video and movie files that can be linked from any portion of the article - including the abstract. Acceptable formats include .asf, avi, .wav, and all types of Windows Media files.   
 }%
 \label{video:spectrum}
@@ -191,7 +191,7 @@ Charlie & 73\% & 2 & A good attempt.\\
 
 \section*{Sample Equation}
 
-Let $X_1, X_2, \ldots, X_n$ be a sequence of independent and identically distributed random variables with $\text{E}[X_i] = \mu$ and $\text{Var}[X_i] = \sigma^2 < \infty$, and let
+Let $X_1, X_2, \ldots, X_n$ be a sequence of independent and identically distributed random variables with $\text{E}[X_i] = \mu$ and $\text{Var}[X_i] = \sigma^2 < \infty$, and 	let
 \begin{equation}
 S_n = \frac{X_1 + X_2 + \cdots + X_n}{n}
       = \frac{1}{n}\sum_{i}^{n} X_i
