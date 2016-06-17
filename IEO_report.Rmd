@@ -232,7 +232,7 @@ hist(variable.info,
      main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
 ```
 
-```{r col.data.analysis3, fig.cap="\\label{\\label{col.data.analysis3}Figure 2.B: A zoom on the most informative variables.", autodep=TRUE}
+```{r col.data.analysis3, fig.cap="\\label{col.data.analysis3}Figure 2.B: A zoom on the most informative variables.", autodep=TRUE}
 # Seeing the most informative to set a threshold,
 # frequency are the number of columns with such % of information
 hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35), 
@@ -734,11 +734,9 @@ center <- substr(sample_names, 27, 28)
 table(center)
 ```
 
-We can observe that the samples where collected at 4 tissues source sites but the majority of them at University of Pittsburg (BJ) and MD Anderson(EL). However,the manager center of the data is the same (University of North Carolina) and the same metabolite (RNA). In addition, they come from 7 different plates more or less distributed. However, most samples came from 2 out of 5 different portion    and 2 out of 3 vials.
+We can observe that the samples where collected at 4 tissues source sites but the majority of them at University of Pittsburg (BJ) and MD Anderson(EL). However,the manager center of the data is the same (University of North Carolina) and the same metabolite (RNA). In addition, they come from 7 different plates more or less distributed. However, most samples came from 2 out of 5 different portion and 2 out of 3 vials.
 
-We are going to check if the previous variables of the barcode are surrogate of batch effect indicator. Considering our outcome
-of interest as molecular changes between sample types, tumor vs. normal, we will examine now
-the cross-classification of this outcome with the variables:
+We are going to check if the previous variables of the barcode are surrogate of batch effect indicator. Considering our outcome of interest as molecular changes between sample types, tumor vs. normal, we will examine now the cross-classification of this outcome with the variables:
 
 ```{r table.barcodes, autodep=TRUE}
 table(data.frame(TYPE = thca.filtered$type, TSS = tss))
@@ -747,6 +745,7 @@ table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
 table(data.frame(TYPE = thca.filtered$type, Portion = portion))
 table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
 ```
+
 From the tables we can already see that all of them can be candidates as indicators for batch effect as there is no homogeneity of the number of tumor and normal samples across any of the variables. 
 
 To double check if they have some effect on the batch we make the hierarchical clustering of them. First, we set some functions to plot the hierarhcical clustering:
@@ -804,7 +803,7 @@ plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, ou
 plot.batch(sampleDendrogram, plate , thca.filtered, outcome)
 ```
 
-We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients (where?). 
+We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients (where?).  
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions (not clear). We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person (indicate graph). We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 15: Multidimensional scaling plot of the samples.", autodep=TRUE}
@@ -846,7 +845,7 @@ head(mod0)
 
 After looking for batch effect we couldn't find a clear cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
 
-```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat}Figure 16.A: Hierarchical clustering of the samples with ComBat correction.", autodep=TRUE}
+```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat}Figure 16.A: Hierarchical clustering of the samples with ComBat correction colored by samplevial.", autodep=TRUE}
 library("sva")
 
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design)
@@ -868,6 +867,10 @@ plot.batch(cluster.combat, thca.filtered$gender, thca.filtered, outcome)
 
 ```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat3}Figure 16.C: Hierarchical clustering of the samples with ComBat coloured by type.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$type, thca.filtered, outcome)
+```
+
+```{r clustering.combat4, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat3}Figure 16.D: Hierarchical clustering of the samples with ComBat coloured by tissue sample site.", autodep=TRUE}
+plot.batch(cluster.combat, tss, thca.filtered, outcome)
 ```
 
 We can observe a slightly improvement, but still some tumoral samples cluster together with the normal ones. 
@@ -1276,11 +1279,16 @@ The function `up_down` classify the genes in up-regulated and down-regulated. Th
 r_tumor <- up_down(de_tumor)
 r_females <- up_down(de_females)
 r_males <- up_down(de_males)
+r_gender <- up_down(de_gender)
 
 # We see how do they overlap, more up-regulated, or more dow-regulated genes.
 classify(r_tumor, r_males)
 classify(r_tumor, r_females)
 classify(r_females, r_males)
+
+classify(r_gender, r_males)
+classify(r_females, r_gender)
+classify(r_tumor, r_gender)
 
 # We collect the name of genes for further studies
 genes_females_males <- genes_names(r_females, r_males)
@@ -1402,6 +1410,7 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
         geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
     }
     GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
+    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
     rownames(GO) <- 1:nrow(GO)
     colnames(GO) <- c(colnames(GO)[-ncol(GO)], "Genes")
     list(GO = GO, plot = plotgo)
