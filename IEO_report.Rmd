@@ -831,7 +831,7 @@ treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
 design <- model.matrix(~treat + paired, data=colData(thca.filtered))
 colnames(design) <- c(levels(treat), "paired")
-design <- cbind("(Intercept)" = 1, design)
+# design <- cbind("(Intercept)" = 1, design)
 head(design)
 
 # And the null model
@@ -1429,7 +1429,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich., echo=FALSE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", autodep=TRUE}
+```{r fun.enrich., eval=FALSE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", autodep=TRUE}
 GO_male_exc <- go_analisys(params_male_exc, annot.Entrez.GO)
 if (!is.null(GO_male_exc)){
     print(head(GO_male_exc$GO))
@@ -1438,7 +1438,7 @@ if (!is.null(GO_male_exc)){
 ```
 
 
-```{r fun.enrich.fmu, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
+```{r fun.enrich.fmu, eval=FALSE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
 GO_females_males_up <- go_analisys(go_females_males_up, annot.Entrez.GO)
 if (!is.null(GO_females_males_up)){
     print(head(GO_females_males_up$GO))
@@ -1455,7 +1455,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tfn, echo=FALSE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfn, eval=FALSE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1463,7 +1463,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfu, echo=FALSE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes up-regulated in both comparisons between normal and tumors and tumor vs normal in females.", autodep=TRUE}
+```{r fun.enrich.tfu, eval=FALSE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes up-regulated in both comparisons between normal and tumors and tumor vs normal in females.", autodep=TRUE}
 GO_tumor_females_up <- go_analisys(go_tumor_females_up, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_up)){
     print(head(GO_tumor_females_up$GO))
@@ -1488,7 +1488,7 @@ if (!is.null(GO_tumor_males_not_clear)){
 }
 ```
 
-```{r fun.enrich.tmu, echo=FALSE, message=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", autodep=TRUE}
+```{r fun.enrich.tmu, eval=FALSE, message=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", autodep=TRUE}
 GO_tumor_males_up <- go_analisys(go_tumor_males_up, annot.Entrez.GO)
 if (!is.null(GO_tumor_males_up)){
     print(head(GO_tumor_males_up$GO))
@@ -1515,14 +1515,23 @@ table_h <- function(go_obj, ftitle){
     if (is.null(go_obj)){
         warning("Null Object: unable to creat the table")
     } else {
-        xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+        xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}")
         print(x=xtab_tumor, file = ftitle, type = "html")
     }
 }
 
+table_g <- function(go_obj, ftitle){
+    # Function to output the table in html format
+    if (is.null(go_obj)){
+        warning("Null Object: unable to creat the table")
+    } else {
+        xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|r|")
+        print(x=xtab_tumor, file = ftitle, type = "html")
+    }
+}
 table_h(GO_tumor$GO, "GO_tumor_table.html")
 table_h(GO_females$GO, "GO_females_table.html")
-table_h(GO_males$GO, "GO_males_table.html")
+# table_h(GO_males$GO, "GO_males_table.html")
 table_h(GO_gender$GO, "GO_gender_table.html")
 
 table_h(GO_female_exc$GO, "GO_female_exc_table.html")
@@ -1530,7 +1539,7 @@ table_h(GO_female_exc$GO, "GO_female_exc_table.html")
 
 # table_h(GO_females_males_up$GO, "GO_females_males_up_table.html")
 table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
-table_h(GO_females_males_not_clear$GO, "GO_females_males_not_clear_table.html")
+# table_h(GO_females_males_not_clear$GO, "GO_females_males_not_clear_table.html")
 
 # table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
 table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
@@ -1539,10 +1548,10 @@ table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 table_h(GO_tumor_females_down$GO, "GO_tumor_females_down_table.html")
 table_h(GO_tumor_males_down$GO, "GO_tumor_males_down_table.html")
 
-table_h(de_tumor, "DE_tumor.html")
-table_h(de_gender, "DE_gender.html")
-table_h(de_females, "DE_females.html")
-table_h(de_males, "DE_males.html")
+table_g(de_tumor, "DE_tumor.html")
+table_g(de_gender, "DE_gender.html")
+table_g(de_females, "DE_females.html")
+table_g(de_males, "DE_males.html")
 ```
 
 The table of genes which are differentially expressed genes are :
