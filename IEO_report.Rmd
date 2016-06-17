@@ -1378,7 +1378,7 @@ DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor
 go_females_males_down <- go_obj(genes_females_males$down)
 go_females_males_not_clear <- go_obj(genes_females_males$not_clear)
 
-# go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
+go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 # go_tumor_females_up <- go_obj(genes_tumor_females$up) # Genes not in the universe
 go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
@@ -1501,7 +1501,7 @@ if (!is.null(GO_females_males_down)){
 ```
 
 
-```{r fun.enrich.tfn, eval=FALSE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfn, eval=TRUE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1575,9 +1575,10 @@ table_g <- function(go_obj, ftitle){
         print(x=xtab_tumor, file = ftitle, type = "html")
     }
 }
+
 table_h(GO_tumor$GO, "GO_tumor_table.html")
 table_h(GO_females$GO, "GO_females_table.html")
-# table_h(GO_males$GO, "GO_males_table.html")
+table_h(GO_males$GO, "GO_males_table.html")
 table_h(GO_gender$GO, "GO_gender_table.html")
 
 table_h(GO_female_exc$GO, "GO_female_exc_table.html")
@@ -1587,7 +1588,7 @@ table_h(GO_female_exc$GO, "GO_female_exc_table.html")
 table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
 # table_h(GO_females_males_not_clear$GO, "GO_females_males_not_clear_table.html")
 
-# table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
+table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
 table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 # table_h(GO_tumor_females_up$GO, "GO_tumor_females_up_table.html")
 # table_h(GO_tumor_males_up$GO, "GO_tumor_males_up_table.html")
@@ -1600,26 +1601,27 @@ table_g(de_females, "DE_females.html")
 table_g(de_males, "DE_males.html")
 ```
 
-The table of genes which are differentially expressed genes are :
-The comparison of [tumoral vs normal](DE_tumor.html) samples.  
-The comparison of [females vs males](DE_gender.html) samples.  
-The comparison of [tumoral vs normal](DE_females.html) female samples.  
-The comparison of [tumoral vs normal](DE_males.html) male samples.  
+The table of genes which are differentially expressed in the different comparisons are in the following sites:
+ * The comparison of [tumoral vs normal](DE_tumor.html) samples.  
+ * The comparison of [females vs males](DE_gender.html) samples.  
+ * The comparison of [tumoral vs normal](DE_females.html) female samples.  
+ * The comparison of [tumoral vs normal](DE_males.html) male samples.  
 
 To explore more than the top 6 GO we should look into the tables generated with any browser.
-In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
-In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
-In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
-In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs normals of females, exclusively from females.  
-In [GO_male_exc](GO_male_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison male tumor vs normal samples, exclusively from males.  
-In [GO_females_males_up](GO_females_males_up_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are up-regulated.  
-In [GO_females_males_down](GO_females_males_down_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are down-regulated.  
-In [GO_tumor_females_not_clear](GO_tumor_females_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
-In [GO_tumor_males_not_clear](GO_tumor_males_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy males.   
-In [GO_tumor_females_up](GO_tumor_females_up_table.html) we have the list of GO enrich on the differentially expressed genes up-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
-In [GO_tumor_males_down](GO_tumor_males_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy males. 
-In [GO_tumor_females_down](GO_tumor_females_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
-In [GO_tumor_males_up](GO_tumor_males_up_table.html) we have the list of GO enrich on the differentially expressed genes up-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy males.  
+ * In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
+ * In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
+ * In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
+ * In [GO_gender_table](GO_gender_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between females and males.    
+ * In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs normals of females, exclusively from females.  
+ * In [GO_male_exc](GO_male_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison male tumor vs normal samples, exclusively from males.  
+ * In [GO_females_males_up](GO_females_males_up_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are up-regulated.  
+ * In [GO_females_males_down](GO_females_males_down_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are down-regulated.  
+ * In [GO_tumor_females_not_clear](GO_tumor_females_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
+ * In [GO_tumor_males_not_clear](GO_tumor_males_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy males.   
+ * In [GO_tumor_females_up](GO_tumor_females_up_table.html) we have the list of GO enrich on the differentially expressed genes up-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
+ * In [GO_tumor_males_down](GO_tumor_males_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy males. 
+ * In [GO_tumor_females_down](GO_tumor_females_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
+ * In [GO_tumor_males_up](GO_tumor_males_up_table.html) we have the list of GO enrich on the differentially expressed genes up-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy males.  
 
 ## SessionInfo
 
