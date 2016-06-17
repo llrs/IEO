@@ -1,6 +1,6 @@
 ---
 title: "Supplementary material of New insights of the RNa-seq data of The Cancer Genome Atlas for Papillary Thyroid Carcinoma"
-author: "[Mauro Álvarez](mailto:mauro.alvarez01@estudiant.upf.edu), [Lluís Revilla](mailto:lluis.revilla01@estudiant.upf.edu), [Marina Reixachs](mailto:marina.reixachs01@estudiant.upf.edu), [Inés Sentís](mailto:ines.sentis01@estudiant.upf.edu)"
+author: "[Lluís Revilla](mailto:lluis.revilla01@estudiant.upf.edu), [Marina Reixachs](mailto:marina.reixachs01@estudiant.upf.edu), [Inés Sentís](mailto:ines.sentis01@estudiant.upf.edu), [Mauro Álvarez](mailto:mauro.alvarez01@estudiant.upf.edu)"
 date: "19th June 2016"
 output:
   html_document:
