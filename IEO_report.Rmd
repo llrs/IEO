@@ -825,7 +825,7 @@ We can confirm that there isn't a clear group of normal and tumors and some tumo
 
 For now on we need to select our design and null hypothesis. We define them as:
 
-```{r design, autodep=TRUE}
+```{r design, autodep=TRUE, include=FALSE}
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
@@ -872,6 +872,18 @@ plot.batch(cluster.combat, thca.filtered$type, thca.filtered, outcome)
 
 We can observe a slightly improvement, but still some tumoral samples cluster together with the normal ones. 
 
+```{r mds2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 16: Multidimensional scaling plot of the samples.", autodep=TRUE}
+batch_effects <- list(portion, tss, as.character(thca.filtered$type),
+                      as.character(thca.filtered$gender))
+for (batching in batch_effects){
+    batch <- as.integer(factor(batching))
+    names(batch) <- sample_names
+    plotMDS(combatexp, labels = outcome, col = batch)
+    legend("bottomleft", paste("Batch", levels(factor(batching))),
+           fill = sort(unique(batch)), inset = 0.05, cex=0.7)
+}
+```
+
 ### QR Decomposition
 
 To improve the batch effect removal we look if QR decomposition yields better results. In this case, we look for sample vial and TSS batch effects removal. To do so, we have to built the full model which would include gender and type as fixed effects. 
@@ -901,6 +913,18 @@ plot.batch(cluster.qr, tss, thca.filtered, outcome)
 ```
 
 With QR decomposition we can observe that some tumoral samples cluster with other normal samples on a lower branch.
+
+```{r mds3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 16: Multidimensional scaling plot of the samples.", autodep=TRUE}
+batch_effects <- list(portion, tss, as.character(thca.filtered$type),
+                      as.character(thca.filtered$gender))
+for (batching in batch_effects){
+    batch <- as.integer(factor(batching))
+    names(batch) <- sample_names
+    plotMDS(qrexp, labels = outcome, col = batch)
+    legend("bottomleft", paste("Batch", levels(factor(batching))),
+           fill = sort(unique(batch)), inset = 0.05, cex=0.7)
+}
+```
 
 ### Removing batch effect with SVD
 
@@ -1063,7 +1087,7 @@ cm <- makeContrasts(
     TumorVsNormal = (tumor.MALE + tumor.FEMALE) - (normal.MALE + normal.FEMALE),
     FemaleVsMale = (tumor.FEMALE + normal.FEMALE) - (tumor.MALE + normal.MALE),
     levels = design)
-
+cm
 fit2 <- contrasts.fit(fit, cm)
 fit2 <- eBayes(fit2)
 
