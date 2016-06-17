@@ -1,0 +1,25 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!GO_tumor.html
+!IEO_report.Rmd
+!IEO_report.html
+!README.md
+!initiall_script.R
+!template-preparing-submission/GSA-journal-template.tex
+!template-preparing-submission/IEO.bib
+!template-preparing-submission/gsajnl.cls
+!template-preparing-submission/styles/goi.sty
+!template-preparing-submission/styles/gos.sty
+!template-preparing-submission/styles/gs.sty
+!template-preparing-submission/styles/inv.sty
+!template-preparing-submission/styles/mp.sty
+!template-preparing-submission/web.bib
+
+# etc...
+
+# ...even if they are in subdirectories
+!*/
+.Rproj.user
