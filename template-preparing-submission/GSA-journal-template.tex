@@ -97,7 +97,7 @@ Furthermore, our surrogate variable treatment highlights the effect of the inter
 We wanted to figure out whether there is a gender effect in the gene expression level in the context of thyroid tumor. So we were interested to see whether DE genes observed between tumor and normal were the same for within female samples (tumor  and normal) and within male samples (tumor and normal). For this reason, our contrasts of interest were made as 8 comparisons: 
 Female vs. Male, Tumor vs. Normal, Female-Tumor vs. Female-Normal,  Male-Tumor vs. Male-Normal, Female-Normal vs. Male-Normal, Female-Tumor vs. Male-Tumor, Female-Tumor vs Male-Normal, Male-Tumor vs Female-Normal. Here we show the diagnostic plots for those comparisons that are more interesting (see Figure SCHEME)...
 
-We can see from the QQplots that DE genes from all comparisons differ from adjusting to a t-Student distribution (see Supplementary material). The volcano plots reveal an interesting extreme pattern in the comparisons between Tumor vs. Normal (see \ref{fig:volcano1}) and Female-Tumor vs. Female-Normal (see \ref{fig:volcano2}) where almost all DE expressed genes appear to be under-expressed. In contrast, the Male-Tumor vs. Male-Normal(see \ref{fig:volcano3}) comparison present a less extreme volcano plot. Interestingly, in the comparison between Female vs. Male (see \ref{fig:volcano4}) where the contrast is done by gender, without taking into account the sample type (tumor or normal), we see the opposite extreme pattern where females show over-expression of almost all genes. This is due to the main contribution of normal samples to this comparison. We can infer a higher gene expression in Female-Normal compared to Male-Normal samples whereas Female-Tumor and Male-Tumor samples do not have significant differences in gene expression (see Supplementary material). 
+We can see from the QQplots that DE genes from all comparisons differ from adjusting to a t-Student distribution (see Supplementary material).Furthermore, the volcano plots reveal an interesting extreme pattern in the comparisons between Tumor vs. Normal (see \ref{fig:volcano1}) and Female-Tumor vs. Female-Normal (see \ref{fig:volcano2}) where almost all DE expressed genes appear to be under-expressed. In contrast, the Male-Tumor vs. Male-Normal(see \ref{fig:volcano3}) comparison present a less extreme volcano plot. Interestingly, in the comparison between Female vs. Male (see \ref{fig:volcano4}) where the contrast is done by gender, without taking into account the sample type (tumor or normal), we see the opposite extreme pattern where it is shown an over-expression of almost all genes. 
 
 \begin{figure}
 \centering
@@ -127,8 +127,20 @@ We can see from the QQplots that DE genes from all comparisons differ from adjus
 \label{fig:volcano4}
 \end{figure}
 
-Venn diagrams help to explore the consistency of the obtained DE genes among the different comparisons. In \ref{fig:venn1} we can see that from the set of DE genes between Tumor and Normal condition almost all of them are shared with females (Tumor-Female vs. Normal-Female). So, not only most of the DE genes are down-regulated in both comparisons but also almost all of them are shared. In contrast, This is due to the fact that 
-even though the pattern from the volcano plots and the QQ plots of the 3 comparisons were similar actually a small amount of DE genes are shared to be differentially expressed among them. In contrast, taking both within gender comparisons (Female-Normal vs. Female-Disease and Male-Normal vs. Male-Disease) a larger proportion of genes are shared (54). Furhtermore, the direction of the fold change is also consistent in both comparisons, giving a set of 26 genes that are down regulated and 28 up regulated.
+Venn diagrams help to explore the consistency of the obtained DE genes among the different comparisons. In \ref{fig:venn1} we can see that from the set of DE genes between Tumor and Normal condition almost all (9988) of them are shared with females (Female-Tumor vs. Female-Normal). So, not only most of the DE genes are down-regulated (same pattern) in both comparisons but also almost all of them are shared. This is due to the main contribution of normal samples to this comparison. We can infer a higher gene expression in Female-Normal compared to Male-Normal samples whereas Female-Tumor and Male-Tumor samples do not have significant differences in gene expression (see Supplementary material). As a summary of our results:
+\begin{itemize}
+\item Female-Tumor = FT
+\item Male-Tumor = MT
+\item Female-Normal = FN
+\item Male-Normal = MN
+\end{itemize}
+
+\begin{block}
+\centering
+FT$\simeq$MN$\simeq$MT$<$FN\\
+\end{block}
+
+The fact that Female-Normal samples have more up-regulated DE genes is the key to understand our results and their patterns.
 
 \begin{figure}
 \centering
