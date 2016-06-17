@@ -1103,6 +1103,8 @@ cm <- makeContrasts(
     FemaleNormalVsMaleNormal = normal.FEMALE - normal.MALE,
     TumorVsNormal = (tumor.MALE + tumor.FEMALE) - (normal.MALE + normal.FEMALE),
     FemaleVsMale = (tumor.FEMALE + normal.FEMALE) - (tumor.MALE + normal.MALE),
+    FemaleTumorvsMaleNormal = tumor.FEMALE - normal.MALE,
+    FemalNormaleVsMaleTumor = normal.FEMALE - tumor.MALE,
     levels = design)
 cm
 fit2 <- contrasts.fit(fit, cm)
