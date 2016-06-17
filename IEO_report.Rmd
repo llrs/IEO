@@ -461,7 +461,7 @@ assays(thca.filtered)$logCPM[1:5, 1:5]
 Let's examine the library sizes in terms of total number of sequence read counts
 per sample. Figure 5 below shows library sizes per sample in increasing order.
 
-```{r libsizes1, echo=FALSE, out.width="600px", fig.cap="\\label{libsize1}Figure 5.A: Library sizes in increasing order of the whole dataset", autodep=TRUE}
+```{r libsizes1, echo=TRUE, out.width="600px", fig.cap="\\label{libsize1}Figure 5.A: Library sizes in increasing order of the whole dataset", autodep=TRUE}
 ord <- order(dge$sample$lib.size)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca$type[ord] == "tumor") + 1],
@@ -472,7 +472,7 @@ legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
 Plotting for all samples makes it impossible to see accurately the blue and red colors 
 corresponding to tumor and normal respectively.
 
-```{r libsizes2, echo=FALSE, out.width="600px", fig.cap="\\label{libsize2}Figure 5.B: Library sizes in increasing order of the paired data.", autodep=TRUE}
+```{r libsizes2, echo=TRUE, out.width="600px", fig.cap="\\label{libsize2}Figure 5.B: Library sizes in increasing order of the paired data.", autodep=TRUE}
 ord.subset <- order(dge.subset$sample$lib.size)
 barplot(dge.subset$sample$lib.size[ord.subset]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(thca.filtered$type[ord.subset] == "tumor") + 1],
@@ -1326,7 +1326,7 @@ params_female_exc <- go_obj(DE_females_exc)
 mask <- DE_males %in% intersect(DE_males, DE_females)
 DE_males_exc <- DE_males[!mask]
 DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor)]
-params_male_exc <- go_obj(DE_males_exc)
+# params_male_exc <- go_obj(DE_males_exc)
 
 # We explore those genes that are shared among the comparisons
 # go_females_males_up <- go_obj(genes_females_males$up)
@@ -1429,7 +1429,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich., echo=TRUE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", autodep=TRUE}
+```{r fun.enrich., echo=FALSE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", autodep=TRUE}
 GO_male_exc <- go_analisys(params_male_exc, annot.Entrez.GO)
 if (!is.null(GO_male_exc)){
     print(head(GO_male_exc$GO))
@@ -1438,7 +1438,7 @@ if (!is.null(GO_male_exc)){
 ```
 
 
-```{r fun.enrich.fmu, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
+```{r fun.enrich.fmu, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
 GO_females_males_up <- go_analisys(go_females_males_up, annot.Entrez.GO)
 if (!is.null(GO_females_males_up)){
     print(head(GO_females_males_up$GO))
@@ -1463,7 +1463,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfu, echo=TRUE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes up-regulated in both comparisons between normal and tumors and tumor vs normal in females.", autodep=TRUE}
+```{r fun.enrich.tfu, echo=FALSE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes up-regulated in both comparisons between normal and tumors and tumor vs normal in females.", autodep=TRUE}
 GO_tumor_females_up <- go_analisys(go_tumor_females_up, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_up)){
     print(head(GO_tumor_females_up$GO))
@@ -1480,7 +1480,7 @@ if (!is.null(GO_tumor_females_down)){
 ```
 
 
-```{r fun.enrich.tmn, echo=FALSE, message=FALSE, fig.cap="\\label{tumor11}Figure 25.L: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males againts tumor comparison", autodep=TRUE}
+```{r fun.enrich.tmn, echo=TRUE, message=FALSE, fig.cap="\\label{tumor11}Figure 25.L: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males againts tumor comparison", autodep=TRUE}
 GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, annot.Entrez.GO)
 if (!is.null(GO_tumor_males_not_clear)){
     print(head(GO_tumor_males_not_clear$GO))
@@ -1488,7 +1488,7 @@ if (!is.null(GO_tumor_males_not_clear)){
 }
 ```
 
-```{r fun.enrich.tmu, echo=TRUE, message=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", autodep=TRUE}
+```{r fun.enrich.tmu, echo=FALSE, message=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", autodep=TRUE}
 GO_tumor_males_up <- go_analisys(go_tumor_males_up, annot.Entrez.GO)
 if (!is.null(GO_tumor_males_up)){
     print(head(GO_tumor_males_up$GO))
@@ -1526,16 +1526,16 @@ table_h(GO_males$GO, "GO_males_table.html")
 table_h(GO_gender$GO, "GO_gender_table.html")
 
 table_h(GO_female_exc$GO, "GO_female_exc_table.html")
-table_h(GO_male_exc$GO, "GO_male_exc_table.html")
+# table_h(GO_male_exc$GO, "GO_male_exc_table.html")
 
-table_h(GO_females_males_up$GO, "GO_females_males_up_table.html")
+# table_h(GO_females_males_up$GO, "GO_females_males_up_table.html")
 table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
 table_h(GO_females_males_not_clear$GO, "GO_females_males_not_clear_table.html")
 
 # table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
-# table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
-table_h(GO_tumor_females_up$GO, "GO_tumor_females_up_table.html")
-table_h(GO_tumor_males_up$GO, "GO_tumor_males_up_table.html")
+table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
+# table_h(GO_tumor_females_up$GO, "GO_tumor_females_up_table.html")
+# table_h(GO_tumor_males_up$GO, "GO_tumor_males_up_table.html")
 table_h(GO_tumor_females_down$GO, "GO_tumor_females_down_table.html")
 table_h(GO_tumor_males_down$GO, "GO_tumor_males_down_table.html")
 
