@@ -1,5 +1,7 @@
 ---
 title: "Supplementary material of New insights of the RNa-seq data of The Cancer Genome Atlas for Papillary Thyroid Carcinoma"
+author: "[Mauro Álvarez](mailto:mauro.alvarez01@estudiant.upf.edu), [Lluís Revilla](mailto:lluis.revilla01@estudiant.upf.edu), [Marina Reixachs](mailto:marina.reixachs01@estudiant.upf.edu), [Inés Sentís](mailto:ines.sentis01@estudiant.upf.edu)"
+date: "19th June 2016"
 output:
   html_document:
     theme: united
@@ -138,11 +140,6 @@ if (length(fig_labels) > 0) {
 }    
 ```
 
-#### Mauro Álvarez (mauro.alvarez01@estudiant.upf.edu)
-#### Lluís Revilla (lluis.revilla01@estudiant.upf.edu)
-#### Marina Reixachs (marina.reixachs01@estudiant.upf.edu)
-#### Inés Sentís (ines.sentis01@estudiant.upf.edu) 
-
 ## Introduction
 
 Thyroid cancer can develop from the different cells that form the follicles of the thyroid. This gland located at the base of the throat secretes hormones such as T3 and T4 that have their metabolic functionalities such as control of heart rate, blood pressure, body temperature and weight. [See it on TCGA](http://cancergenome.nih.gov/cancersselected/thyroid). 
@@ -232,7 +229,7 @@ hist(variable.info,
      main = "Variables completness", xlab = "% of not NA of each variable", ylab = "Counts")
 ```
 
-```{r col.data.analysis3, fig.cap="\\label{\\label{col.data.analysis3}Figure 2.B: A zoom on the most informative variables.", autodep=TRUE}
+```{r col.data.analysis3, fig.cap="\\label{col.data.analysis3}Figure 2.B: A zoom on the most informative variables.", autodep=TRUE}
 # Seeing the most informative to set a threshold,
 # frequency are the number of columns with such % of information
 hist(variable.info, xlim = c(0.3, 1), ylim = c(0, 35), 
@@ -668,7 +665,7 @@ control the relative image size in *inches*. The final image size results from
 --->
 
 ```{r maPlotsTumor, fig.height = 16, fig.cap = "\\label{maPlotsTumor}Figure 13.A: MA-plots of the tumor samples.", autodep=TRUE}
-par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
+par(mfrow = c(9, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==  "tumor"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "tumor"]
 for (i in 1:ncol(setmp)) {
@@ -688,8 +685,8 @@ We do not observe samples with major expression-level dependent biases.
 
 Let's look now to the normal samples:
 
-```{r maPlotsNormal, fig.height = 10, fig.cap = "\\label{maPlotsNormal}Figure 13.B: MA-plots of the normal samples.", autodep=TRUE}
-par(mfrow = c(8, 3), mar = c(4, 3, 4, 1))
+```{r maPlotsNormal, fig.height = 16, fig.cap = "\\label{maPlotsNormal}Figure 13.B: MA-plots of the normal samples.", autodep=TRUE}
+par(mfrow = c(9, 3), mar = c(4, 3, 4, 1))
 setmp <- thca.filtered[, thca.filtered$type ==   "normal"]
 dgetmp <- dge.subset[, thca.filtered$type ==  "normal"]
 for (i in 1:ncol(setmp)) {
@@ -734,11 +731,9 @@ center <- substr(sample_names, 27, 28)
 table(center)
 ```
 
-We can observe that the samples where collected at 4 tissues source sites but the majority of them at University of Pittsburg (BJ) and MD Anderson(EL). However,the manager center of the data is the same (University of North Carolina) and the same metabolite (RNA). In addition, they come from 7 different plates more or less distributed. However, most samples came from 2 out of 5 different portion    and 2 out of 3 vials.
+We can observe that the samples where collected at 4 tissues source sites but the majority of them at University of Pittsburg (BJ) and MD Anderson(EL). However,the manager center of the data is the same (University of North Carolina) and the same metabolite (RNA). In addition, they come from 7 different plates more or less distributed. However, most samples came from 2 out of 5 different portion and 2 out of 3 vials.
 
-We are going to check if the previous variables of the barcode are surrogate of batch effect indicator. Considering our outcome
-of interest as molecular changes between sample types, tumor vs. normal, we will examine now
-the cross-classification of this outcome with the variables:
+We are going to check if the previous variables of the barcode are surrogate of batch effect indicator. Considering our outcome of interest as molecular changes between sample types, tumor vs. normal, we will examine now the cross-classification of this outcome with the variables:
 
 ```{r table.barcodes, autodep=TRUE}
 table(data.frame(TYPE = thca.filtered$type, TSS = tss))
@@ -747,6 +742,7 @@ table(data.frame(TYPE = thca.filtered$type, PLATE = plate))
 table(data.frame(TYPE = thca.filtered$type, Portion = portion))
 table(data.frame(TYPE = thca.filtered$type, Vial = samplevial))
 ```
+
 From the tables we can already see that all of them can be candidates as indicators for batch effect as there is no homogeneity of the number of tumor and normal samples across any of the variables. 
 
 To double check if they have some effect on the batch we make the hierarchical clustering of them. First, we set some functions to plot the hierarhcical clustering:
@@ -804,7 +800,7 @@ plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, ou
 plot.batch(sampleDendrogram, plate , thca.filtered, outcome)
 ```
 
-We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients (where?). 
+We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients (where?).  
 There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions (not clear). We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person (indicate graph). We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 15: Multidimensional scaling plot of the samples.", autodep=TRUE}
@@ -846,7 +842,7 @@ head(mod0)
 
 After looking for batch effect we couldn't find a clear cause of the batch effect. We suspect that sample vial has something to do. However, we try to see if we can improve the clustering by using method ComBat for sample vial. 
 
-```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat}Figure 16.A: Hierarchical clustering of the samples with ComBat correction.", autodep=TRUE}
+```{r clustering.combat, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat}Figure 16.A: Hierarchical clustering of the samples with ComBat correction colored by samplevial.", autodep=TRUE}
 library("sva")
 
 combatexp <- ComBat(assays(thca.filtered)$cqn.logCPM, tss, mod = design)
@@ -862,19 +858,27 @@ names(outcome) <- colnames(thca.filtered)
 plot.batch(cluster.combat, samplevial, thca.filtered, outcome)
 ```
 
-```{r clustering.combat2, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat2}Figure 16.B: Hierarchical clustering of the samples with ComBat correction coloured by gender.", autodep=TRUE}
+```{r clustering.combat2, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat2}Figure 16.B: Hierarchical clustering of the samples with ComBat correction coloured by tissues sourec site", autodep=TRUE}
+plot.batch(cluster.combat, tss, thca.filtered, outcome)
+```
+
+```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat3}Figure 16.C: Hierarchical clustering of the samples with ComBat correction coloured by gender.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$gender, thca.filtered, outcome)
 ```
 
-```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat3}Figure 16.C: Hierarchical clustering of the samples with ComBat coloured by type.", autodep=TRUE}
+```{r clustering.combat4, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat4}Figure 16.D: Hierarchical clustering of the samples with ComBat coloured by type.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$type, thca.filtered, outcome)
+```
+
+```{r clustering.combat5, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat5}Figure 16.D: Hierarchical clustering of the samples with ComBat coloured by portion", autodep=TRUE}
+plot.batch(cluster.combat, portion, thca.filtered, outcome)
 ```
 
 We can observe a slightly improvement, but still some tumoral samples cluster together with the normal ones. 
 
-```{r mds2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 16: Multidimensional scaling plot of the samples.", autodep=TRUE}
-batch_effects <- list(portion, tss, as.character(thca.filtered$type),
-                      as.character(thca.filtered$gender))
+```{r mds2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 17: Multidimensional scaling plot of the samples.", autodep=TRUE}
+batch_effects <- list(samplevial, tss, as.character(thca.filtered$gender),
+                      as.character(thca.filtered$type), portion)
 for (batching in batch_effects){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
@@ -888,7 +892,7 @@ for (batching in batch_effects){
 
 To improve the batch effect removal we look if QR decomposition yields better results. In this case, we look for sample vial and TSS batch effects removal. To do so, we have to built the full model which would include gender and type as fixed effects. 
 
-```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.1}Figure 17.A: Hierarchical clustering of the samples with QR descompostion for sample vial", autodep=TRUE}
+```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.1}Figure 18.A: Hierarchical clustering of the samples with QR descompostion for sample vial", autodep=TRUE}
 library("limma")
 
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = design)
@@ -899,24 +903,25 @@ cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
 plot.batch(cluster.qr, samplevial, thca.filtered, outcome)
 ```
 
-```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.2}Figure 17.B: Hierarchical clustering of the samples with QR descompostion for TSS", autodep=TRUE}
+```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.2}Figure 18.B: Hierarchical clustering of the samples with QR descompostion for TSS", autodep=TRUE}
 plot.batch(cluster.qr, tss, thca.filtered, outcome)
 ```
 
-```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.3}Figure 17.C: Hierarchical clustering of the samples with QR descompostion for gender", autodep=TRUE}
+```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.3}Figure 18.C: Hierarchical clustering of the samples with QR descompostion for gender", autodep=TRUE}
 plot.batch(cluster.qr, thca.filtered$gender, thca.filtered, outcome)
 ```
 
-```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.4}Figure 17.D: Hierarchical clustering of the samples with QR descompostion for type", autodep=TRUE}
+```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.4}Figure 18.D: Hierarchical clustering of the samples with QR descompostion for type", autodep=TRUE}
 plot.batch(cluster.qr, thca.filtered$type, thca.filtered, outcome)
-plot.batch(cluster.qr, tss, thca.filtered, outcome)
+```
+
+```{r clustering.QRdecomposition.5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.5}Figure 18.E: Hierarchical clustering of the samples with QR descompostion for portion", autodep=TRUE}
+plot.batch(cluster.qr, portion, thca.filtered, outcome)
 ```
 
 With QR decomposition we can observe that some tumoral samples cluster with other normal samples on a lower branch.
 
-```{r mds3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 16: Multidimensional scaling plot of the samples.", autodep=TRUE}
-batch_effects <- list(portion, tss, as.character(thca.filtered$type),
-                      as.character(thca.filtered$gender))
+```{r mds3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 19: Multidimensional scaling plot of the samples with qrexp.", autodep=TRUE}
 for (batching in batch_effects){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
@@ -930,7 +935,7 @@ for (batching in batch_effects){
 
 We further try if SVD yelds a better result:
 
-```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd1}Figure 18.A: Hierarchical clustering of the samples with SVD for sample vial", autodep=TRUE}
+```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd1}Figure 20.A: Hierarchical clustering of the samples with SVD for sample vial", autodep=TRUE}
 library("corpcor")
 s <- fast.svd(t(scale(t(assays(thca.filtered)$cqn.logCPM),
                       center = TRUE, scale = TRUE)))
@@ -949,16 +954,25 @@ names(batch) <- colnames(thca.filtered)
 plot.batch(cluster.svd, samplevial, thca.filtered, outcome)
 ```
 
-```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd2}Figure 18.B: Hierarchical clustering of the samples with SVD for TSS", autodep=TRUE}
+```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd2}Figure 20.B: Hierarchical clustering of the samples with SVD for TSS", autodep=TRUE}
 plot.batch(cluster.svd, tss, thca.filtered, outcome)
 ```
 
-```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 18.C: Hierarchical clustering of the samples with SVD for type", autodep=TRUE}
+```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 20.C: Hierarchical clustering of the samples with SVD for gender", autodep=TRUE}
+plot.batch(cluster.svd, thca.filtered$gender, thca.filtered, outcome)
+```
+
+```{r clustring.svd4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd4}Figure 20.D: Hierarchical clustering of the samples with SVD for type", autodep=TRUE}
 plot.batch(cluster.svd, thca.filtered$type, thca.filtered, outcome)
 ```
 
-SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed.
-After all the process the best one, that separates better tumor and normal samples is the ComBat function, which will be used for following-up analysis.
+```{r clustring.svd5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 20.E: Hierarchical clustering of the samples with SVD for portion", autodep=TRUE}
+plot.batch(cluster.svd, portion, thca.filtered, outcome)
+```
+
+SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed. Therefore we don't plot the MDS for SVD.
+
+After all the process the best one, that separates better tumor and normal samples is the ComBat function, as we have seen on the figure 17.D, which will be used for following-up analysis.
 
 ```{r qrexpr, autodep=TRUE}
 assays(thca.filtered)$qrexp <- qrexp
@@ -1086,6 +1100,8 @@ cm <- makeContrasts(
     FemaleNormalVsMaleNormal = normal.FEMALE - normal.MALE,
     TumorVsNormal = (tumor.MALE + tumor.FEMALE) - (normal.MALE + normal.FEMALE),
     FemaleVsMale = (tumor.FEMALE + normal.FEMALE) - (tumor.MALE + normal.MALE),
+    FemaleTumorvsMaleNormal = tumor.FEMALE - normal.MALE,
+    FemalNormaleVsMaleTumor = normal.FEMALE - tumor.MALE,
     levels = design)
 cm
 fit2 <- contrasts.fit(fit, cm)
@@ -1276,11 +1292,16 @@ The function `up_down` classify the genes in up-regulated and down-regulated. Th
 r_tumor <- up_down(de_tumor)
 r_females <- up_down(de_females)
 r_males <- up_down(de_males)
+r_gender <- up_down(de_gender)
 
 # We see how do they overlap, more up-regulated, or more dow-regulated genes.
 classify(r_tumor, r_males)
 classify(r_tumor, r_females)
 classify(r_females, r_males)
+
+classify(r_gender, r_males)
+classify(r_females, r_gender)
+classify(r_tumor, r_gender)
 
 # We collect the name of genes for further studies
 genes_females_males <- genes_names(r_females, r_males)
@@ -1402,6 +1423,7 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
         geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
     }
     GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
+    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
     rownames(GO) <- 1:nrow(GO)
     colnames(GO) <- c(colnames(GO)[-ncol(GO)], "Genes")
     list(GO = GO, plot = plotgo)
