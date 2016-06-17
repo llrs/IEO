@@ -861,23 +861,27 @@ names(outcome) <- colnames(thca.filtered)
 plot.batch(cluster.combat, samplevial, thca.filtered, outcome)
 ```
 
-```{r clustering.combat2, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat2}Figure 16.B: Hierarchical clustering of the samples with ComBat correction coloured by gender.", autodep=TRUE}
+```{r clustering.combat2, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat2}Figure 16.B: Hierarchical clustering of the samples with ComBat correction coloured by tissues sourec site", autodep=TRUE}
+plot.batch(cluster.combat, tss, thca.filtered, outcome)
+```
+
+```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{clustering.combat3}Figure 16.C: Hierarchical clustering of the samples with ComBat correction coloured by gender.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$gender, thca.filtered, outcome)
 ```
 
-```{r clustering.combat3, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat3}Figure 16.C: Hierarchical clustering of the samples with ComBat coloured by type.", autodep=TRUE}
+```{r clustering.combat4, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat4}Figure 16.D: Hierarchical clustering of the samples with ComBat coloured by type.", autodep=TRUE}
 plot.batch(cluster.combat, thca.filtered$type, thca.filtered, outcome)
 ```
 
-```{r clustering.combat4, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat3}Figure 16.D: Hierarchical clustering of the samples with ComBat coloured by tissue sample site.", autodep=TRUE}
-plot.batch(cluster.combat, tss, thca.filtered, outcome)
+```{r clustering.combat5, message=FALSE, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap ="\\label{clustering.combat5}Figure 16.D: Hierarchical clustering of the samples with ComBat coloured by portion", autodep=TRUE}
+plot.batch(cluster.combat, portion, thca.filtered, outcome)
 ```
 
 We can observe a slightly improvement, but still some tumoral samples cluster together with the normal ones. 
 
-```{r mds2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 16: Multidimensional scaling plot of the samples.", autodep=TRUE}
-batch_effects <- list(portion, tss, as.character(thca.filtered$type),
-                      as.character(thca.filtered$gender))
+```{r mds2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 17: Multidimensional scaling plot of the samples.", autodep=TRUE}
+batch_effects <- list(samplevial, tss, as.character(thca.filtered$gender),
+                      as.character(thca.filtered$type), portion)
 for (batching in batch_effects){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
@@ -891,7 +895,7 @@ for (batching in batch_effects){
 
 To improve the batch effect removal we look if QR decomposition yields better results. In this case, we look for sample vial and TSS batch effects removal. To do so, we have to built the full model which would include gender and type as fixed effects. 
 
-```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.1}Figure 17.A: Hierarchical clustering of the samples with QR descompostion for sample vial", autodep=TRUE}
+```{r clustering.QRdecomposition.1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.1}Figure 18.A: Hierarchical clustering of the samples with QR descompostion for sample vial", autodep=TRUE}
 library("limma")
 
 qrexp <- removeBatchEffect(assays(thca.filtered)$cqn.logCPM, tss, design = design)
@@ -902,24 +906,25 @@ cluster.qr <- as.dendrogram(cluster.qr, hang = 0.1)
 plot.batch(cluster.qr, samplevial, thca.filtered, outcome)
 ```
 
-```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.2}Figure 17.B: Hierarchical clustering of the samples with QR descompostion for TSS", autodep=TRUE}
+```{r clustering.QRdecomposition.2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.2}Figure 18.B: Hierarchical clustering of the samples with QR descompostion for TSS", autodep=TRUE}
 plot.batch(cluster.qr, tss, thca.filtered, outcome)
 ```
 
-```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.3}Figure 17.C: Hierarchical clustering of the samples with QR descompostion for gender", autodep=TRUE}
+```{r clustering.QRdecomposition.3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.3}Figure 18.C: Hierarchical clustering of the samples with QR descompostion for gender", autodep=TRUE}
 plot.batch(cluster.qr, thca.filtered$gender, thca.filtered, outcome)
 ```
 
-```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.4}Figure 17.D: Hierarchical clustering of the samples with QR descompostion for type", autodep=TRUE}
+```{r clustering.QRdecomposition.4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.4}Figure 18.D: Hierarchical clustering of the samples with QR descompostion for type", autodep=TRUE}
 plot.batch(cluster.qr, thca.filtered$type, thca.filtered, outcome)
-plot.batch(cluster.qr, tss, thca.filtered, outcome)
+```
+
+```{r clustering.QRdecomposition.5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.QRdecomposition.5}Figure 18.E: Hierarchical clustering of the samples with QR descompostion for portion", autodep=TRUE}
+plot.batch(cluster.qr, portion, thca.filtered, outcome)
 ```
 
 With QR decomposition we can observe that some tumoral samples cluster with other normal samples on a lower branch.
 
-```{r mds3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 16: Multidimensional scaling plot of the samples.", autodep=TRUE}
-batch_effects <- list(portion, tss, as.character(thca.filtered$type),
-                      as.character(thca.filtered$gender))
+```{r mds3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 19: Multidimensional scaling plot of the samples with qrexp.", autodep=TRUE}
 for (batching in batch_effects){
     batch <- as.integer(factor(batching))
     names(batch) <- sample_names
@@ -933,7 +938,7 @@ for (batching in batch_effects){
 
 We further try if SVD yelds a better result:
 
-```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd1}Figure 18.A: Hierarchical clustering of the samples with SVD for sample vial", autodep=TRUE}
+```{r clustring.svd1, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd1}Figure 20.A: Hierarchical clustering of the samples with SVD for sample vial", autodep=TRUE}
 library("corpcor")
 s <- fast.svd(t(scale(t(assays(thca.filtered)$cqn.logCPM),
                       center = TRUE, scale = TRUE)))
@@ -952,16 +957,25 @@ names(batch) <- colnames(thca.filtered)
 plot.batch(cluster.svd, samplevial, thca.filtered, outcome)
 ```
 
-```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd2}Figure 18.B: Hierarchical clustering of the samples with SVD for TSS", autodep=TRUE}
+```{r clustring.svd2, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd2}Figure 20.B: Hierarchical clustering of the samples with SVD for TSS", autodep=TRUE}
 plot.batch(cluster.svd, tss, thca.filtered, outcome)
 ```
 
-```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 18.C: Hierarchical clustering of the samples with SVD for type", autodep=TRUE}
+```{r clustring.svd3, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 20.C: Hierarchical clustering of the samples with SVD for gender", autodep=TRUE}
+plot.batch(cluster.svd, thca.filtered$gender, thca.filtered, outcome)
+```
+
+```{r clustring.svd4, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd4}Figure 20.D: Hierarchical clustering of the samples with SVD for type", autodep=TRUE}
 plot.batch(cluster.svd, thca.filtered$type, thca.filtered, outcome)
 ```
 
-SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed.
-After all the process the best one, that separates better tumor and normal samples is the ComBat function, which will be used for following-up analysis.
+```{r clustring.svd5, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap="\\label{clustering.svd3}Figure 20.E: Hierarchical clustering of the samples with SVD for portion", autodep=TRUE}
+plot.batch(cluster.svd, portion, thca.filtered, outcome)
+```
+
+SVD clusters together normal and tumoral samples, maybe because some of them are quite similar according to the PCA previously performed. Therefore we don't plot the MDS for SVD.
+
+After all the process the best one, that separates better tumor and normal samples is the ComBat function, as we have seen on the figure 17.D, which will be used for following-up analysis.
 
 ```{r qrexpr, autodep=TRUE}
 assays(thca.filtered)$qrexp <- qrexp
