@@ -1,5 +1,7 @@
 # IEO
-Project to analyze Thyroid carcinoma data from the TCGA project.
+Project to analyze Thyroid carcinoma data from the TCGA project.  
+# Objective 
+The main question we want to address with this analysis is why women has more prevalence of this cancer.
 
 # Tables we need to comment
 ## GO tables
@@ -11,8 +13,9 @@ Project to analyze Thyroid carcinoma data from the TCGA project.
 - [ ] GO_males_table.html
 - [X] GO_females_table.html: Marina
 - [X] GO_tumor_table.html:  Lluís
+
 ## DE tables
 - [ ] DE_tumor.html
-- [ ] DE_gender.html
+- [X] DE_gender.html: Lluís
 - [ ] DE_females.html
 - [ ] DE_males.html

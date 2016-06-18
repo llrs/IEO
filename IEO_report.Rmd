@@ -1082,7 +1082,7 @@ The different objects contain different information: `annot` contains the Symbol
 
 ## Differential expression of paired data
 
-Using the expression values with batch effect removed by qr decomposition and without the surrogate variables, we proceed with the voom normalization
+Using the expression values with batch effect removed by `ComBat` and without the surrogate variables, we proceed with the voom normalization
 
 ```{r DE, autodep=TRUE, fig.cap="\\label{voom} Figure 21: The effect of the normalization by voom."}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
