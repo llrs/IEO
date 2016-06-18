@@ -7,10 +7,10 @@ Project to analyze Thyroid carcinoma data from the TCGA project.
 - [ ] GO_tumor_females_down_table.html
 - [ ] GO_females_males_down_table.html
 - [ ] GO_female_exc_table.html
-- [ ] GO_gender_table.html
+- [ ] GO_gender_table.html: Lluis
 - [ ] GO_males_table.html
-- [ ] GO_females_table.html
-- [ ] GO_tumor_table.html:  Lluís
+- [X] GO_females_table.html: Marina
+- [X] GO_tumor_table.html:  Lluís
 
 - [ ] DE_tumor.html
 - [ ] DE_gender.html
