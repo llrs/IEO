@@ -1001,9 +1001,11 @@ hist(pv, main = "Histogram of p-values", las = 1)
 hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 ```
 
+As we can see the distribution of p-values is not uniform, and reach the maximum frequency at p-value 1, and the minimum at p-value 0.
+
 ### Surrogate variables with sva
 
-Now, let's estimate surrogate variables using the `sva()` function.
+Using `sva` to estimate and remove artifacts from high dimensional data, where we use our alternative hypothesis and our null hypothesis:
 
 ```{r sva.variables, autodep=TRUE}
 sv <- sva(assays(thca.filtered)$combatexp, design, mod0)
@@ -1020,8 +1022,7 @@ pvsv <- f.pvalue(assays(thca.filtered)$combatexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
-We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`. So removing or taking into account the surrogate variables lead to more differentially expressed genes.  
-Figure 20 shows the resulting distribution of p-values.
+Apparently we haven't increased the number of DE genes, but we can see if the distribution of p-values has changed: 
 
 ```{r psvdist, out.width = "500px", fig.cap = "\\label{psvdist}Figure 20.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.", autodep=TRUE}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
@@ -1033,7 +1034,7 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
 
-After this preliminary analysis, we can conclude that aproximatelly 4300 genes have different expression levels among tumor and normal samples. 
+As we can see the distribution is now uniform, thus `sva` corrected for artifacts.
 
 ### Removing surrogate variables effect
 
@@ -1043,6 +1044,7 @@ Instead of working with the surrogate variables in the model, we remove them for
 # Code from https://www.biostars.org/p/121489/#121500
 
 cleanY = function(y, mod, svs) {
+    # Function to remove the efect of sv following a design from y
     X = cbind(mod, svs)
     Hat = solve(t(X) %*% X) %*% t(X)
     beta = (Hat %*% t(y))
