@@ -817,11 +817,11 @@ for (batching in batch_effects){
 
 We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. And it seems that the females have more variance between healthy and tumoral.
 
-## Design of the effects on expression
+## Models of the disease
 
-For now on we need to select our design and null hypothesis. We define them as:
+Our model of the disease will affect the analysis from here onwards. Therefore we need to select our model and null hypothesis. We define them as:
 
-```{r design, autodep=TRUE, include=FALSE}
+```{r design, autodep=TRUE}
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
@@ -835,6 +835,7 @@ mod0 <- model.matrix(~1 + gender + type + paired, data = colData(thca.filtered))
 head(mod0)
 ```
 
+Our model includes the interaction of gender and type, while our null model just includes the gender and type (in both cases with the paired factor to take into account the fact that the samples are paired). This way comparing this models we will see if there is interaction between gender and tumor or not. 
 
 ## Removing batch effect
 
@@ -981,9 +982,7 @@ assays(thca.filtered)$combatexp <- combatexp
 
 ## Initial assesment on differential expression
 
-We perform a simple examination of expression changes and their associated p-values
-using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
-We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
+We perform a simple examination of expression changes and their associated p-values using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva) using the models previously created.
 
 ```{r sva.model, autodep=TRUE}
 pv <- f.pvalue(assays(thca.filtered)$combatexp, design, mod0)
@@ -1423,7 +1422,7 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
         geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
     }
     GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
-    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
+    GO <- GO[order(-GO$OddsRatio, GO$Pvalue, -GO$ExpCount, -GO$Count), ]
     rownames(GO) <- 1:nrow(GO)
     colnames(GO) <- c(colnames(GO)[-ncol(GO)], "Genes")
     list(GO = GO, plot = plotgo)
@@ -1601,7 +1600,7 @@ table_g(de_females, "DE_females.html")
 table_g(de_males, "DE_males.html")
 ```
 
-The table of genes which are differentially expressed in the different comparisons are in the following sites:
+The table of genes which are differentially expressed in the different comparisons are in the following sites:  
 * The comparison of [tumoral vs normal](DE_tumor.html) samples.  
 * The comparison of [females vs males](DE_gender.html) samples.  
 * The comparison of [tumoral vs normal](DE_females.html) female samples.  
