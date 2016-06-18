@@ -800,8 +800,7 @@ plot.batch(sampleDendrogram, as.character(thca.filtered$type), thca.filtered, ou
 plot.batch(sampleDendrogram, plate , thca.filtered, outcome)
 ```
 
-We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients (where?).  
-There might be a batch effect on the samplevial, that is the order of portion in a sequence of 100 - 120 mg sample portions (not clear). We can also observe that there are two groups of tumoral samples, and one of them clusters with one sample from a healthy person (indicate graph). We can see with a PCA that the tumoral and normal cells don't create two clearly separated groups:
+We can see that the sample from A3PR-normal clusters with the tumoral ones, and the A3H2 tumoral clusters with the healthy patients on Figure 14.D. To visualize the relationship we use the multiscaling dimensional plot colored by portion, tss, type, and gender:
 
 ```{r mds, fig.height = 7, fig.width = 14, dpi = 100, echo = TRUE, fig.cap = "\\label{mds}Figure 15: Multidimensional scaling plot of the samples.", autodep=TRUE}
 batch_effects <- list(portion, tss, as.character(thca.filtered$type),
@@ -815,13 +814,13 @@ for (batching in batch_effects){
 }
 ```
 
-We can confirm that there isn't a clear group of normal and tumors and some tumoral samples do mix with the normal ones. And it seems that the females have more variance between healthy and tumoral.
+We can observe that there are two groups of tumoral samples, and one of them is close to healthy samples.
 
-## Design of the effects on expression
+## Models of the disease
 
-For now on we need to select our design and null hypothesis. We define them as:
+Our model of the disease will affect the analysis from here onwards. Therefore we need to select our model and null hypothesis. We define them as:
 
-```{r design, autodep=TRUE, include=FALSE}
+```{r design, autodep=TRUE}
 # Create the design matrix involving tumor and normal samples and males and females
 treat <- factor(paste(thca.filtered$type, thca.filtered$gender, sep = "."))
 paired <- as.numeric(as.factor(thca.filtered$bcr_patient_barcode))
@@ -835,6 +834,7 @@ mod0 <- model.matrix(~1 + gender + type + paired, data = colData(thca.filtered))
 head(mod0)
 ```
 
+Our model includes the interaction of gender and type, while our null model just includes the gender and type (in both cases with the paired factor to take into account the fact that the samples are paired). This way comparing this models we will see if there is interaction between gender and tumor or not. 
 
 ## Removing batch effect
 
@@ -981,9 +981,7 @@ assays(thca.filtered)$combatexp <- combatexp
 
 ## Initial assesment on differential expression
 
-We perform a simple examination of expression changes and their associated p-values
-using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
-We build the null model with just the intercept (=1) in order to compare it with the previous full model (including gender and type).
+We perform a simple examination of expression changes and their associated p-values using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva) using the models previously created.
 
 ```{r sva.model, autodep=TRUE}
 pv <- f.pvalue(assays(thca.filtered)$combatexp, design, mod0)
@@ -1002,9 +1000,11 @@ hist(pv, main = "Histogram of p-values", las = 1)
 hist(pv, main = "Histogram of p-values", xlim = c(0, 0.1), breaks = 80)
 ```
 
+As we can see the distribution of p-values is not uniform, and reach the maximum frequency at p-value 1, and the minimum at p-value 0.
+
 ### Surrogate variables with sva
 
-Now, let's estimate surrogate variables using the `sva()` function.
+Using `sva` to estimate and remove artifacts from high dimensional data, where we use our alternative hypothesis and our null hypothesis:
 
 ```{r sva.variables, autodep=TRUE}
 sv <- sva(assays(thca.filtered)$combatexp, design, mod0)
@@ -1021,8 +1021,7 @@ pvsv <- f.pvalue(assays(thca.filtered)$combatexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
-We have increased the number of changing genes to `r sum(p.adjust(pvsv, method = "fdr") < 0.01)`. So removing or taking into account the surrogate variables lead to more differentially expressed genes.  
-Figure 20 shows the resulting distribution of p-values.
+Apparently we haven't increased the number of DE genes, but we can see if the distribution of p-values has changed: 
 
 ```{r psvdist, out.width = "500px", fig.cap = "\\label{psvdist}Figure 20.A: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.", autodep=TRUE}
 hist(pvsv, main = "Histogram of p-values adjusting surrogate variables", 
@@ -1034,7 +1033,7 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
 
-After this preliminary analysis, we can conclude that aproximatelly 4300 genes have different expression levels among tumor and normal samples. 
+As we can see the distribution is now uniform, thus `sva` corrected for artifacts.
 
 ### Removing surrogate variables effect
 
@@ -1044,6 +1043,7 @@ Instead of working with the surrogate variables in the model, we remove them for
 # Code from https://www.biostars.org/p/121489/#121500
 
 cleanY = function(y, mod, svs) {
+    # Function to remove the efect of sv following a design from y
     X = cbind(mod, svs)
     Hat = solve(t(X) %*% X) %*% t(X)
     beta = (Hat %*% t(y))
@@ -1423,7 +1423,7 @@ go_analisys <- function(go_obj, annots.GO, size = 5, count = 5, pvalue = 0.05){
         geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
     }
     GO <- merge(GO, geneSYMs, by.x = "GOBPID", by.y = 0)
-    GO <- GO[order(GO$OddsRatio, decreasing = TRUE), ]
+    GO <- GO[order(-GO$OddsRatio, GO$Pvalue, -GO$ExpCount, -GO$Count), ]
     rownames(GO) <- 1:nrow(GO)
     colnames(GO) <- c(colnames(GO)[-ncol(GO)], "Genes")
     list(GO = GO, plot = plotgo)
@@ -1601,7 +1601,7 @@ table_g(de_females, "DE_females.html")
 table_g(de_males, "DE_males.html")
 ```
 
-The table of genes which are differentially expressed in the different comparisons are in the following sites:
+The table of genes which are differentially expressed in the different comparisons are in the following sites:  
 * The comparison of [tumoral vs normal](DE_tumor.html) samples.  
 * The comparison of [females vs males](DE_gender.html) samples.  
 * The comparison of [tumoral vs normal](DE_females.html) female samples.  

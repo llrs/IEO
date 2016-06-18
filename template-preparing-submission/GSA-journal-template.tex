@@ -9,7 +9,6 @@
 % {mp} Multiparental Populations
 \usepackage{cite}
 \usepackage{url}
-\usepackage{float}
 
 
 \title{New insights of the RNA-seq data of \textit{The Cancer Genome Atlas} for Papillary Thyroid Carcinoma}
@@ -94,6 +93,12 @@ After the filtering and normalization of the data, we searched for batch effects
 % Comentar SVA: fet
 Furthermore, our surrogate variable treatment highlights the effect of the interaction of gender and type by removing the effect of gender and type independently. The mean-variance relationship was estimated by weights at individual observation-by-gene level to fit the full model.  
 
+% Totes les comparacions afegides
+We wanted to figure out whether there is a gender effect in the gene expression level in the context of thyroid tumor. So we were interested to see whether DE genes observed between tumor and normal were the same for within female samples (tumor  and normal) and within male samples (tumor and normal). For this reason, our contrasts of interest were made as 8 comparisons: 
+Female vs. Male, Tumor vs. Normal, Female-Tumor vs. Female-Normal,  Male-Tumor vs. Male-Normal, Female-Normal vs. Male-Normal, Female-Tumor vs. Male-Tumor, Female-Tumor vs Male-Normal, Male-Tumor vs Female-Normal. Here we show the diagnostic plots for those comparisons that are more interesting (see Figure SCHEME)...
+
+We can see from the QQplots that DE genes from all comparisons differ from adjusting to a t-Student distribution (see Supplementary materials: Accuracy subsection). Furthermore, the volcano plots reveal an interesting extreme pattern in the comparisons between Tumor vs. Normal (see Figure \ref{fig:volcano1}) and Female-Tumor vs. Female-Normal (see Figure \ref{fig:volcano2}) where almost all DE expressed genes appear to be under-expressed. In contrast, the Male-Tumor vs. Male-Normal(see Figure \ref{fig:volcano3}) comparison present a less extreme volcano plot. Interestingly, in the comparison between Female vs. Male (see Figure \ref{fig:volcano4}) where the contrast is done by gender, without taking into account the sample type (tumor or normal), we see the opposite extreme pattern where it is shown an over-expression of almost all genes. 
+
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcanoplot-1}
@@ -160,6 +165,16 @@ For further investigation, we have also performed a functional enrichment analys
 %tot teu Marina... jo no m'atreveixo perque no se si ho interpreto bé
 
 
+% GO_tumor_table.html
+
+The genes ontologies enriched by the genes differentially expressed in the comparison between tumoral and normal samples are related to regulation of metal ions, and acid and lipids regulation, like high-density lipoprotein particle assembly and very-low-density lipoprotein particle remodeling, as well as phosphorilation and ERK1 and ERK2 cascade, cardiac conduction system development, regulation of apoptotic DNA fragmentation among many others. This genes ontologies reflect the same behavior as in the comparison of between tumoral and normal females samples.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{../IEO_report_files/figure-html/venn_plots-1}
+\caption{Venn diagram that shows DE genes shared between Tumor vs. Normal condition and Tumor-Female vs- Normal-female condition }.
+\label{fig:venn1}
+\end{figure}
 
   
 \bibliography{IEO}
