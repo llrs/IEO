@@ -1566,12 +1566,14 @@ table_h <- function(go_obj, ftitle){
     }
 }
 
-table_g <- function(go_obj, ftitle){
+table_g <- function(ttobj, ftitle){
     # Function to output the table in html format
-    if (is.null(go_obj)){
+    if (is.null(tt_obj)){
         warning("Null Object: unable to creat the table")
     } else {
-        xtab_tumor <- xtable(go_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|r|")
+        rownames(tt_obj) <- 1:nrow(tt_obj)
+        colnames(tt_obj)[1] <- "Entrezid"
+        xtab_tumor <- xtable(tt_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|r|")
         print(x=xtab_tumor, file = ftitle, type = "html")
     }
 }

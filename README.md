@@ -10,12 +10,12 @@ The main question we want to address with this analysis is why women has more pr
 - [ ] GO_females_males_down_table.html
 - [ ] GO_female_exc_table.html
 - [X] GO_gender_table.html: Lluis
-- [ ] GO_males_table.html
+- [ ] GO_males_table.html: Lluis
 - [X] GO_females_table.html: Marina
 - [X] GO_tumor_table.html:  Lluís
 
 ## DE tables
-- [ ] DE_tumor.html
+- [X] DE_tumor.html: Lluís
 - [X] DE_gender.html: Lluís
 - [ ] DE_females.html
-- [ ] DE_males.html
+- [ ] DE_males.html : Lluis
