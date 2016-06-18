@@ -151,28 +151,23 @@ As a summary of our results:
 \item Male-Normal = MN
 \end{itemize}
 
-\begin{block}
-\centering
-MN$\simeq$MT$\simeq$FT$<$FN\\
-\end{block}
-
 \bigskip
 
 \begin{table*}[t]
   \centering
-  \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
-     Regulation & FT Vs FN & MT Vs MN & FT Vs MT & FN Vs MN & T Vs N & F Vs M & FT Vs MN & FN Vs MT \
-	 Down & 10845 & 42 & 3 & 1 & 10626 & 1 & 54 & 6 \
-	 Not DE & 952 & 11721 & 11798 & 698 & 1147 & 689 & 11701 & 925 \
-	 UP & 4 & 38 & 0 & 11102 & 28 & 11111 & 46 & 10870 \
+  \begin{tabular}{c|cccccccc}
+     Regulation & FT Vs FN & MT Vs MN & FT Vs MT & FN Vs MN & T Vs N & F Vs M & FT Vs MN & FN Vs MT \\ \hline
+     Down & 10845 & 42 & 3 & 1 & 10626 & 1 & 54 & 6 \\ 
+     Not DE & 952 & 11721 & 11798 & 698 & 1147 & 689 & 11701 & 925 \\
+     UP & 4 & 38 & 0 & 11102 & 28 & 11111 & 46 & 10870
   \end{tabular}
-  \caption{Blabla}
+  \caption{Number of genes up-regulated, down-regulated and not differentially expressed genes in the different comparisons}
   \label{tab:1}
 \end{table*}
 
                      
 All in all, the fact that Female-Normal samples have more up-regulated DE genes respect to the rest of the samples (see \ref{tab:1}) 
-is the key to understand our results and their patterns. From this comparisons we can see a pattern of how these interactions are related between them: it seems that the higher interaction is due to being a female, rather than having a specific development of the cancer on females or in males, or being male. This relationship can be expressed as $FT\approxTM\approxNM<FN$.
+is the key to understand our results and their patterns. From this comparisons we can see a pattern of how these interactions are related between them: it seems that the higher interaction is due to being a female, rather than having a specific development of the cancer on females or in males, or being male. This relationship can be expressed as $FT \approx MT \approx MN < FN$.
 
 For further investigation, we have also performed a functional enrichment analysis with the sets of DE genes that where more interesting in order to elucidate the mechanisms that are altered in thyroid tumoral processes. In the case of DE expressed genes between Tumor and Normal samples we obtained several GO terms  % GO_tumor_table.html
 related to regulation of metal ions, and acid and lipids regulation, like high-density lipoprotein particle assembly and very-low-density lipoprotein particle remodeling, as well as phosphorilation and ERK1 and ERK2 cascade, cardiac conduction system development, regulation of apoptotic DNA fragmentation among many others. This genes ontologies reflect the same behavior as in the comparison of between tumoral and normal females samples. % GO_female_table.html 
@@ -181,8 +176,11 @@ However, in that case other specific processes related with DNA damage response 
 As we could expect, this processes also appear when taking the gene set shared by tumor vs. normal samples and female tumor vs. female normal samples. 
 	 	
 % GO_gender_table.html & DE_gender
-Looking in the comparison between females and males there is a predominance of GO terms related to movement like motor neuron axon guidance and positive chemotaxis, followed by ion metal transport. Surprisingly the go term with the lowest p-value and highest OddsRatio is related to the regulation of cholesterol transport, confirming the high requirements of energy of the tumor, specially in women. One special enriched GO is positive thymic T cell selection, with higher restriction on which T-cell are selected, the tumor in females might be able to develop earlier and stronger in females than in males. The most expressed gene in these comparisons is DDX42, among its related pathways are mRNA Splicing - Major Pathway. GO annotations related to this gene include nucleic acid binding and ATP-dependent RNA helicase activity.
+Looking in the comparison between females and males there is a predominance of GO terms related to movement like motor neuron axon guidance and positive chemotaxis, followed by ion metal transport. Surprisingly the go term with the lowest p-value and highest OddsRatio is related to the regulation of cholesterol transport, confirming the high requirements of energy of the tumor, specially in women. One special enriched GO is positive thymic T cell selection, with higher restriction on which T-cell are selected, the tumor in females might be able to develop earlier and stronger in females than in males. The most expressed gene in this comparison is DDX42, among its related pathways are mRNA Splicing and GO annotations relate it with nucleic acid binding and ATP-dependent RNA helicase activity.
 
+
+% DE_males, GO_males_exc, GO_males
+However the differentially expressed genes in the comparison Male-Tumor vs Male-Normal, are related to regulation of transcription, DNA-templated and regulation of several process as macromolecule metabolic process, biological quality, primary metabolic process. (See suplementary data)
 
 \begin{figure}
 \centering
