@@ -1571,7 +1571,6 @@ table_g <- function(ttobj, ftitle){
     if (is.null(tt_obj)){
         warning("Null Object: unable to creat the table")
     } else {
-        tt_obj <- tt_obj[order(-abs(tt_obj$logFC), tt_obj$adj.P.Val), ]
         rownames(tt_obj) <- 1:nrow(tt_obj)
         xtab_tumor <- xtable(tt_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|r|")
         print(x=xtab_tumor, file = ftitle, type = "html")
