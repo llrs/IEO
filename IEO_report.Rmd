@@ -1566,7 +1566,7 @@ table_h <- function(go_obj, ftitle){
     }
 }
 
-table_g <- function(ttobj, ftitle){
+table_g <- function(tt_obj, ftitle){
     # Function to output the table in html format
     if (is.null(tt_obj)){
         warning("Null Object: unable to creat the table")
