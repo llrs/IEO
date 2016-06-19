@@ -1573,7 +1573,6 @@ table_g <- function(ttobj, ftitle){
     } else {
         tt_obj <- tt_obj[order(-abs(tt_obj$logFC), tt_obj$adj.P.Val), ]
         rownames(tt_obj) <- 1:nrow(tt_obj)
-        colnames(tt_obj)[1] <- "Entrezid"
         xtab_tumor <- xtable(tt_obj, align="l|c|r|r|r|r|r|p{3cm}|p{3cm}|r|")
         print(x=xtab_tumor, file = ftitle, type = "html")
     }
