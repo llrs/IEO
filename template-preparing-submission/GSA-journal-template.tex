@@ -81,7 +81,8 @@ A part from normalization, we also have considered possible batch effects. We ha
 
 After the batch effect correction, the covariates of the expression were estimated with \textit{sva}, where the null hypothesis is the gender, male or female, and type, tumor or normal. The alternative hypothesis is the interaction of gender and type: Female-Tumor, Male-Tumor, Male-Normal and Female-Normal samples. In both models of the disease the barcodes were used to take into account the paired samples of each patient. The surrogate variables effect were removed from the expression data.
 
-\subsection*{Differential expression analysis} \label{subsec:de}
+\subsection*{Differential expression analysis} 
+\label{subsec:de}
 
 In order to perform the differential expression analysis we used \textit{limma} R/Bioconductor package with a workflow based on what has been previously published \citep{limma}. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6 $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). With the previously build design matrix the observational-level weights were calculated with the function \textit{voom} from \textit{limma}. As we were working with paired data we estimated the correlation in repeated measurements before fitting the linear model. Finally we build and fitted contrast matrices related to gender and disease status (normal or tumor) and calculated moderated t-statistics. Moreover, we used the \textit{sva} R/Bioconductor package to remove the effect of the surrogate variables \citep{sva}. Representation of differentially expressed gene sets was performed with the R package \textit{Vennerable} \citep{Venn} and \textit{ggplot2} \citep{ggplot2}.
 \subsection*{Functional enrichment}
@@ -158,7 +159,7 @@ As a summary of our results:
      Not DE & 952 & 11721 & 11798 & 698 & 1147 & 689 & 11701 & 925 \\
      UP & 4 & 38 & 0 & 11102 & 28 & 11111 & 46 & 10870
   \end{tabular}
-  \caption{Number of genes up-regulated, down-regulated and not differentially expressed genes in the different comparisons}
+  \caption{Number of genes up-regulated, down-regulated and not differentially expressed genes in the different comparisons, before any filtering of p-value or Odds ratio.}
   \label{tab:1}
 \end{table*}
 

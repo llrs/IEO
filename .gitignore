@@ -3,7 +3,6 @@
 
 # But not these files...
 !.gitignore
-!GO_tumor.html
 !IEO_report.Rmd
 !IEO_report.html
 !README.md
