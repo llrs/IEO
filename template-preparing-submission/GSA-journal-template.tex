@@ -79,8 +79,8 @@ A part from normalization, we also have considered possible batch effects. We ha
 
 After the batch effect correction, the covariates of the expression were estimated with \textit{sva}, where the null hypothesis is the gender, male or female, and type, tumor or normal. The alternative hypothesis is the interaction of gender and type: Female-Tumor, Male-Tumor, Male-Normal and Female-Normal samples. In both models of the disease the barcodes were used to take into account the paired samples of each patient. The surrogate variables effect were removed from the expression data.
 
-\subsection*{Differential expression analysis}
-In order to perform the differential expression analysis we used \textit{limma} R/Bioconductor package with a workflow based on what has been previously published \citep{limma}. With the previously build design matrix the observational-level weights were calculated with the function \textit{voom} from \textit{limma}. As we were working with paired data we estimated the correlation in repeated measurements before fitting the linear model. Finally we build and fitted contrast matrices related to gender and disease status (normal or tumor) and calculated moderated t-statistics. Moreover, we used the \textit{sva} R/Bioconductor package to remove the effect of the surrogate variables \citep{sva}. Representation of differentially expressed gene sets was performed with the R package \textit{Vennerable} \citep{Venn} and \textit{ggplot2} \citep{ggplot2}.
+\subsection*{Differential expression analysis} \label{DE}
+In order to perform the differential expression analysis we used \textit{limma} R/Bioconductor package with a workflow based on what has been previously published \citep{limma}. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6 $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). With the previously build design matrix the observational-level weights were calculated with the function \textit{voom} from \textit{limma}. As we were working with paired data we estimated the correlation in repeated measurements before fitting the linear model. Finally we build and fitted contrast matrices related to gender and disease status (normal or tumor) and calculated moderated t-statistics. Moreover, we used the \textit{sva} R/Bioconductor package to remove the effect of the surrogate variables \citep{sva}. Representation of differentially expressed gene sets was performed with the R package \textit{Vennerable} \citep{Venn} and \textit{ggplot2} \citep{ggplot2}.
 
 \subsection*{Functional enrichment}
 The resulting sets of differentially expressed genes between different conditions according to gender or disease status (normal or tumor) was used to perform Gene Ontology (GO) analyses. For this purpose we used the R/Bioconductor package \textit{GOstats} with the Biological Process (BP) ontology and applied a conditional hypergeometric test in order to account for the hierarchical structure of GO terms \citep{Gostats}.The annotations were provided by the \textit{org.Hs.eg.db} package \citep{org}. 
@@ -107,28 +107,28 @@ Female vs. Male, Tumor vs. Normal, Female-Tumor vs. Female-Normal,  Male-Tumor v
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcanoplot-1}
-\caption{Volcano plot comparing DE genes between all tumor and all normal samples. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6  $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). Most significant DE genes are down-regulated (under-expressed).}
+\caption{Volcano plot comparing DE genes between all tumor and all normal samples. Most significant DE genes are down-regulated (under-expressed). See \ref{DE}.}
 \label{fig:volcano1}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcano4-1}
-\caption{Volcano plot comparing DE genes between female tumor samples and female normal samples. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6 $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). Most significant DE genes are down-regulated (under-expressed).}
+\caption{Volcano plot comparing DE genes between female tumor samples and female normal samples. Most significant DE genes are down-regulated (under-expressed). See \ref{DE}.}
 \label{fig:volcano2}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcano3-1}
-\caption{Volcano plot comparing DE genes between male tumor samples and male normal samples. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6 $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). Its pattern differs from the rest of the volcano plots because it has DE genes up regulated (over-expressed) as well as down regulated (under-expressed).}
+\caption{Volcano plot comparing DE genes between male tumor samples and male normal samples. Its pattern differs from the rest of the volcano plots because it has DE genes up regulated (over-expressed) as well as down regulated (under-expressed). See \ref{DE}.}
 \label{fig:volcano3}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcano2-1}
-\caption{Volcano plot comparing DE genes between all male and all female samples. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6 $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). Most significant DE genes are up-regulated (over-expressed).}
+\caption{Volcano plot comparing DE genes between all male and all female samples. Most significant DE genes are up-regulated (over-expressed). See \ref{DE}.}
 \label{fig:volcano4}
 \end{figure}
 
