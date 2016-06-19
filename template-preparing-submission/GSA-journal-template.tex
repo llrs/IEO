@@ -1,6 +1,7 @@
 \documentclass[9pt,twocolumn,twoside]{gsajnl}
 % Use the documentclass option 'lineno' to view line numbers
 \DeclareUnicodeCharacter{00A0}{ }
+\setlength{\belowcaptionskip}{-10pt} % To reduce space after figures
 \articletype{inv} % article type
 % {inv} Investigation 
 % {gs} Genomic Selection
@@ -79,7 +80,8 @@ A part from normalization, we also have considered possible batch effects. We ha
 
 After the batch effect correction, the covariates of the expression were estimated with \textit{sva}, where the null hypothesis is the gender, male or female, and type, tumor or normal. The alternative hypothesis is the interaction of gender and type: Female-Tumor, Male-Tumor, Male-Normal and Female-Normal samples. In both models of the disease the barcodes were used to take into account the paired samples of each patient. The surrogate variables effect were removed from the expression data.
 
-\subsection*{Differential expression analysis} \label{DE}
+\subsection*{Differential expression analysis} 
+\label{subsec:de}
 In order to perform the differential expression analysis we used \textit{limma} R/Bioconductor package with a workflow based on what has been previously published \citep{limma}. Criteria for significantly DE genes is represented by the red lines at 2 $log_{2}$ fold-change and 4.6 $log_{2}$ Odd ratio (99\% probability that the gene is differentially expressed between the the conditions being compared). With the previously build design matrix the observational-level weights were calculated with the function \textit{voom} from \textit{limma}. As we were working with paired data we estimated the correlation in repeated measurements before fitting the linear model. Finally we build and fitted contrast matrices related to gender and disease status (normal or tumor) and calculated moderated t-statistics. Moreover, we used the \textit{sva} R/Bioconductor package to remove the effect of the surrogate variables \citep{sva}. Representation of differentially expressed gene sets was performed with the R package \textit{Vennerable} \citep{Venn} and \textit{ggplot2} \citep{ggplot2}.
 
 \subsection*{Functional enrichment}
@@ -98,42 +100,42 @@ We wanted to figure out whether there is a gender effect in the gene expression 
 Female vs. Male, Tumor vs. Normal, Female-Tumor vs. Female-Normal,  Male-Tumor vs. Male-Normal, Female-Normal vs. Male-Normal, Female-Tumor vs. Male-Tumor, Female-Tumor vs Male-Normal, Male-Tumor vs Female-Normal. Here we show the diagnostic plots for those comparisons that are more interesting (see Figure \ref{fig:scheme}).
 
 \begin{figure}
-\centering
+%\centering
 \includegraphics[width=\linewidth]{scheme}
-\caption{Summary scheme of contrats made and their DE genes found on each}
+\caption{Summary scheme of contrasts made and their DE genes found on each comparison on the second row, on the third row the comparison of the second row, where arrows indicates in which comparison are those genes up-regulated or down-regulated. If both arrows are present indicates different behaviour depending on the comparison.}
 \label{fig:scheme}
 \end{figure}
 
 \begin{figure}
-\centering
+%\centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcanoplot-1}
-\caption{Volcano plot comparing DE genes between all tumor and all normal samples. Most significant DE genes are down-regulated (under-expressed). See \ref{DE}.}
+\caption{Volcano plot comparing DE genes between all tumor and all normal samples. Most significant DE genes are down-regulated (under-expressed). See \ref{subsec:de}.}
 \label{fig:volcano1}
 \end{figure}
 
 \begin{figure}
-\centering
+%\centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcano4-1}
-\caption{Volcano plot comparing DE genes between female tumor samples and female normal samples. Most significant DE genes are down-regulated (under-expressed). See \ref{DE}.}
+\caption{Volcano plot comparing DE genes between female tumor samples and female normal samples. Most significant DE genes are down-regulated (under-expressed). See \ref{subsec:de}.}
 \label{fig:volcano2}
 \end{figure}
 
 \begin{figure}
-\centering
+%\centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcano3-1}
-\caption{Volcano plot comparing DE genes between male tumor samples and male normal samples. Its pattern differs from the rest of the volcano plots because it has DE genes up regulated (over-expressed) as well as down regulated (under-expressed). See \ref{DE}.}
+\caption{Volcano plot comparing DE genes between male tumor samples and male normal samples. Its pattern differs from the rest of the volcano plots because it has DE genes up regulated (over-expressed) as well as down regulated (under-expressed). See \ref{subsec:de}.}
 \label{fig:volcano3}
 \end{figure}
 
 \begin{figure}
-\centering
+%\centering
 \includegraphics[width=\linewidth]{../IEO_report_files/figure-html/volcano2-1}
-\caption{Volcano plot comparing DE genes between all male and all female samples. Most significant DE genes are up-regulated (over-expressed). See \ref{DE}.}
+\caption{Volcano plot comparing DE genes between all male and all female samples. Most significant DE genes are up-regulated (over-expressed). See \ref{subsec:de}.}
 \label{fig:volcano4}
 \end{figure}
 
 
-We can see from the QQplots that DE genes from all comparisons differ from adjusting to a t-Student distribution (see Supplementary Materials: Accuracy subsection). Furthermore, the volcano plots reveal an interesting extreme pattern in the comparisons between Tumor vs. Normal (see Figure \ref{fig:volcano1}) and Female-Tumor vs. Female-Normal (see Figure \ref{fig:volcano2}) where almost all DE expressed genes appear to be under-expressed. In contrast, the Male-Tumor vs. Male-Normal (see Figure \ref{fig:volcano3}) comparison present a less extreme volcano plot. Interestingly, in the comparison between Female vs. Male (see Figure \ref{fig:volcano4}) where the contrast is done by gender, without taking into account the sample type (tumor or normal), we see the opposite extreme pattern where it is shown an over-expression of almost all genes. This is due to the main contribution of normal samples to this comparison. We can infer a higher gene expression in Female-Normal compared to Male-Normal samples whereas Female-Tumor and Male-Tumor samples do not have significant differences in gene expression. 
+We can see from the QQplots that DE genes from all comparisons differ from adjusting to a t-Student distribution (see Supplementary materials: Accuracy subsection). Furthermore, the volcano plots reveal an interesting extreme pattern in the comparisons between Tumor vs. Normal (see Figure \ref{fig:volcano1}) and Female-Tumor vs. Female-Normal (see Figure \ref{fig:volcano2}) where almost all DE expressed genes appear to be under-expressed. In contrast, the Male-Tumor vs. Male-Normal (see Figure \ref{fig:volcano3}) comparison present a less extreme volcano plot. Interestingly, in the comparison between Female vs. Male (see Figure \ref{fig:volcano4}) where the contrast is done by gender, without taking into account the sample type (tumor or normal), we see the opposite extreme pattern where it is shown an over-expression of almost all genes. This is due to the main contribution of normal samples to this comparison. We can infer a higher gene expression in Female-Normal compared to Male-Normal samples whereas Female-Tumor and Male-Tumor samples do not have significant differences in gene expression. 
 
 Venn diagrams also help to explore the consistency of the obtained DE genes among the different comparisons. In Figure \ref{fig:venn1} we can see that from the set of DE genes between Tumor and Normal condition almost all (9988) of them are shared with females (Female-Tumor vs. Female-Normal). So, not only most of the DE genes are down-regulated (same pattern) in both comparisons but also almost all of them are shared. Additionally, in Table \ref{tab:1} we can see a summary of the number of DE expressed genes in the 3 comparisons that are more interesting for our analysis and the resulting genes from the intersection between the mentioned DE gene sets.
 
@@ -164,7 +166,7 @@ As a summary of our results:
 All in all, the fact that Female-Normal samples have more up-regulated DE genes respect to the rest of the samples (see Table \ref{tab:1}) 
 is the key to understand our results and their patterns. From this comparisons we can see a pattern of how these interactions are related between them: it seems that the higher interaction is due to being a female, rather than having a specific development of the cancer on females or in males, or being male. The relationship between the interaction of factors can be expressed as $FT \approx MT \approx MN < FN$.
 
-For further investigation, we have also performed a functional enrichment analysis with the sets of DE genes that were more interesting in order to elucidate the mechanisms that are altered in thyroid tumoral processes. In the case of DE expressed genes between Tumor and Normal samples we obtained several GO terms  % GO_tumor_table.html
+For further investigation, we have also performed a functional enrichment analysis with the sets of DE genes that where more interesting in order to elucidate the mechanisms that are altered in thyroid tumoral processes. In the case of DE expressed genes between Tumor and Normal samples we obtained several GO terms  % GO_tumor_table.html
 related to regulation of metal ions, and acid and lipids regulation, like high-density lipoprotein particle assembly and very-low-density lipoprotein particle remodeling, as well as phosphorilation and ERK1 and ERK2 cascade, cardiac conduction system development, regulation of apoptotic DNA fragmentation among many others. This genes ontologies reflect the same behavior as in the comparison of between tumoral and normal females samples. % GO_female_table.html 
 However, in that case other specific processes related with DNA damage response that include the well-known p53 pathway appear together with cell adhesion processes (either to other cells or to the matrix), chemotaxis related processes and migration of vascular and immune response cells. 
 %GO_tumor_females_down_table-1.html
@@ -177,7 +179,7 @@ Looking in the comparison between females and males there is a predominance of G
 However the differentially expressed genes in the comparison Male-Tumor vs Male-Normal, are related to regulation of transcription, DNA-templated and regulation of several process as macromolecule metabolic process, biological quality, primary metabolic process. (See Supplementary GO tables)
 
 % Summary of GO interpretation by Mauro, translated by Lluís
-In general we can see that the interaction of gender with the tumor in women affects to the function of the cells. As they lose the capacity to perform their specific task they gain capacity to become tumoral. Some of the unexpected GO terms found could be due to parathyroid cells in the original samples,  which are known to be located in difuse and different regions depending on the person, so it can not be discarded that this tissue could have been included in some of the samples.
+In general we can see that the interaction of gender with the tumor in women affects to the function of the cells. As they lose the capacity to perform their specific task they gain capacity to become tumoral. Some of the unexpected GO terms found could be due to parathyroid cells in the original samples, which are known to be located in diffuse and different regions depending on the person, so it can not be discarded that this tissue could have been included in some of the samples.
 
 %La gran flipada de la Inés
 In light of the results, we suggest the following hypothesis. One one hand, our results reveal that most of the DE genes found belong to lipid and cholesterol-associated pathways. On the other hand, most of the DE genes found on tumor samples are under-expressed respect to the female normal samples. An under-activation of the thyroid gland activity (hypothyroidism) is related to cancer and to alterations of the LDL cholesterol levels because thyroid hormones (T3 and T4) are not regulating it \citep{tyr}. As a consequence, cholesterol tend to accumulate in the cells. A recent study confirm the strong avidity of proliferative cancer cells for lipid and cholesterol \citep{Beloribi-Djefaflia2016}. Not only tumor cells requiere lipids and cholesterol but also \citet{Beloribi-Djefaflia2016} states that excessive lipid and cholesterol accumulation in cancer cells is considered as main feature of more agressive cancer forms. In other words, a thyroid cancer form leading to an hypothyroidism can result into a more agressive thyroid cancer due to the cholesterol and lipid accumulation in the cells. Therefore, the fact that there is a greater difference in under-expression of genes between Tumor-Female vs Normal-Female samples than the comparison Tumor-Male vs. Normal-Male samples might be the explanation why thyroid cancer is more prevalent in women than men. So future research must be done in order to know why the female normal samples in our study have over-expressed genes respect to any other type of sample. We suspect that it might be related to a greater activation of the lipid pathways in females than males related to the well-known gender difference respect to fat accumulation and lipid methabolism \citep{Blaak2001}. However,further investigation must be done in order to confirm our hypothesis so our results must be taken with caution.
