@@ -1016,6 +1016,7 @@ surrogate variables.
 
 ```{r svn.ftest, autodep=TRUE}
 modsv <- cbind(design, sv$sv)
+colnames(modsv) <- c(colnames(design), make.names(1:ncol(sv$sv)))
 mod0sv <- cbind(mod0, sv$sv)
 pvsv <- f.pvalue(assays(thca.filtered)$combatexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
@@ -1039,7 +1040,7 @@ As we can see the distribution is now uniform, thus `sva` corrected for artifact
 
 Instead of working with the surrogate variables in the model, we remove them for commodity when making the different contrast we are interested in.
 
-```{r remove_surrogates, autodep=TRUE}
+```{r remove_surrogates, eval=FALSE, autodep=TRUE}
 # Code from https://www.biostars.org/p/121489/#121500
 
 cleanY = function(y, mod, svs) {
@@ -1086,11 +1087,11 @@ Using the expression values with batch effect removed by `ComBat` and without th
 
 ```{r DE, autodep=TRUE, fig.cap="\\label{voom} Figure 21: The effect of the normalization by voom."}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
-n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
+n_counts <- apply(assays(thca.filtered)$combatexp, 1:2, function(x){2^(x)})
 
 # Normalize by mean variance with voom
-vo <- voom(n_counts, design, plot = TRUE)
-fit <- lmFit(vo, design)
+vo <- voom(n_counts, modsv, plot = TRUE)
+fit <- lmFit(vo, modsv)
 
 # Make the comparisons we are interested in based on our design
 cm <- makeContrasts(
@@ -1102,7 +1103,7 @@ cm <- makeContrasts(
     FemaleVsMale = (tumor.FEMALE + normal.FEMALE) - (tumor.MALE + normal.MALE),
     FemaleTumorvsMaleNormal = tumor.FEMALE - normal.MALE,
     FemalNormaleVsMaleTumor = normal.FEMALE - tumor.MALE,
-    levels = design)
+    levels = modsv)
 cm
 fit2 <- contrasts.fit(fit, cm)
 fit2 <- eBayes(fit2)
@@ -1169,7 +1170,7 @@ mtext("Comparing genes between females patients and healthy.", outer = TRUE, cex
       side = 3, line = -2)
 ```
 
-```{r accuracy4, fig.cap="\\label{accuracy4}Figure 22.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples.", autodep=TRUE}
+```{r accuracy4, eval=FALSE, fig.cap="\\label{accuracy4}Figure 22.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples.", autodep=TRUE, include=FALSE}
 pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
 qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
@@ -1198,7 +1199,7 @@ volcano(tt_tumor, "Comparing tumoral vs normal")
 volcano(tt_gender, "Comparing females vs males")
 ```
 
-```{r volcano3, fig.cap="\\label{volcano3}Figure 23.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE}
+```{r volcano3, eval=FALSE, fig.cap="\\label{volcano3}Figure 23.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE}
 volcano(tt_males, "Comparing males: tumoral vs normal")
 ```
 
@@ -1213,12 +1214,12 @@ The number of genes which are differentialed expressed can be calculated with:
 ```{r de.number, autodep=TRUE}
 de_tumor <- subset(tt_tumor, abs(logFC) >= lfc_threshold & B >= 4.6 )
 de_gender <- subset(tt_gender, abs(logFC) >= lfc_threshold & B >= 4.6)
-de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6)
+# de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6)
 de_females <- subset(tt_females, abs(logFC) >= lfc_threshold & B >= 4.6)
 
 # Number of genes which pass the filter
-de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_males), nrow(de_females))
-names(de_genes) <- c("Tumor vs Normal", "Females vs Males", "Males", "Females")
+de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_females))
+names(de_genes) <- c("Tumor vs Normal", "Females vs Males", "Females")
 de_genes
 ```
 
@@ -1291,21 +1292,21 @@ The function `up_down` classify the genes in up-regulated and down-regulated. Th
 ```{r compares, autodep=TRUE}
 r_tumor <- up_down(de_tumor)
 r_females <- up_down(de_females)
-r_males <- up_down(de_males)
+# r_males <- up_down(de_males)
 r_gender <- up_down(de_gender)
 
 # We see how do they overlap, more up-regulated, or more dow-regulated genes.
-classify(r_tumor, r_males)
+# classify(r_tumor, r_males)
 classify(r_tumor, r_females)
-classify(r_females, r_males)
+# classify(r_females, r_males)
 
-classify(r_gender, r_males)
+# classify(r_gender, r_males)
 classify(r_females, r_gender)
 classify(r_tumor, r_gender)
 
 # We collect the name of genes for further studies
-genes_females_males <- genes_names(r_females, r_males)
-genes_tumor_males <- genes_names(r_tumor, r_males)
+# genes_females_males <- genes_names(r_females, r_males)
+# genes_tumor_males <- genes_names(r_tumor, r_males)
 genes_tumor_females <- genes_names(r_tumor, r_females)
 ```
 
@@ -1313,7 +1314,7 @@ We can observe that there are `r length(genes_tumor_males$not_clear)` genes whic
 
 ```{r names_overlap, autodep=TRUE}
 DE_tumor <- unique(rownames(de_tumor))
-DE_males <- unique(rownames(de_males))
+# DE_males <- unique(rownames(de_males))
 DE_females <- unique(rownames(de_females))
 DE_gender <- unique(rownames(de_gender))
 ```
@@ -1328,12 +1329,12 @@ plot(Venn(list(DE_tumor, DE_females),
               SetNames = c("Tumoral", "Females")))
 ```
 
-```{r venn2, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE}
+```{r venn2, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE, eval=FALSE}
 plot(Venn(list(DE_tumor, DE_males),
               SetNames = c("Tumoral", "Males")))
 ```
 
-```{r venn3, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE}
+```{r venn3, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE, eval = FALSE}
 plot(Venn(list(DE_females, DE_males),
               SetNames = c("Females", "Males")))
 ```
@@ -1368,9 +1369,9 @@ DE_females_exc <- DE_females_exc[!DE_females_exc %in% intersect(DE_females_exc, 
 params_female_exc <- go_obj(DE_females_exc)
 
 # The set of differentially expressed only in males
-mask <- DE_males %in% intersect(DE_males, DE_females)
-DE_males_exc <- DE_males[!mask]
-DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor)]
+# mask <- DE_males %in% intersect(DE_males, DE_females)
+# DE_males_exc <- DE_males[!mask]
+# DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor)]
 # params_male_exc <- go_obj(DE_males_exc)
 
 # We explore those genes that are shared among the comparisons
@@ -1579,7 +1580,7 @@ table_g <- function(tt_obj, ftitle){
 
 table_h(GO_tumor$GO, "GO_tumor_table.html")
 table_h(GO_females$GO, "GO_females_table.html")
-table_h(GO_males$GO, "GO_males_table.html")
+# table_h(GO_males$GO, "GO_males_table.html")
 table_h(GO_gender$GO, "GO_gender_table.html")
 
 table_h(GO_female_exc$GO, "GO_female_exc_table.html")
@@ -1599,7 +1600,7 @@ table_h(GO_tumor_males_down$GO, "GO_tumor_males_down_table.html")
 table_g(de_tumor, "DE_tumor.html")
 table_g(de_gender, "DE_gender.html")
 table_g(de_females, "DE_females.html")
-table_g(de_males, "DE_males.html")
+# table_g(de_males, "DE_males.html")
 ```
 
 The table of genes which are differentially expressed in the different comparisons are in the following sites:  
