@@ -1016,7 +1016,9 @@ surrogate variables.
 
 ```{r svn.ftest, autodep=TRUE}
 modsv <- cbind(design, sv$sv)
+colnames(modsv) <- c(colnames(design), paste0("sv", c(1:sv$n)))
 mod0sv <- cbind(mod0, sv$sv)
+colnames(mod0sv) <- c(colnames(mod0), paste0("sv", c(1:sv$n)))
 pvsv <- f.pvalue(assays(thca.filtered)$combatexp, modsv, mod0sv)
 sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
@@ -1033,11 +1035,11 @@ hist(pvsv, main = "Histogram of p-values adjusting surrogate variables",
      las = 1, xlim = c(0, 0.1), breaks = 80)
 ```
 
-As we can see the distribution is now uniform, thus `sva` corrected for artifacts.
+As we can see the distribution is now uniform, thus `sva` corrected for artifacts and the underlying hypotesis of uniform distribution of gene expression is true.
 
 ### Removing surrogate variables effect
 
-Instead of working with the surrogate variables in the model, we remove them for commodity when making the different contrast we are interested in.
+Instead of working with the surrogate variables in the model, we could remove them using the following function
 
 ```{r remove_surrogates, autodep=TRUE}
 # Code from https://www.biostars.org/p/121489/#121500
@@ -1080,17 +1082,21 @@ annot.Entrez.GO <- select(org.Hs.eg.db,
 
 The different objects contain different information: `annot` contains the Symbol and Ensembl identifier from the remaining genes, `all.Human.GO` is the object with Gene Ontologies and Symbols for all human genes, while `anot.Entrez.GO` has the GO and the symbols for the genes.
 
+```{r, include=FALSE}
+save.image(file="Before_Differential_expression_of_paired_data.RData")
+```
+
 ## Differential expression of paired data
 
-Using the expression values with batch effect removed by `ComBat` and without the surrogate variables, we proceed with the voom normalization
+Using the expression values with batch effect removed by `ComBat` we proceed with the voom normalization, note that the surrogate variables effect is still in there, because it is better adjusting than removing the effect of a variable.
 
 ```{r DE, autodep=TRUE, fig.cap="\\label{voom} Figure 21: The effect of the normalization by voom."}
 # Transform the log2 normalized by cqn to counts without the surrogate variables
-n_counts <- apply(e.no_surrogates, 1:2, function(x){2^(x)})
+n_counts <- apply(assays(thca.filtered)$combatexp, 1:2, function(x){2^(x)})
 
 # Normalize by mean variance with voom
-vo <- voom(n_counts, design, plot = TRUE)
-fit <- lmFit(vo, design)
+vo <- voom(n_counts, modsv, plot = TRUE)
+fit <- lmFit(vo, modsv)
 
 # Make the comparisons we are interested in based on our design
 cm <- makeContrasts(
@@ -1102,8 +1108,8 @@ cm <- makeContrasts(
     FemaleVsMale = (tumor.FEMALE + normal.FEMALE) - (tumor.MALE + normal.MALE),
     FemaleTumorvsMaleNormal = tumor.FEMALE - normal.MALE,
     FemalNormaleVsMaleTumor = normal.FEMALE - tumor.MALE,
-    levels = design)
-cm
+    levels = modsv)
+cm[1:5,]
 fit2 <- contrasts.fit(fit, cm)
 fit2 <- eBayes(fit2)
 
@@ -1170,13 +1176,13 @@ mtext("Comparing genes between females patients and healthy.", outer = TRUE, cex
 ```
 
 ```{r accuracy4, fig.cap="\\label{accuracy4}Figure 22.D: P-value distribution and comparison with the t-student distribution in the male comparison tumoral and healthy samples.", autodep=TRUE}
-pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
-hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
-qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
-qqline(fit2$t[, 2], lwd = 2, col = "red")
-abline(0, 1, lwd = 2)
-mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 1.5, 
-      side = 3, line = -2)
+# pars <- par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+# hist(tt_males$P.Value, xlab = "Raw P-values", main = "", las = 1)
+# qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual[2], main = "", pch = ".", cex = 3)
+# qqline(fit2$t[, 2], lwd = 2, col = "red")
+# abline(0, 1, lwd = 2)
+# mtext("Comparing genes between male patients and healthy.", outer = TRUE, cex = 1.5, 
+#       side = 3, line = -2)
 ```
 
 ### Volcano plots
@@ -1186,6 +1192,9 @@ We can see in volanco plots how look like the data
 ```{r volcanoplot, fig.cap="\\label{volcano1}Figure 23.A: Volcano plot of the comparison healthy vs tumoral.", autodep=TRUE}
 volcano <- function(data, title){
     # Plot a volcano plot of a toptable output of limma
+    if (nrow(data) == 0) {
+        return(NULL)
+    }
     ggplot(data, aes(logFC, B, colour = adj.P.Val)) + geom_point() + theme_bw()+ 
         ggtitle(title) + geom_vline(xintercept = c(2, -2), col = "red")+ 
         geom_hline(yintercept = 4.6, col = "red")
@@ -1206,18 +1215,23 @@ volcano(tt_males, "Comparing males: tumoral vs normal")
 volcano(tt_females, "Comparing females: tumoral vs normal")
 ```
 
+```{r save, include=FALSE}
+save.image(file="Before_Genes_differentially_expressed.RData")
+```
+
 ### Genes differentially expressed
 
 The number of genes which are differentialed expressed can be calculated with:
 
 ```{r de.number, autodep=TRUE}
-de_tumor <- subset(tt_tumor, abs(logFC) >= lfc_threshold & B >= 4.6 )
+de_tumor <- subset(tt_tumor, abs(logFC) >= lfc_threshold & B >= 4.6)
 de_gender <- subset(tt_gender, abs(logFC) >= lfc_threshold & B >= 4.6)
-de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6)
+tryCatch(de_males <- subset(tt_males, abs(logFC) >= lfc_threshold & B >= 4.6),
+         error = function(e){return(0)})
 de_females <- subset(tt_females, abs(logFC) >= lfc_threshold & B >= 4.6)
 
 # Number of genes which pass the filter
-de_genes <- c(nrow(de_tumor), nrow(de_gender), nrow(de_males), nrow(de_females))
+de_genes <- c(nrow(de_tumor), nrow(de_gender), 0, nrow(de_females))
 names(de_genes) <- c("Tumor vs Normal", "Females vs Males", "Males", "Females")
 de_genes
 ```
@@ -1291,29 +1305,29 @@ The function `up_down` classify the genes in up-regulated and down-regulated. Th
 ```{r compares, autodep=TRUE}
 r_tumor <- up_down(de_tumor)
 r_females <- up_down(de_females)
-r_males <- up_down(de_males)
+# r_males <- up_down(de_males)
 r_gender <- up_down(de_gender)
 
 # We see how do they overlap, more up-regulated, or more dow-regulated genes.
-classify(r_tumor, r_males)
+# classify(r_tumor, r_males)
 classify(r_tumor, r_females)
-classify(r_females, r_males)
+# classify(r_females, r_males)
 
-classify(r_gender, r_males)
+# classify(r_gender, r_males)
 classify(r_females, r_gender)
 classify(r_tumor, r_gender)
 
 # We collect the name of genes for further studies
-genes_females_males <- genes_names(r_females, r_males)
-genes_tumor_males <- genes_names(r_tumor, r_males)
+# genes_females_males <- genes_names(r_females, r_males)
+# genes_tumor_males <- genes_names(r_tumor, r_males)
 genes_tumor_females <- genes_names(r_tumor, r_females)
 ```
 
-We can observe that there are `r length(genes_tumor_males$not_clear)` genes which depending on the comparison they change the direction from up-regulated to dow-regulated or vice versa. We have already obtained list of genes classified by the behavior in two comparisons with genes_names function. Furthermore we can extract all the names of the other comparisons to see how much they overlap:
+
 
 ```{r names_overlap, autodep=TRUE}
 DE_tumor <- unique(rownames(de_tumor))
-DE_males <- unique(rownames(de_males))
+# DE_males <- unique(rownames(de_males))
 DE_females <- unique(rownames(de_females))
 DE_gender <- unique(rownames(de_gender))
 ```
@@ -1329,13 +1343,13 @@ plot(Venn(list(DE_tumor, DE_females),
 ```
 
 ```{r venn2, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE}
-plot(Venn(list(DE_tumor, DE_males),
-              SetNames = c("Tumoral", "Males")))
+# plot(Venn(list(DE_tumor, DE_males),
+              # SetNames = c("Tumoral", "Males")))
 ```
 
 ```{r venn3, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE}
-plot(Venn(list(DE_females, DE_males),
-              SetNames = c("Females", "Males")))
+# plot(Venn(list(DE_females, DE_males),
+              # SetNames = c("Females", "Males")))
 ```
 
 As we can observe of the comparison, many genes differentially expressed on females comparing healthy samples and tumoral ones are not found on males.
@@ -1347,7 +1361,7 @@ We can perform a functional enrichment on our data with the GO already stored
 ```{r fun.enrich.params_tumors, message=FALSE, warning=FALSE, autodep=TRUE}
 library(GOstats)
 
-go_obj <- function(genes_id, universe = unique(annot.Entrez.GO)){
+go_obj <- function(genes_id, universe = unique(annot.Entrez.GO$ENTREZID)){
     # Create an object for GOstat from ENTREZIDs
     new("GOHyperGParams", geneIds = genes_id,
                     universeGeneIds = universe,
@@ -1357,34 +1371,34 @@ go_obj <- function(genes_id, universe = unique(annot.Entrez.GO)){
 }
 
 params_tumor <- go_obj(DE_tumor)
-params_males <- go_obj(DE_males)
+# params_males <- go_obj(DE_males)
 params_females <- go_obj(DE_females)
 parmas_gender <- go_obj(DE_gender)
 
 # The set of differentially expressed only in females
-mask <- DE_females %in% intersect(DE_males, DE_females)
-DE_females_exc <- DE_females[!mask]
-DE_females_exc <- DE_females_exc[!DE_females_exc %in% intersect(DE_females_exc, DE_tumor)]
-params_female_exc <- go_obj(DE_females_exc)
+# mask <- DE_females %in% intersect(DE_males, DE_females)
+# DE_females_exc <- DE_females[!mask]
+# DE_females_exc <- DE_females_exc[!DE_females_exc %in% intersect(DE_females_exc, DE_tumor)]
+# params_female_exc <- go_obj(DE_females_exc)
 
 # The set of differentially expressed only in males
-mask <- DE_males %in% intersect(DE_males, DE_females)
-DE_males_exc <- DE_males[!mask]
-DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor)]
+# mask <- DE_males %in% intersect(DE_males, DE_females)
+# DE_males_exc <- DE_males[!mask]
+# DE_males_exc <- DE_males_exc[!DE_males_exc %in% intersect(DE_males_exc, DE_tumor)]
 # params_male_exc <- go_obj(DE_males_exc)
 
 # We explore those genes that are shared among the comparisons
 # go_females_males_up <- go_obj(genes_females_males$up)
-go_females_males_down <- go_obj(genes_females_males$down)
-go_females_males_not_clear <- go_obj(genes_females_males$not_clear)
+# go_females_males_down <- go_obj(genes_females_males$down)
+# go_females_males_not_clear <- go_obj(genes_females_males$not_clear)
 
 # go_tumor_females_not_clear <- go_obj(genes_tumor_females$not_clear)
 # go_tumor_females_up <- go_obj(genes_tumor_females$up) # Genes not in the universe
 go_tumor_females_down <- go_obj(genes_tumor_females$down)
 
-go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
+# go_tumor_males_not_clear <- go_obj(genes_tumor_males$not_clear)
 # go_tumor_males_up <- go_obj(genes_tumor_males$up)
-go_tumor_males_down <- go_obj(genes_tumor_males$down)
+# go_tumor_males_down <- go_obj(genes_tumor_males$down)
 ```
 
 Once prepared with the object we can run the analysis:
@@ -1450,11 +1464,11 @@ if (!is.null(GO_females)){
 ```
 
 ```{r fun.enrich.m, echo=TRUE, message=FALSE, fig.cap="\\label{tumor2}Figure 25.C: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males comparison", autodep=TRUE}
-GO_males <- go_analisys(params_males, annot.Entrez.GO)
-if (!is.null(GO_males)){
-    print(head(GO_males$GO))
-    plot(GO_males$plot)
-}
+# GO_males <- go_analisys(params_males, annot.Entrez.GO)
+# if (!is.null(GO_males)){
+#     print(head(GO_males$GO))
+#     plot(GO_males$plot)
+# }
 ```
 
 
@@ -1466,7 +1480,7 @@ if (!is.null(GO_gender)){
 }
 ```
 
-```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, fig.cap="\\label{tumor4}Figure 25.E: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", autodep=TRUE}
+```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, fig.cap="\\label{tumor4}Figure 25.E: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", autodep=TRUE, eval=FALSE}
 GO_female_exc <- go_analisys(params_female_exc, annot.Entrez.GO)
 if (!is.null(GO_female_exc)){
     print(head(GO_female_exc$GO))
@@ -1476,28 +1490,28 @@ if (!is.null(GO_female_exc)){
 
 
 ```{r fun.enrich., eval=FALSE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", autodep=TRUE}
-GO_male_exc <- go_analisys(params_male_exc, annot.Entrez.GO)
-if (!is.null(GO_male_exc)){
-    print(head(GO_male_exc$GO))
-    plot(GO_male_exc$plot)
-}
+# GO_male_exc <- go_analisys(params_male_exc, annot.Entrez.GO)
+# if (!is.null(GO_male_exc)){
+#     print(head(GO_male_exc$GO))
+#     plot(GO_male_exc$plot)
+# }
 ```
 
 
 ```{r fun.enrich.fmu, eval=FALSE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
-GO_females_males_up <- go_analisys(go_females_males_up, annot.Entrez.GO)
-if (!is.null(GO_females_males_up)){
-    print(head(GO_females_males_up$GO))
-    plot(GO_females_males_up$plot)
-}
+# GO_females_males_up <- go_analisys(go_females_males_up, annot.Entrez.GO)
+# if (!is.null(GO_females_males_up)){
+#     print(head(GO_females_males_up$GO))
+#     plot(GO_females_males_up$plot)
+# }
 ```
 
 ```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor7}Figure 25.H: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons", autodep=TRUE}
-GO_females_males_down <- go_analisys(go_females_males_down, annot.Entrez.GO)
-if (!is.null(GO_females_males_down)){
-    print(head(GO_females_males_down$GO))
-    plot(GO_females_males_down$plot)
-}
+# GO_females_males_down <- go_analisys(go_females_males_down, annot.Entrez.GO)
+# if (!is.null(GO_females_males_down)){
+#     print(head(GO_females_males_down$GO))
+#     plot(GO_females_males_down$plot)
+# }
 ```
 
 
@@ -1527,27 +1541,27 @@ if (!is.null(GO_tumor_females_down)){
 
 
 ```{r fun.enrich.tmn, echo=TRUE, message=FALSE, fig.cap="\\label{tumor11}Figure 25.L: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males againts tumor comparison", autodep=TRUE}
-GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, annot.Entrez.GO)
-if (!is.null(GO_tumor_males_not_clear)){
-    print(head(GO_tumor_males_not_clear$GO))
-    plot(GO_tumor_males_not_clear$plot)
-}
+# GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, annot.Entrez.GO)
+# if (!is.null(GO_tumor_males_not_clear)){
+#     print(head(GO_tumor_males_not_clear$GO))
+#     plot(GO_tumor_males_not_clear$plot)
+# }
 ```
 
 ```{r fun.enrich.tmu, eval=FALSE, message=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", autodep=TRUE}
-GO_tumor_males_up <- go_analisys(go_tumor_males_up, annot.Entrez.GO)
-if (!is.null(GO_tumor_males_up)){
-    print(head(GO_tumor_males_up$GO))
-    plot(GO_tumor_males_up$plot)
-}
+# GO_tumor_males_up <- go_analisys(go_tumor_males_up, annot.Entrez.GO)
+# if (!is.null(GO_tumor_males_up)){
+#     print(head(GO_tumor_males_up$GO))
+#     plot(GO_tumor_males_up$plot)
+# }
 ```
 
 ```{r fun.enrich.tmd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor13}Figure 25.N: Representation of the P-value and effect of the GO of the genes down-regulated in both comparisons between normal and tumors and tumor vs normal in males.", autodep=TRUE}
-GO_tumor_males_down <- go_analisys(go_tumor_males_down, annot.Entrez.GO)
-if (!is.null(GO_tumor_males_down)){
-    print(head(GO_tumor_males_down$GO))
-    plot(GO_tumor_males_down$plot)
-}
+# GO_tumor_males_down <- go_analisys(go_tumor_males_down, annot.Entrez.GO)
+# if (!is.null(GO_tumor_males_down)){
+#     print(head(GO_tumor_males_down$GO))
+#     plot(GO_tumor_males_down$plot)
+# }
 ```
 
 ### Result tables
@@ -1579,27 +1593,27 @@ table_g <- function(tt_obj, ftitle){
 
 table_h(GO_tumor$GO, "GO_tumor_table.html")
 table_h(GO_females$GO, "GO_females_table.html")
-table_h(GO_males$GO, "GO_males_table.html")
+# table_h(GO_males$GO, "GO_males_table.html")
 table_h(GO_gender$GO, "GO_gender_table.html")
 
-table_h(GO_female_exc$GO, "GO_female_exc_table.html")
+# table_h(GO_female_exc$GO, "GO_female_exc_table.html")
 # table_h(GO_male_exc$GO, "GO_male_exc_table.html")
 
 # table_h(GO_females_males_up$GO, "GO_females_males_up_table.html")
-table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
+# table_h(GO_females_males_down$GO, "GO_females_males_down_table.html")
 # table_h(GO_females_males_not_clear$GO, "GO_females_males_not_clear_table.html")
 
 # table_h(GO_tumor_females_not_clear$GO, "GO_tumor_females_not_clear_table.html")
-table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
+# table_h(GO_tumor_males_not_clear$GO, "GO_tumor_males_not_clear_table.html")
 # table_h(GO_tumor_females_up$GO, "GO_tumor_females_up_table.html")
 # table_h(GO_tumor_males_up$GO, "GO_tumor_males_up_table.html")
 table_h(GO_tumor_females_down$GO, "GO_tumor_females_down_table.html")
-table_h(GO_tumor_males_down$GO, "GO_tumor_males_down_table.html")
+# table_h(GO_tumor_males_down$GO, "GO_tumor_males_down_table.html")
 
 table_g(de_tumor, "DE_tumor.html")
 table_g(de_gender, "DE_gender.html")
 table_g(de_females, "DE_females.html")
-table_g(de_males, "DE_males.html")
+# table_g(de_males, "DE_males.html")
 ```
 
 The table of genes which are differentially expressed in the different comparisons are in the following sites:  
@@ -1613,16 +1627,7 @@ To explore more than the top 6 GO we should look into the tables generated with 
 * In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
 * In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
 * In [GO_gender_table](GO_gender_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between females and males.    
-* In [GO_female_exc](GO_female_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs normals of females, exclusively from females.  
-* In [GO_male_exc](GO_male_exc_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison male tumor vs normal samples, exclusively from males.  
-* In [GO_females_males_up](GO_females_males_up_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are up-regulated.  
-* In [GO_females_males_down](GO_females_males_down_table.html) we have the list of GO enrich on the differentially expressed genes which are shared between the males and the females and in both cases are down-regulated.  
-* In [GO_tumor_females_not_clear](GO_tumor_females_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
-* In [GO_tumor_males_not_clear](GO_tumor_males_not_clear_table.html) we have the list of GO enrich on the differentially expressed genes shared between the comparison of tumoral vs healthy samples and tumoral samples and healthy males.   
-* In [GO_tumor_females_up](GO_tumor_females_up_table.html) we have the list of GO enrich on the differentially expressed genes up-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
-* In [GO_tumor_males_down](GO_tumor_males_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy males. 
 * In [GO_tumor_females_down](GO_tumor_females_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
-* In [GO_tumor_males_up](GO_tumor_males_up_table.html) we have the list of GO enrich on the differentially expressed genes up-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy males.  
 
 ## SessionInfo
 
