@@ -1207,7 +1207,7 @@ volcano(tt_tumor, "Comparing tumoral vs normal")
 volcano(tt_gender, "Comparing females vs males")
 ```
 
-```{r volcano3, fig.cap="\\label{volcano3}Figure 23.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE}
+```{r volcano3, eval=FALSE, fig.cap="\\label{volcano3}Figure 23.C: Volcano plot of the comparison healthy males vs tumoral males.", autodep=TRUE, include=FALSE}
 volcano(tt_males, "Comparing males: tumoral vs normal")
 ```
 
@@ -1342,12 +1342,12 @@ plot(Venn(list(DE_tumor, DE_females),
               SetNames = c("Tumoral", "Females")))
 ```
 
-```{r venn2, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE}
+```{r venn2, eval=FALSE, fig.cap="\\label{venn2}Figure 24.B: Representation of the number of genes differentially expressed in comparison between males, and healthy vs tumoral.", autodep=TRUE, include=FALSE}
 # plot(Venn(list(DE_tumor, DE_males),
               # SetNames = c("Tumoral", "Males")))
 ```
 
-```{r venn3, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE}
+```{r venn3, eval=FALSE, fig.cap="\\label{venn3}Figure 24.C: Representation of the number of genes differentially expressed in comparison between males and females.", autodep=TRUE, include=FALSE}
 # plot(Venn(list(DE_females, DE_males),
               # SetNames = c("Females", "Males")))
 ```
@@ -1463,7 +1463,7 @@ if (!is.null(GO_females)){
 }
 ```
 
-```{r fun.enrich.m, echo=TRUE, message=FALSE, fig.cap="\\label{tumor2}Figure 25.C: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males comparison", autodep=TRUE}
+```{r fun.enrich.m, eval=FALSE, fig.cap="\\label{tumor2}Figure 25.C: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males comparison", message=FALSE, autodep=TRUE, include=FALSE}
 # GO_males <- go_analisys(params_males, annot.Entrez.GO)
 # if (!is.null(GO_males)){
 #     print(head(GO_males$GO))
@@ -1480,7 +1480,7 @@ if (!is.null(GO_gender)){
 }
 ```
 
-```{r fun.enrich.gender_tumors, echo=TRUE, message=FALSE, fig.cap="\\label{tumor4}Figure 25.E: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", autodep=TRUE, eval=FALSE}
+```{r fun.enrich.gender_tumors, eval=FALSE, fig.cap="\\label{tumor4}Figure 25.E: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from females", message=FALSE, autodep=TRUE, include=FALSE}
 GO_female_exc <- go_analisys(params_female_exc, annot.Entrez.GO)
 if (!is.null(GO_female_exc)){
     print(head(GO_female_exc$GO))
@@ -1489,7 +1489,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich., eval=FALSE, message=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", autodep=TRUE}
+```{r fun.enrich., eval=FALSE, fig.cap="\\label{tumor5}Figure 25.F: Representation of the P-value and effect of the GO of the comparison of differentially expressed genes exclusivly from males", message=FALSE, autodep=TRUE, include=FALSE}
 # GO_male_exc <- go_analisys(params_male_exc, annot.Entrez.GO)
 # if (!is.null(GO_male_exc)){
 #     print(head(GO_male_exc$GO))
@@ -1498,7 +1498,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich.fmu, eval=FALSE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", autodep=TRUE}
+```{r fun.enrich.fmu, eval=FALSE, fig.cap="\\label{tumor6}Figure 25.G: Representation of the P-value and effect of the GO of the up-regulated genes in both  male and female comparisons", message=FALSE, warning=FALSE, autodep=TRUE, include=FALSE}
 # GO_females_males_up <- go_analisys(go_females_males_up, annot.Entrez.GO)
 # if (!is.null(GO_females_males_up)){
 #     print(head(GO_females_males_up$GO))
@@ -1506,7 +1506,7 @@ if (!is.null(GO_female_exc)){
 # }
 ```
 
-```{r fun.enrich.fmd, echo=TRUE, message=FALSE, warning=FALSE, fig.cap="\\label{tumor7}Figure 25.H: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons", autodep=TRUE}
+```{r fun.enrich.fmd, eval=FALSE, fig.cap="\\label{tumor7}Figure 25.H: Representation of the P-value and effect of the GO of the down-regulated genes in both  male and female comparisons", message=FALSE, warning=FALSE, autodep=TRUE, include=FALSE}
 # GO_females_males_down <- go_analisys(go_females_males_down, annot.Entrez.GO)
 # if (!is.null(GO_females_males_down)){
 #     print(head(GO_females_males_down$GO))
@@ -1515,7 +1515,7 @@ if (!is.null(GO_female_exc)){
 ```
 
 
-```{r fun.enrich.tfn, eval=FALSE, message=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", autodep=TRUE}
+```{r fun.enrich.tfn, eval=FALSE, fig.cap="\\label{tumor8}Figure 25.I: Representation of the P-value and effect of the GO of the genes with different regulation in the comparison between normal and tumors and females", message=FALSE, autodep=TRUE, include=FALSE}
 GO_tumor_females_not_clear <- go_analisys(go_tumor_females_not_clear, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_not_clear)){
     print(head(GO_tumor_females_not_clear$GO))
@@ -1523,7 +1523,7 @@ if (!is.null(GO_tumor_females_not_clear)){
 }
 ```
 
-```{r fun.enrich.tfu, eval=FALSE, message=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes up-regulated in both comparisons between normal and tumors and tumor vs normal in females.", autodep=TRUE}
+```{r fun.enrich.tfu, eval=FALSE, fig.cap="\\label{tumor9}Figure 25.J: Representation of the P-value and effect of the GO of the genes up-regulated in both comparisons between normal and tumors and tumor vs normal in females.", message=FALSE, autodep=TRUE, include=FALSE}
 GO_tumor_females_up <- go_analisys(go_tumor_females_up, annot.Entrez.GO)
 if (!is.null(GO_tumor_females_up)){
     print(head(GO_tumor_females_up$GO))
@@ -1540,7 +1540,7 @@ if (!is.null(GO_tumor_females_down)){
 ```
 
 
-```{r fun.enrich.tmn, echo=TRUE, message=FALSE, fig.cap="\\label{tumor11}Figure 25.L: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males againts tumor comparison", autodep=TRUE}
+```{r fun.enrich.tmn, eval=FALSE, fig.cap="\\label{tumor11}Figure 25.L: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes in males againts tumor comparison", message=FALSE, autodep=TRUE, include=FALSE}
 # GO_tumor_males_not_clear <- go_analisys(go_tumor_males_not_clear, annot.Entrez.GO)
 # if (!is.null(GO_tumor_males_not_clear)){
 #     print(head(GO_tumor_males_not_clear$GO))
@@ -1548,7 +1548,7 @@ if (!is.null(GO_tumor_females_down)){
 # }
 ```
 
-```{r fun.enrich.tmu, eval=FALSE, message=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", autodep=TRUE}
+```{r fun.enrich.tmu, eval=FALSE, fig.cap="\\label{tumor12}Figure 25.M: Representation of the P-value and effect of the GO of the genes with the differentially expressed genes up-regulated in both tumors vs normal in males and tumor vs normals.", message=FALSE, autodep=TRUE, include=FALSE}
 # GO_tumor_males_up <- go_analisys(go_tumor_males_up, annot.Entrez.GO)
 # if (!is.null(GO_tumor_males_up)){
 #     print(head(GO_tumor_males_up$GO))
@@ -1556,7 +1556,7 @@ if (!is.null(GO_tumor_females_down)){
 # }
 ```
 
-```{r fun.enrich.tmd, echo=TRUE, message=FALSE, fig.cap="\\label{tumor13}Figure 25.N: Representation of the P-value and effect of the GO of the genes down-regulated in both comparisons between normal and tumors and tumor vs normal in males.", autodep=TRUE}
+```{r fun.enrich.tmd, eval=FALSE, fig.cap="\\label{tumor13}Figure 25.N: Representation of the P-value and effect of the GO of the genes down-regulated in both comparisons between normal and tumors and tumor vs normal in males.", message=FALSE, autodep=TRUE, include=FALSE}
 # GO_tumor_males_down <- go_analisys(go_tumor_males_down, annot.Entrez.GO)
 # if (!is.null(GO_tumor_males_down)){
 #     print(head(GO_tumor_males_down$GO))
@@ -1617,17 +1617,17 @@ table_g(de_females, "DE_females.html")
 ```
 
 The table of genes which are differentially expressed in the different comparisons are in the following sites:  
-* The comparison of [tumoral vs normal](DE_tumor.html) samples.  
-* The comparison of [females vs males](DE_gender.html) samples.  
-* The comparison of [tumoral vs normal](DE_females.html) female samples.  
-* The comparison of [tumoral vs normal](DE_males.html) male samples.  
+ * The comparison of [tumoral vs normal](DE_tumor.html) samples.  
+ * The comparison of [females vs males](DE_gender.html) samples.  
+ * The comparison of [tumoral vs normal](DE_females.html) female samples.  
+ * The comparison of [tumoral vs normal](DE_males.html) male samples.  
 
 To explore more than the top 6 GO we should look into the tables generated with any browser.
-* In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
-* In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
-* In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
-* In [GO_gender_table](GO_gender_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between females and males.    
-* In [GO_tumor_females_down](GO_tumor_females_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
+ * In [GO_tumor_table](GO_tumor_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumor vs healthy samples.  
+ * In [GO_females_table](GO_females_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison tumoral females vs healthy females.  
+ * In [GO_males_table](GO_males_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between tumoral males samples and healthy males samples.  
+ * In [GO_gender_table](GO_gender_table.html) we have the list of GO enrich on the differentially expressed genes in the comparison between females and males.    
+ * In [GO_tumor_females_down](GO_tumor_females_down_table.html) we have the list of GO enrich on the differentially expressed genes down-regulated in the comparison of tumoral vs healthy samples and tumoral samples and healthy females.  
 
 ## SessionInfo
 
@@ -1638,6 +1638,6 @@ sessionInfo()
 
 ##Bibliography
 
-* Agrawal N, Akbani R, Aksoy BA, Ally A, Arachchi H, Asa SL, Zou L. (2014). Integrated Genomic Characterization of Papillary Thyroid Carcinoma. Cell, 159(3), 676-690. 
-* The Canger Genome Atlas. Papillary Thyroid Carcinoma. Retrieved May 6, 2016. Available from: http://cancergenome.nih.gov/cancersselected/thyroid
-* Xing M. (2013). Molecular pathogenesis and mechanisms of thyroid cancer. Nature Reviews. Cancer, 13(3), 184-99. 
+ * Agrawal N, Akbani R, Aksoy BA, Ally A, Arachchi H, Asa SL, Zou L. (2014). Integrated Genomic Characterization of Papillary Thyroid Carcinoma. Cell, 159(3), 676-690. 
+ * The Canger Genome Atlas. Papillary Thyroid Carcinoma. Retrieved May 6, 2016. Available from: http://cancergenome.nih.gov/cancersselected/thyroid
+ * Xing M. (2013). Molecular pathogenesis and mechanisms of thyroid cancer. Nature Reviews. Cancer, 13(3), 184-99. 
